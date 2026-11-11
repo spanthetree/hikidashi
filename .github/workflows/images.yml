@@ -1,0 +1,158 @@
+name: images
+
+# The three images (#77), published to GHCR:
+#
+#   ghcr.io/spanthetree/hikidashi-server        amd64, arm64
+#   ghcr.io/spanthetree/hikidashi-worker        amd64, arm64
+#   ghcr.io/spanthetree/hikidashi-worker-cuda   amd64
+#
+# A release tag (v0.19.0) publishes 0.19.0, 0.19 and latest. Run by hand
+# (Actions → images → Run workflow), it publishes edge and sha-<commit>, for
+# trying a branch on a NAS before a release. A pull request that changes what
+# goes into an image builds the amd64 ones and starts them, and pushes
+# nothing.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - pyproject.toml
+      - uv.lock
+      - frontend/package.json
+      - frontend/package-lock.json
+      - .github/workflows/images.yml
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: images-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: hikidashi-server
+            target: server
+            extras: ""
+            platforms: linux/amd64,linux/arm64
+          - image: hikidashi-worker
+            target: worker
+            extras: ""
+            platforms: linux/amd64,linux/arm64
+          # The GPU libraries are ~2 GB, and the cards are on amd64 hosts.
+          - image: hikidashi-worker-cuda
+            target: worker
+            extras: --extra cuda
+            platforms: linux/amd64
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+      PUSH: ${{ github.event_name != 'pull_request' }}
+      # The cuda image is the worker image plus wheels: not worth a PR's time.
+      SKIP: ${{ github.event_name == 'pull_request' && matrix.image == 'hikidashi-worker-cuda' }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.SKIP != 'true'
+
+      # The tag is the version the changelog commit set (CONTRIBUTING.md):
+      # an image never says one version and runs another.
+      - name: The tag matches pyproject.toml
+        if: env.SKIP != 'true' && github.ref_type == 'tag'
+        run: |
+          want=$(sed -n 's/^version = "\(.*\)"$/\1/p' pyproject.toml)
+          [ "${GITHUB_REF_NAME#v}" = "$want" ] || {
+            echo "::error::tag $GITHUB_REF_NAME, but pyproject.toml says $want"; exit 1; }
+
+      # The cuda wheels and two architectures' layers need the room.
+      - name: Free disk space
+        if: env.SKIP != 'true' && matrix.image == 'hikidashi-worker-cuda'
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+
+      - uses: docker/setup-qemu-action@v3
+        if: env.SKIP != 'true' && contains(matrix.platforms, 'arm64')
+      - uses: docker/setup-buildx-action@v3
+        if: env.SKIP != 'true'
+
+      - uses: docker/metadata-action@v5
+        if: env.SKIP != 'true'
+        id: meta
+        with:
+          images: ${{ env.IMAGE }}
+          # latest only on a release tag, never on edge or a pull request.
+          flavor: latest=auto
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=edge,enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=sha,enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=ref,event=pr
+          labels: |
+            org.opencontainers.image.title=${{ matrix.image }}
+            org.opencontainers.image.description=Hikidashi, a searchable archive of your saved Instagram reels (${{ matrix.target }} image)
+
+      # amd64 first, loaded here, so it can be started before anything is
+      # pushed. The push below reuses its layers from the cache.
+      - name: Build (amd64)
+        if: env.SKIP != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          build-args: EXTRAS=${{ matrix.extras }}
+          platforms: linux/amd64
+          load: true
+          tags: ${{ matrix.image }}:test
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+      - name: The server starts and answers
+        if: env.SKIP != 'true' && matrix.target == 'server'
+        run: |
+          # As a NAS runs it: an unprivileged user, on an empty /data.
+          mkdir -p "$RUNNER_TEMP/data" && chmod 777 "$RUNNER_TEMP/data"
+          docker run -d --name smoke --user 99:100 -p 8080:8080 \
+            -v "$RUNNER_TEMP/data:/data" ${{ matrix.image }}:test
+          for _ in $(seq 60); do
+            if curl -fsS http://localhost:8080/api/auth; then exit 0; fi
+            sleep 1
+          done
+          docker logs smoke; exit 1
+
+      - name: The worker has its tools
+        if: env.SKIP != 'true' && matrix.target == 'worker'
+        run: |
+          docker run --rm --user 99:100 ${{ matrix.image }}:test sh -c '
+            hikidashi --help >/dev/null &&
+            python -c "import faster_whisper" &&
+            tesseract --version >/dev/null &&
+            ffmpeg -version >/dev/null && echo ok'
+
+      - uses: docker/login-action@v3
+        if: env.SKIP != 'true' && env.PUSH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        if: env.SKIP != 'true' && env.PUSH == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          build-args: EXTRAS=${{ matrix.extras }}
+          platforms: ${{ matrix.platforms }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,scope=${{ matrix.image }},mode=max
