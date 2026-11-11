@@ -13,33 +13,31 @@ def texts(caption):
 class TestStreetAddresses(unittest.TestCase):
     def test_full_us_address_with_suite(self):
         caption = (
-            "Where: @litehousegrilldfw // 11501 Custer Rd, Ste 109, "
-            "Frisco, TX 75035\n\nTheir fettuccine alfredo was unreal"
+            "Where: @examplegrill // 8800 Preston Rd, Ste 240, "
+            "Frisco, TX 75034\n\nThe pasta alone is worth the drive"
         )
-        self.assertIn("11501 Custer Rd, Ste 109, Frisco, TX 75035", texts(caption))
+        self.assertIn("8800 Preston Rd, Ste 240, Frisco, TX 75034", texts(caption))
 
     def test_address_stops_before_the_prose_that_follows(self):
-        caption = "706 N Lamar Blvd, Austin, TX 78703 and honestly it slaps"
+        caption = "1420 S Congress Ave, Austin, TX 78704 and honestly it slaps"
         found = texts(caption)[0]
         self.assertNotIn("slaps", found)
         self.assertIn("Austin", found)
 
     def test_several_addresses_in_one_caption(self):
         caption = (
-            f"{PIN}Russ & Daughters — 179 E Houston St, New York, NY 10002 "
-            f"{PIN}Katz's Delicatessen — 205 E Houston St, New York, NY 10002 "
-            f"{PIN}Mei Lai Wah — 41 Mott St, New York, NY 10013"
+            f"{PIN}Pearl & Sons — 140 Water St, New York, NY 10005 "
+            f"{PIN}Mabel's Deli — 118 Water St, New York, NY 10005 "
+            f"{PIN}Golden Bun — 27 Pell St, New York, NY 10038"
         )
         found = texts(caption)
         self.assertEqual(len(found), 3)
-        self.assertTrue(all("St, New York" in f or "Mott St" in f for f in found))
+        self.assertTrue(all("St, New York" in f or "Pell St" in f for f in found))
 
     def test_venue_name_is_kept_alongside_the_address(self):
-        """ "Katz's Delicatessen — 205 E Houston St" beats either half alone."""
-        caption = f"{PIN}Katz's Delicatessen — 205 E Houston St, New York, NY 10002"
-        self.assertEqual(
-            texts(caption), ["Katz's Delicatessen — 205 E Houston St, New York, NY 10002"]
-        )
+        """ "Mabel's Deli — 118 Water St" beats either half alone."""
+        caption = f"{PIN}Mabel's Deli — 118 Water St, New York, NY 10005"
+        self.assertEqual(texts(caption), ["Mabel's Deli — 118 Water St, New York, NY 10005"])
 
 
 class TestPinnedPlaces(unittest.TestCase):
@@ -48,10 +46,10 @@ class TestPinnedPlaces(unittest.TestCase):
 
     def test_a_description_after_the_name_is_dropped(self):
         caption = (
-            f"{PIN}Palo Duro Canyon — dramatic canyon views, hiking and one "
-            "of the most incredible sunrises in the state"
+            f"{PIN}Cedar Hollow Canyon — red rock walls, a long hike and the "
+            "best sunrise of the trip"
         )
-        self.assertEqual(texts(caption), ["Palo Duro Canyon"])
+        self.assertEqual(texts(caption), ["Cedar Hollow Canyon"])
 
     def test_trailing_flags_and_handles_are_stripped(self):
         self.assertEqual(
@@ -61,8 +59,8 @@ class TestPinnedPlaces(unittest.TestCase):
 
     def test_prose_after_a_pin_is_not_a_place(self):
         caption = (
-            f"{PIN}At some point everyone experiences loss, disappointment, "
-            "betrayal, or a situation that feels impossible to recover from"
+            f"{PIN}Sooner or later every plan falls apart, and the trip you "
+            "remember is the one that went sideways"
         )
         self.assertEqual(texts(caption), [])
 
@@ -71,7 +69,7 @@ class TestPinnedPlaces(unittest.TestCase):
 
     def test_other_emoji_do_not_act_as_pins(self):
         """A variation selector inside a character class would match everything."""
-        caption = "\U0001f31f to learn valuable life lessons every time you open this"
+        caption = "\U0001f31f to pick up one new trick every time you open this"
         self.assertEqual(texts(caption), [])
 
     def test_keycap_emoji_are_not_pins(self):
@@ -80,11 +78,11 @@ class TestPinnedPlaces(unittest.TestCase):
 
 class TestLabels(unittest.TestCase):
     def test_where_label(self):
-        self.assertIn("Cedar Park", texts("Where: Cedar Park"))
+        self.assertIn("Oak Hollow", texts("Where: Oak Hollow"))
 
     def test_handle_prefix_is_stripped(self):
-        caption = "Location: @khashoka.USA // 1057 S Sherman St, Richardson, TX"
-        self.assertTrue(texts(caption)[0].startswith("1057 S Sherman"))
+        caption = "Location: @example.usa // 2200 N Oak St, Plano, TX"
+        self.assertTrue(texts(caption)[0].startswith("2200 N Oak"))
 
 
 class TestHygiene(unittest.TestCase):
@@ -102,7 +100,7 @@ class TestHygiene(unittest.TestCase):
         self.assertEqual(extract("just a normal caption with no venue"), [])
 
     def test_duplicates_and_contained_matches_collapse(self):
-        caption = f"{PIN}Katz's — 205 E Houston St, New York, NY 10002"
+        caption = f"{PIN}Mabel's — 118 Water St, New York, NY 10005"
         self.assertEqual(len(texts(caption)), 1)
 
     def test_results_cap(self):
@@ -117,7 +115,7 @@ class TestMapsUrl(unittest.TestCase):
         self.assertIn("Monument Valley, Arizona", unquote_plus(place.url))
 
     def test_as_dict_shape(self):
-        d = extract(f"{PIN}Cedar Park")[0].as_dict()
+        d = extract(f"{PIN}Oak Hollow")[0].as_dict()
         self.assertEqual(set(d), {"text", "url"})
 
 

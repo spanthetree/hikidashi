@@ -5,14 +5,14 @@ by opting in, the public instance at its limit of one request a second. Nothing
 is looked up unless HIKIDASHI_GEOCODER names a server: captions stay on this
 machine by default.
 
-A caption's place is rarely a clean query. "TICKET CHECK-IN LOCATION // 504 E
-Main St, Bellville, TX" finds nothing as written, and "Katz's Delicatessen —
+A caption's place is rarely a clean query. "TICKET CHECK-IN LOCATION // 310 W
+Main St, Fredericksburg, TX" finds nothing as written, and "Mabel's Deli —
 205 E Houston St" depends on the server knowing the shop. So each place is
 tried as a short series of queries, best first, and the first that finds
 anything wins.
 
-How sure a result is comes from how much the candidates agree. "Portland,
-Maine" names one place; "Cedar Park" names dozens across the US, and a pin on
+How sure a result is comes from how much the candidates agree. "Bangor,
+Maine" names one place; "Springfield" names dozens across the US, and a pin on
 the first of them is as likely to be wrong as right. The score is the share of
 the candidates' weight that lies near the top one, so a query whose answers
 are all in one spot scores 1, and a pin that would be a guess scores low and
@@ -57,7 +57,7 @@ COARSEST_RANK = 4
 _HANDLE = re.compile(r"\s*@[\w.]+")
 # "Ste 130", "Unit A-102": no geocoder indexes the suite, and some give up on it.
 _SUITE = re.compile(r",?\s*(?:\b(?:Ste|Suite|Unit|Apt)\b\.?|#)\s*[\w\-]+", re.IGNORECASE)
-# "(3 nights)", "(@visitsekiparks)": asides, never part of the place.
+# "(3 nights)", "(@example.parks)": asides, never part of the place.
 _ASIDE = re.compile(r"\s*\([^)]*\)|\s*…\s*$")
 _JUNK_LEAD = re.compile(r"^.*?//\s*")
 
@@ -89,7 +89,7 @@ def queries(text: str) -> list[str]:
         if len(q) >= 3 and q not in tries:
             tries.append(q)
 
-    # "Mackinac Island, Michigan @puremichigan": the handle credits a tourist
+    # "Mackinac Island, Michigan @example.travel": the handle credits a tourist
     # board, and confuses every geocoder.
     clean = _ASIDE.sub("", _HANDLE.sub("", text))
     add(clean)
@@ -99,16 +99,16 @@ def queries(text: str) -> list[str]:
     if street:
         add(street.group(0))
         add(_SUITE.sub("", street.group(0)))
-    # "LOCATION // 504 E Main St": whatever follows the separator.
+    # "LOCATION // 310 W Main St": whatever follows the separator.
     add(_JUNK_LEAD.sub("", clean))
-    # "Slice of Life BBQ, 4-21-13 Jingumae, Shibuya, Tokyo": drop the venue,
+    # "Hinoki Grill, 2-8-5 Ebisu, Shibuya, Tokyo": drop the venue,
     # but only ahead of an address. "Hot Springs, Arkansas" is not a venue in
     # Arkansas, and the state alone is no place to put a pin.
     rest = clean.split(",", 1)[1] if "," in clean else ""
     if re.search(r"\d", rest):
         add(rest)
-    # "Katz's Delicatessen — 205 E Houston St": the venue, should the server
-    # know it but not the address. Not "Location: 100 West Laurel Street",
+    # "Mabel's Deli — 118 Water St": the venue, should the server
+    # know it but not the address. Not "Location: 200 North Pine Street",
     # where what comes before the colon is a label.
     if street and not street.group(0).startswith(_SPLIT.split(clean, 1)[0]):
         name = _SPLIT.split(clean, 1)[0]

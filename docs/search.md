@@ -11,18 +11,19 @@ to show). That set lists what someone saved, so it stays out of the repo: put
 your own at `data/search_eval.json` (git-ignored), and the eval reads it in
 place of `tests/search_eval.json`, 22 queries over the demo library
 (`scripts/demo_library.py`) in the same format. The real set covers eight
-kinds of query:
+kinds of query. The examples below are of the same kind, but they are not the
+real queries, which would say what is in the library:
 
 | kind | n | example |
 |------|---|---------|
-| phrase | 7 | `soups that don't suck` |
-| keyword | 7 | `birria`, `osint` |
-| paraphrase | 15 | `warm broth for a cold night`, `the best margherita in Naples` |
-| voiceover | 9 | `that video where he says he's been a butcher for 20 years` |
-| place | 8 | `cheap eats in Tokyo`, `things to see in Nagano` |
-| creator | 6 | a handle typed as a name, `the dad who braids hair` |
-| non-english | 13 | `紅葉`, `桜`, `receta queso oaxaca`, `losing weight after having a baby` |
-| negative | 8 | `knitting a sweater`, `gochujang`: no good answer exists |
+| phrase | 7 | `one pot to wash`, words from a caption |
+| keyword | 7 | `sourdough`, `lathe` |
+| paraphrase | 15 | `a quick weeknight dinner with chicken`, `making bread at home` |
+| voiceover | 9 | `the one where he says he's been baking for ten years` |
+| place | 8 | `cheap eats in Tokyo`, `things to see in Kyoto` |
+| creator | 6 | a handle typed as words, or a creator described rather than named |
+| non-english | 13 | `塩ラーメン`, `伏見稲荷`, a Spanish recipe search |
+| negative | 8 | `knitting a sweater`, `car engine repair`: no good answer exists |
 
 ```bash
 uv run python -m app.search.eval             # keyword-only and blended
@@ -74,14 +75,15 @@ phrases still rank first, the negatives are as quiet as before, and p95 is
 25 ms. Keyword-only search, all you get before `./hikidashi embed`, went from
 0.43 to 0.73. The chunk vectors add about 3 MB to the database.
 
-At three decimals paraphrase is 0.859 against 0.861: in "drive a famous race
-track as a tourist", a reel whose voiceover is about track days now ranks
-4th, one above a fifth expected reel.
+At three decimals paraphrase is 0.859 against 0.861: in one paraphrase query,
+a reel whose voiceover is about something close to the query now ranks 4th,
+one above a fifth expected reel.
 
 What did not improve:
 
-- **"The best margherita in Naples" puts a pizza reel at 5th**, not in the
-  top 3. Nothing that fits the latency budget on CPU fixes it; see below, and
+- **A "best dish in its home city" query puts its first reel at 5th**, not in
+  the top 3. Its reels show the food, but none names the dish or the city.
+  Nothing that fits the latency budget on CPU fixes it; see below, and
   [#64](https://github.com/spanthetree/hikidashi/issues/64).
 - **`京都`, 0.22 to 0.18.** Kyoto is a substring of 東京都, Tokyo (see
   [Japanese](#japanese-33)).
@@ -104,16 +106,16 @@ no longer reproduced two days later: re-summarised reels move the numbers
 2. **Unspaced scripts match inside a run.** FTS5's unicode61 tokenizer makes a
    whole run of Japanese one token, so 紅葉 never matched 紅葉スポット. Words in
    CJK and kana are matched as substrings of caption, transcript and OCR text.
-3. **Creators typed with spaces.** "tokyo supercars" matches @tokyosupercars_example.
+3. **Creators typed with spaces.** "tokyo carspots" matches @tokyocarspots_example.
    Before, the LIKE over handles took the whole query, spaces included.
 4. **Transcripts are embedded a stretch at a time** (`item_chunk_vec`): 60
    words, overlapping by 20, from the transcript and the OCR text. 1,007 chunks
    for 420 reels. A reel's closest chunk, if at least 0.5 similar, competes
    with its summary for its place on the semantic list, at 0.1 less than its
    similarity. The summary says what a reel is about and drops what was said,
-   and this is what finds "the one where she says soup doesn't count as a
-   meal". `EMBED_V` is 2, so the first `./hikidashi embed` after upgrading
-   re-embeds everything (about 90 s on CPU).
+   and this is what finds a half-remembered line from a voiceover. `EMBED_V`
+   is 2, so the first `./hikidashi embed` after upgrading re-embeds everything
+   (about 90 s on CPU).
 5. **Every hit says why it matched.** `/api/items?q=` returns `match` per item:
    `{"match": ["keyword", "semantic", "transcript"], "similarity": 0.52}`.
    Cards show it as a badge under `npm run dev`, or on the built app with
@@ -143,13 +145,13 @@ results on average). Two things caused it:
 The pre-#20 code scores paraphrase 0.861; "now" is 0.859, and any-two as the
 fallback 0.855. Without vectors that fallback is what the app uses.
 
-- **One word was a match.** ORed, "grooming a long haired cat" found 24 reels
-  for "long", and "tabletop roleplaying games with small children" pushed its
-  fourth reel from 3rd to 11th with 48 reels about games. Lowering the weight
-  instead cost voiceover (0.15: 0.93), and keeping only the hits the vectors
+- **One word was a match.** ORed, a query about grooming a pet found 24 reels
+  for one common adjective in it, and a query about board games with children
+  pushed its fourth reel from 3rd to 11th with 48 reels about games. Lowering
+  the weight instead cost voiceover (0.15: 0.93), and keeping only the hits the vectors
   also found changed nothing: the noise was on both lists.
 - **A voiceover counted twice.** As a list of its own, a reel's best chunk
-  added to its summary's rank, so in "tacos in New York" two reels with a
+  added to its summary's rank, so in one food-and-place query two reels with a
   voiceover beat the closest summary match (0.65), which has none. On one list,
   an offset of 0.1 to 0.15 scores the same; 0.2 costs voiceover (0.93).
 
@@ -178,34 +180,34 @@ so compare each with its own "none" row rather than with the tables above.
 | bge-reranker-v2-m3-int8 | 0.923 | 2,189 ms | 5,344 ms |
 
 At most +0.02, with paraphrase getting worse, at 10 to 250 times the latency
-budget. None of them fixes the margherita query either. Given 60 candidates
-that include the four pizza reels, every model ranks them 19th or lower and
-puts the Sicilian sandwich, NYC food crawls or Austin tacos on top: like the
-bi-encoder, they read "best X in Y" as a restaurant review.
+budget. None of them fixes the dish query either. Given 60 candidates that
+include its four reels, every model ranks them 19th or lower and puts other
+food reels with a city in them on top: like the bi-encoder, they read "best X
+in Y" as a restaurant review.
 
 **Tuning the cut-offs.** Sweeping `MIN_SIMILARITY` (0.22 to 0.40),
 `MAX_VECTOR_HITS` (12 to 40) and the RRF `K` (10 to 60) moved nDCG by at most
-±0.01. 0.36 made negatives quieter, but it also cuts the margherita query's
-pizza reels, which sit at 0.27 to 0.30. Left at 0.27 / 24 / 60.
+±0.01. 0.36 made negatives quieter, but it also cuts the dish query's reels,
+which sit at 0.27 to 0.30. Left at 0.27 / 24 / 60.
 
 **Query expansion with the local LLM** (HyDE: write the summary of a reel that
-would answer the query, embed that). qwen2.5:3b answers "Best traditional
-margherita pizza in Naples", which would work, but takes 400 to 900 ms per
-search on this box and makes things up (a creator's "spicy peanut chicken
-stir-fry"). Over budget.
+would answer the query, embed that). For the dish query, qwen2.5:3b writes a
+summary that names the food, which would work, but takes 400 to 900 ms per
+search on this box and makes things up (a recipe no creator in the library
+posted). Over budget.
 
 **Document expansion** (doc2query: the LLM writes eight searches per reel at
 index time, embedded with the summary). 28 minutes over the library and no gain
 (0.898 to 0.904 at best), with voiceover worse (0.88 to 0.79). A 3B model
-restates the reel ("Beer Pizza Dough Recipe") rather than adding what someone
-would search for, and never wrote "margherita" for a pizza reel.
+restates the reel's title rather than adding what someone would search for,
+and never wrote the dish's name for any of its reels.
 
-**What would fix margherita:** the link from "margherita" to "pizza" is world
-knowledge that a 300M embedder has only weakly: "margherita pizza" puts all
-four pizza reels in the top five, "margherita Naples" puts none in the top ten.
-None of the four pizza reels says "margherita" or "Naples" anywhere, so
-nothing added to them at index time can help: the query has to learn that a
-margherita is a pizza. Accepted as a limit of running without a GPU: query
+**What would fix the dish query:** the link from the dish's name to the food
+is world knowledge that a 300M embedder has only weakly: the dish's name with
+the food's puts all four reels in the top five, the dish's name with the city
+puts none in the top ten. None of the four reels names the dish or the city
+anywhere, so nothing added to them at index time can help: the query has to
+learn what the dish is. Accepted as a limit of running without a GPU: query
 rewriting works but is too slow on CPU. It is tracked, with the reranker and
 doc2query results above, in
 [#64](https://github.com/spanthetree/hikidashi/issues/64), to re-measure once
@@ -219,14 +221,14 @@ per-query numbers here are from the 0.2.0 search.
 
 | query | blended nDCG@10 | |
 |-------|----------------:|-|
-| `カフェ` | 0.97 | substring hits in Japanese captions, plus a gaming cafe in Austin from the vectors |
+| `カフェ` | 0.97 | substring hits in Japanese captions, plus an English-only cafe reel from the vectors |
 | `桜` | 0.93 | three reels with 桜 in the caption, and two English-only cherry blossom reels from the vectors |
-| `カレー` | 0.83 | the curry recipe first; a green curry marinade in a meal-prep reel is missed |
+| `カレー` | 0.83 | the curry recipe first; a curry inside a reel about something else is missed |
 | `京都` | 0.18 | see below |
 
 embeddinggemma is multilingual, so a Japanese query finds English reels on the
-same subject without any translation step: that is how `桜` finds the Yoshino
-and Mt. Fuji cherry blossom reels.
+same subject without any translation step: that is how `桜` finds cherry blossom
+reels whose text is all in English.
 
 **Substring matching cannot tell words apart.** `京都` (Kyoto) is a substring of
 `東京都` (Tokyo Metropolis), so it matches three Tokyo restaurant addresses,

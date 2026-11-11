@@ -128,7 +128,7 @@ def schema(categories: list[str] | None = None) -> dict[str, Any]:
     }
 
 
-# Below this many words, a caption alone is too thin to tag: "Find your @heaven"
+# Below this many words, a caption alone is too thin to tag: "Find your @happyplace"
 # came back as "a beautiful car" every time. Such reels need OCR or vision.
 MIN_WORDS = 3
 _WORD = re.compile(r"(?<![@\w/.])[^\W\d_]{2,}")

@@ -348,8 +348,8 @@ class TestTaggerReadsIt(OcrCase):
         self.assertIn("DATES THAT EVERY DAD", must(p))
 
     def test_on_screen_words_make_a_thin_caption_worth_sending(self):
-        self.assertIsNone(build_prompt("Find your @heaven 🌍", [], None))
-        self.assertIsNotNone(build_prompt("Find your @heaven 🌍", [], None, "You wanna go?"))
+        self.assertIsNone(build_prompt("Find your @happyplace 🌍", [], None))
+        self.assertIsNotNone(build_prompt("Find your @happyplace 🌍", [], None, "You wanna go?"))
 
     def test_the_tagger_waits_for_ocr_then_reads_it(self):
         waiting = {r["shortcode"] for r in tagger.pending(self.conn)}

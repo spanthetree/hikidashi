@@ -1,8 +1,8 @@
 """Search: FTS5 keywords and embedding similarity, blended.
 
 Keyword search is exact and explainable, and loses the reel you describe in
-other words. Vectors find "warm broth for a cold night" in a reel captioned
-Loaded Potato Soup, and are vague about exact phrases. So both run, and the
+other words. Vectors find "a vegetarian sandwich" in a reel captioned
+Portobello banh mi, and are vague about exact phrases. So both run, and the
 ranking is tiered:
 
     1. the query as an exact phrase        always first, keyword order
@@ -68,14 +68,14 @@ CONTENT_WEIGHT = 0.5
 MIN_SIMILARITY = 0.27
 # ...and no more than this many of them. A vague query ("that video about
 # saving money") is near everything a little, and past this many the tail is
-# noise. Not relative to the best match: one fluke at the top (a Sicilian
-# sandwich for "margherita in Naples") would then cut the real answers.
+# noise. Not relative to the best match: one fluke at the top (a sandwich reel
+# for a pizza query) would then cut the real answers.
 MAX_VECTOR_HITS = 24
 
 
 # Words that say how you are asking, not what you are after. A sentence-length
 # query keeps only the rest for its content-word match: "that video where he
-# says he's been a butcher" is looking for "butcher", not for "that".
+# says he's been baking for years" is looking for "baking", not for "that".
 STOPWORDS = frozenset(
     """
 a about all an and any are as at be been being but by can could did do does
@@ -128,8 +128,8 @@ def distinctive(conn: sqlite3.Connection, q: str, user_id: int = LOCAL) -> list[
     """The content tokens of `q` that say what you are after.
 
     A word in more than COMMON of the person's library is dropped too: it finds
-    nothing in particular, and a reel must not miss "the best margherita in
-    Naples" for not saying "best". None when no word is left, or for a single
+    nothing in particular, and a reel must not miss "the best ramen in
+    Sapporo" for not saying "best". None when no word is left, or for a single
     word, which `fts_query` has already tried.
     """
     if len(tokens(q)) < 2:
@@ -153,9 +153,9 @@ def fts_content(conn: sqlite3.Connection, q: str, user_id: int = LOCAL) -> str |
     """The distinctive tokens ANDed: the query with the words that only say how
     you are asking taken out. None when there are none (see `distinctive`).
 
-    ANDed, not ORed: any one word of "grooming a long haired cat" found 24
-    reels for "long", and "tabletop roleplaying games with small children"
-    pushed the real answer out with 48 reels about games (#20).
+    ANDed, not ORed: one common adjective in a query about grooming a pet
+    found 24 reels, and a query about board games with children pushed the
+    real answer out with 48 reels about games (#20).
     """
     toks = distinctive(conn, q, user_id)
     return " AND ".join(f'"{t}"' for t in toks) if toks else None
@@ -225,13 +225,13 @@ def keyword_hits(conn: sqlite3.Connection, q: str, user_id: int = LOCAL) -> list
         1. every word, best bm25 first, then recipe titles and ingredients
         2. creator names and hashtag fragments, which FTS does not index: FTS
            matches whole tokens, so it finds #easyrecipe for "easyrecipe" but
-           not for "recipe". "tokyo supercars" finds @tokyosupercars_example too.
+           not for "recipe". "tokyo carspots" finds @tokyocarspots_example too.
            And the tags and games this person chose, which are theirs, not the
            index's.
         3. unspaced-script words as substrings of the text (see UNSPACED)
 
     A sentence rarely matches every one of its words: `content_word_hits` is
-    what finds "the one where she says soup doesn't count as a meal".
+    what finds "the one where she says the sauce cooks while the roast rests".
     """
     like = f"%{q.strip()}%"
     fts = fts_query(q)

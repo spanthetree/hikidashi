@@ -279,7 +279,7 @@ flowchart TD
 | Constant | Value | Why |
 |---|---|---|
 | `K` | 60 | the usual RRF constant. Sweeping 10–60 moved nDCG by under 0.01 |
-| `MIN_SIMILARITY` | 0.27 | every reel is a little similar to every query (the median is near 0.1, on-topic reels 0.3–0.5). Without a floor any search returns the library. 0.36 was quieter but cut the margherita query's pizza reels, at 0.27–0.30 |
+| `MIN_SIMILARITY` | 0.27 | every reel is a little similar to every query (the median is near 0.1, on-topic reels 0.3–0.5). Without a floor any search returns the library. 0.36 was quieter but cut the reels of a query whose reels never name what it asks for, at 0.27–0.30 |
 | `MAX_VECTOR_HITS` | 24 | a vague query is near everything a little, and past this the tail is noise. A fixed count, not relative to the best match, so one fluke at the top can't cut the real answers |
 | `MIN_CHUNK_SIMILARITY` | 0.5 | below it, stretches of voiceover outrank reels that are about the query |
 | `CHUNK_HANDICAP` | 0.1 | one sentence of speech matching is weaker evidence than the whole reel being about it |

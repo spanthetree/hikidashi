@@ -28,8 +28,8 @@ No API keys, and no captions or transcripts leave the machine.
 
 ## Consequences
 
-- Quality is bounded by small models on CPU. For example, the "margherita in
-  Naples" query needs world knowledge a 300M embedder has only weakly. Limits
+- Quality is bounded by small models on CPU. For example, a query for a dish
+  that no reel names needs world knowledge a 300M embedder has only weakly. Limits
   that need a GPU are tracked together in #64.
 - Heavy stages are slow on a NAS, which is what remote workers are for
   ([0010](0010-always-on-workers-before-remote.md)).

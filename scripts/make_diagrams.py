@@ -828,7 +828,7 @@ def search() -> str:
         ".dim{opacity:.6}",
     ]
     kw = ["potato and leek soup", "soup with roast potato", "best potato soup"]
-    sem = ["warm broth for a cold night", "potato and leek soup", "soup with roast potato"]
+    sem = ["hearty stew for a cold night", "potato and leek soup", "soup with roast potato"]
     for col, items, start in (("kw", kw, 10), ("sem", sem, 22)):
         for i, s in enumerate(items):
             cls = f"{col}{i}"
@@ -843,7 +843,7 @@ def search() -> str:
     fused = [
         ("potato and leek soup", ".0325", 0, 1),
         ("soup with roast potato", ".0320", 1, 2),
-        ("warm broth for a cold…", ".0164", 2, 3),
+        ("hearty stew for a cold…", ".0164", 2, 3),
         ("best potato soup", ".0159", 3, 0),
     ]
     x = cols["fused"]

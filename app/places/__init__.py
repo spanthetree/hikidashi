@@ -3,7 +3,7 @@
 Calibrated against the real library rather than guessed at: of 420 captions,
 59 use a 📍 pin, 22 contain a street address, and 2 use a `Where:` label. The
 pin is by far the strongest signal and usually carries a venue name as well as
-an address — "📍Katz's Delicatessen — 205 E Houston St, New York, NY 10002" —
+an address — "📍Mabel's Deli — 118 Water St, New York, NY 10005" —
 which makes a much better Maps query than the street line alone.
 
 Nothing here is clever enough to be certain, so the bar is deliberately high:
@@ -101,9 +101,9 @@ def _tidy(raw: str, *, strict: bool) -> str | None:
     text = _HASHTAG.sub("", text)  # hashtags are never part of an address
     text = _LEAD.sub("", text)
 
-    # "Palo Duro Canyon — dramatic canyon views, hiking + ..." is a place with a
+    # "Cedar Hollow Canyon — red rock walls, a long hike + ..." is a place with a
     # description attached. Keep the name. An address keeps its whole line,
-    # because "Russ & Daughters — 179 E Houston St" is better than either half.
+    # because "Pearl & Sons — 140 Water St" is better than either half.
     if not _STREET.search(text):
         text = _SPLIT.split(text, 1)[0]
 

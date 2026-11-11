@@ -94,14 +94,14 @@ class TestDetect(unittest.TestCase):
             "recipe is on my blog",
             "DM me for the recipe",
             "Tap the link in our bio for more",
-            "linked in my @example.eats profile or comment BIRRIA to have it sent",
+            "linked in my @example.eats profile or comment ROLLS to have it sent",
             "the recipe can be found here - https://example.com/2023/12/rolls",
         ):
             with self.subTest(text=text):
                 self.assertTrue(sends_elsewhere(text))
         for text in (
             "Boil the noodles for 4 minutes",
-            "Comment and make me go viral",
+            "Comment below and tag a friend",
             "let's talk below in the comments",
         ):
             with self.subTest(text=text):

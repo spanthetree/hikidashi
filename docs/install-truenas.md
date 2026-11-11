@@ -11,7 +11,7 @@ and not a catalog app. [Unraid](install-unraid.md) ·
 
 > The file pulls the published images
 > (`ghcr.io/spanthetree/hikidashi-server`, `-worker`, `-worker-cuda`), which
-> each release publishes (#77), pinned to this release.
+> each release publishes (#77), at `:latest`.
 
 ## What's in the file
 
@@ -121,10 +121,11 @@ The desktop has to run the same release as the server.
 
 ## Updating
 
-The images are pinned to one release, such as `:0.12.0`, because the server
-and its worker must run the same one. To update, **Apps** → `hikidashi` →
-**Edit**, change the tag on **all three** images to the new version, and
-**Save**. TrueNAS pulls them and restarts the app. The database catches up
+The images follow `:latest`. TrueNAS pulls all three of an app's images
+together, so the server and its worker, which must run the same release, stay
+on one. When **Apps** shows an update for `hikidashi`, **Update** pulls them
+and restarts the app. To stay on one release instead, **Edit** the app and
+replace `latest` with it, such as `0.19.0`, on **all three** images. The database catches up
 with a new release on its own when the app starts, and the workers re-run
 only the stages whose version changed. [CHANGELOG.md](../CHANGELOG.md) lists
 what changed.

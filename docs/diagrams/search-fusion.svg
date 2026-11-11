@@ -40,7 +40,7 @@ text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);fo
 <g class="kw2"><rect class="row" x="20" y="178" width="260" height="24" rx="5"/>
 <text class="" x="30" y="194">3  best potato soup</text></g>
 <g class="sem0"><rect class="row" x="310" y="118" width="260" height="24" rx="5"/>
-<text class="" x="320" y="134">1  warm broth for a cold night</text></g>
+<text class="" x="320" y="134">1  hearty stew for a cold night</text></g>
 <g class="sem1"><rect class="row" x="310" y="148" width="260" height="24" rx="5"/>
 <text class="" x="320" y="164">2  potato and leek soup</text></g>
 <g class="sem2"><rect class="row" x="310" y="178" width="260" height="24" rx="5"/>
@@ -54,7 +54,7 @@ text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);fo
 <text class="" x="630" y="134">soup with roast potato</text><text class="s e" x="872" y="134">.0320</text>
 </g>
 <g class="f2"><rect class="row" x="620" y="118" width="260" height="24" rx="5"/>
-<text class="" x="630" y="134">warm broth for a cold…</text><text class="s e" x="872" y="134">.0164</text>
+<text class="" x="630" y="134">hearty stew for a cold…</text><text class="s e" x="872" y="134">.0164</text>
 </g>
 <g class="f3"><rect class="row" x="620" y="118" width="260" height="24" rx="5"/>
 <text class="" x="630" y="134">best potato soup</text><text class="s e" x="872" y="134">.0159</text>

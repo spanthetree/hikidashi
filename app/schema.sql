@@ -235,8 +235,8 @@ CREATE TABLE IF NOT EXISTS shopping_tick (
   PRIMARY KEY (user_id, line)
 );
 
--- The places a reel's caption names, as app/places reads them: "📍Katz's
--- Delicatessen — 205 E Houston St". Only reels that name one have rows;
+-- The places a reel's caption names, as app/places reads them: "📍Mabel's
+-- Deli — 118 Water St". Only reels that name one have rows;
 -- item.place_v records that the rest were read.
 CREATE TABLE IF NOT EXISTS item_place (
   shortcode TEXT NOT NULL REFERENCES item(shortcode) ON DELETE CASCADE,

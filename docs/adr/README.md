@@ -24,11 +24,12 @@ new: a later decision gets its own record and marks the old one
 | [0009](0009-local-models-only.md) | Local models only | Accepted | #2, #3, #4 |
 | [0010](0010-always-on-workers-before-remote.md) | Always-on workers before remote ones | Accepted | #72 |
 | [0011](0011-hybrid-search-rank-fusion.md) | Hybrid search by rank fusion, no reranker | Accepted | #4, #20 |
-| [0012](0012-nas-installs-templates-and-yaml.md) | NAS installs: Unraid templates and TrueNAS YAML, any user, no PUID | Accepted; its `HIKIDASHI_WORKER_TOKEN` note superseded by 0013 | #87 |
+| [0012](0012-nas-installs-templates-and-yaml.md) | NAS installs: Unraid templates and TrueNAS YAML, any user, no PUID | Accepted; its `HIKIDASHI_WORKER_TOKEN` note superseded by 0013, its TrueNAS pin by 0017 | #87 |
 | [0013](0013-standard-api-and-worker-tokens.md) | Standard tokens: user-scoped API tokens, admin-only worker tokens | Accepted | #103 |
 | [0014](0014-game-titles-from-evidence.md) | A reel's video game, decided from evidence | Accepted; supersedes 0006's precedence | #117 |
 | [0015](0015-filters-intersect.md) | Filters intersect | Accepted | #117 |
 | [0016](0016-polyform-noncommercial.md) | Source-available under PolyForm Noncommercial | Accepted | #122 |
+| [0017](0017-version-written-once.md) | The version is written once, in pyproject.toml | Accepted; supersedes 0012's TrueNAS pin | #123 |
 
 ## Adding one
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { segments } from "./caption";
 
-const place = { text: "11501 Custer Rd, Frisco", url: "https://maps.example/?q=custer" };
+const place = { text: "8800 Preston Rd, Frisco", url: "https://maps.example/?q=preston" };
 
 describe("segments", () => {
   it("leaves plain text alone", () => {
@@ -15,9 +15,9 @@ describe("segments", () => {
   });
 
   it("links mentions to the profile", () => {
-    expect(segments("Where: @litehousegrilldfw // here", [])).toEqual([
+    expect(segments("Where: @examplegrill // here", [])).toEqual([
       { kind: "text", text: "Where: " },
-      { kind: "mention", text: "@litehousegrilldfw", url: "https://www.instagram.com/litehousegrilldfw/" },
+      { kind: "mention", text: "@examplegrill", url: "https://www.instagram.com/examplegrill/" },
       { kind: "text", text: " // here" },
     ]);
   });
