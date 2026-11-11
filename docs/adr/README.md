@@ -28,6 +28,7 @@ new: a later decision gets its own record and marks the old one
 | [0013](0013-standard-api-and-worker-tokens.md) | Standard tokens: user-scoped API tokens, admin-only worker tokens | Accepted | #103 |
 | [0014](0014-game-titles-from-evidence.md) | A reel's video game, decided from evidence | Accepted; supersedes 0006's precedence | #117 |
 | [0015](0015-filters-intersect.md) | Filters intersect | Accepted | #117 |
+| [0016](0016-polyform-noncommercial.md) | Source-available under PolyForm Noncommercial | Accepted | #122 |
 
 ## Adding one
 

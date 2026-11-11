@@ -476,6 +476,13 @@
       {/if}
     {/if}
   {/if}
+
+  <section class="a-sec a-about">
+    <h2>{m.about_title()}</h2>
+    <p>{m.about_license()}
+      <a href="https://github.com/spanthetree/hikidashi#license" target="_blank" rel="noopener noreferrer">{m.about_terms()}</a></p>
+    <p class="hint">{m.about_not_affiliated()}</p>
+  </section>
 </main>
 
 <style>
@@ -530,6 +537,9 @@
     border: 1px solid var(--rule);
     border-radius: var(--radius);
   }
+
+  .a-about p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+  .a-about a { color: var(--accent); }
 
   .a-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .a-row label { font-size: 14px; }

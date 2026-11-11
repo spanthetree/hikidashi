@@ -670,5 +670,9 @@
   "side_worker_problem": "ワーカーに問題あり",
   "side_worker_lost": "ワーカー応答なし",
   "side_worker_stopped": "ワーカー停止中",
-  "side_worker_none": "ワーカーなし"
+  "side_worker_none": "ワーカーなし",
+  "about_title": "Hikidashiについて",
+  "about_license": "PolyForm Noncommercial License 1.0.0 のもと、非営利目的なら自由に使えます。",
+  "about_terms": "ライセンスとサードパーティの規約",
+  "about_not_affiliated": "Instagram および Meta とは提携しておらず、承認や後援も受けていません。"
 }
