@@ -11,6 +11,7 @@ Runs on your machine · local models · your data stays yours · one library eac
 [![version](https://img.shields.io/badge/version-0.18.2-blue)](CHANGELOG.md)
 [![tests](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml)
 [![status: alpha](https://img.shields.io/badge/status-alpha-orange)](CHANGELOG.md)
+[![license: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-lightgrey)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776ab?logo=python&logoColor=white)](#quick-start)
 [![Node 20+](https://img.shields.io/badge/node-20%2B-5fa04e?logo=nodedotjs&logoColor=white)](#quick-start)
 
@@ -20,6 +21,7 @@ Runs on your machine · local models · your data stays yours · one library eac
 [Sharing it](#sharing-it-with-others) ·
 [Configuration](#configuration) ·
 [Docs](#documentation) ·
+[License](#license) ·
 [Changelog](CHANGELOG.md)
 
 </div>
@@ -573,6 +575,17 @@ read it: add `UV_ENV_FILE=.env`.
   without the wrapper
 - **[Testing](docs/testing.md)**: unit, property and browser tests, coverage,
   ruff and mypy, and what CI runs when
-- **[Contributing](CONTRIBUTING.md)**: branches, pull requests, and what
-  every PR must update
+- **[Contributing](CONTRIBUTING.md)**: licensing your contribution, branches,
+  pull requests, and what every PR must update
 - **[Changelog](CHANGELOG.md)**: what has shipped
+
+## License
+
+Hikidashi is **source-available**, under the
+[PolyForm Noncommercial License 1.0.0](LICENSE). Use it, copy it, change it
+and share it, free, for any noncommercial purpose: personal use, hobby
+projects, research, and charities, schools and public bodies. Selling it,
+repackaging it, or building it into something sold needs other terms; ask.
+Contributions are welcome, on the terms in
+[CONTRIBUTING](CONTRIBUTING.md#licensing-your-contribution). Why this license:
+[decision record 0016](docs/adr/0016-polyform-noncommercial.md).

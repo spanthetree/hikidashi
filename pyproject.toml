@@ -3,6 +3,10 @@ name = "hikidashi"
 version = "0.18.2"
 description = "A self-hosted, searchable library for Instagram saves"
 readme = "README.md"
+# Source-available, not open source: free for any noncommercial use (#122,
+# docs/adr/0016-polyform-noncommercial.md).
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 
 # Nothing by default: app/db.py and app/importer/ are stdlib-only by design, so
