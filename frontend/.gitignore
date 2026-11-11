@@ -1,0 +1,7 @@
+node_modules/
+.svelte-kit/
+coverage/
+# Playwright (npm run e2e)
+test-results/
+playwright-report/
+e2e/.auth/

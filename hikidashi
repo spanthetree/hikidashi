@@ -1,0 +1,514 @@
+#!/bin/sh
+# Hikidashi, run the same way whether it is installed with uv or Docker Compose.
+#
+#   ./hikidashi [--uv | --docker] start [--build] [--ai] | stop | restart | status
+#   ./hikidashi [--uv | --docker] logs [-f] [worker | server-worker]
+#   ./hikidashi [--uv | --docker] <pipeline command> [flags]
+#
+# Pipeline commands (import, enrich, transcribe, ocr, tag, recipe, embed,
+# places, pipeline, worker), user, token and export are handed to the
+# `hikidashi` CLI: `uv run hikidashi ...`, or `docker compose exec <service>
+# hikidashi ...` in the container whose image has the command's tools:
+# worker for transcribe, ocr, tag and recipe, app for the rest. This script
+# adds what that CLI cannot do from inside a container: starting and stopping
+# the server, and the workers that run the pipeline beside it.
+#
+# POSIX sh, so the host needs neither Python nor bash.
+
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+cd "$ROOT"
+
+CONTAINER=hikidashi
+WORKER_CONTAINER=hikidashi-worker
+
+die() { echo "hikidashi: $*" >&2; exit 1; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# Hikidashi was called ReelVault before 0.18.0. Settings under the old
+# REELVAULT_ names still count, until 0.19.0: an .env that has them is
+# rewritten to the new names once, kept as .env.reelvault.bak, since Compose
+# reads .env itself; and one set in the shell stands in for its HIKIDASHI_
+# name when that is unset.
+if [ -f .env ] && grep -q '^[[:space:]]*\(export[[:space:]]\{1,\}\)\{0,1\}REELVAULT_' .env; then
+	cp -p .env .env.reelvault.bak
+	sed 's/REELVAULT_/HIKIDASHI_/g' .env.reelvault.bak >.env
+	echo "hikidashi: renamed the REELVAULT_ settings in .env to HIKIDASHI_ (the old file is .env.reelvault.bak)" >&2
+fi
+for name in $(env | sed -n 's/^REELVAULT_\([A-Z0-9_]*\)=.*/\1/p'); do
+	eval "[ -n \"\${HIKIDASHI_$name+set}\" ] || export HIKIDASHI_$name=\"\$REELVAULT_$name\""
+done
+
+usage() {
+	cat <<EOF
+usage: ./hikidashi [--uv | --docker] <command> [flags]
+
+server:
+  start [--build] [--ai]   start the server and the workers (Docker: --build
+                           rebuilds the image, --ai also starts Ollama)
+  stop                     stop them
+  restart                  stop, then start, with any changes to .env
+  status                   are they running, and the pipeline's counts
+  logs [-f] [worker | server-worker]
+                           the server's log, or a worker's; -f follows it
+
+pipeline:
+  import [--user NAME] <zip>
+                           import an Instagram export, into NAME's library
+  enrich [--media]         fetch metadata, thumbnails and videos
+  transcribe               transcribe speech
+  ocr                      read on-screen text
+  tag [--llm]              tag from hashtags, and the model
+  recipe                   find recipes, read out ingredients and steps
+  embed                    embed for semantic search
+  places                   find places in captions, put them on the map
+  pipeline [<zip>]         all of the above, in order, stopping at a failure
+  worker [--once] [--stages asr,ocr,...]
+                           run the stages on new reels as they arrive; start
+                           runs one for you, with HIKIDASHI_LOCAL_STAGES
+
+accounts:
+  user add|passwd|rename|list|disable|enable|invite
+                           with HIKIDASHI_AUTH=local, who can sign in
+  token make|list|revoke   API tokens for scripts, worker tokens for workers
+
+export:
+  export <format> [--user NAME] <out>
+                           write recipes or the library out for other tools
+
+\`./hikidashi <command> --help\` lists a pipeline command's flags.
+
+mode: --uv or --docker, else HIKIDASHI_MODE, else docker if the "$CONTAINER"
+container exists or uv is not installed, otherwise uv.
+EOF
+}
+
+# --- mode --------------------------------------------------------------------
+
+MODE=${HIKIDASHI_MODE:-}
+case ${1:-} in
+	--uv) MODE=uv; shift ;;
+	--docker) MODE=docker; shift ;;
+esac
+
+detect_mode() {
+	if have docker && docker container inspect "$CONTAINER" >/dev/null 2>&1; then
+		echo docker
+	elif ! have uv; then
+		echo docker
+	else
+		echo uv
+	fi
+}
+
+[ -n "$MODE" ] || MODE=$(detect_mode)
+case $MODE in
+	uv) have uv || die "uv mode, but uv is not installed (https://docs.astral.sh/uv/)" ;;
+	docker) have docker || die "docker mode, but docker is not installed" ;;
+	*) die "HIKIDASHI_MODE must be uv or docker, not '$MODE'" ;;
+esac
+
+# --- settings ----------------------------------------------------------------
+
+# Compose reads .env itself; uv reads it only when told to. So under uv, every
+# `uv run` below gets it as UV_ENV_FILE, and without this a library set to
+# HIKIDASHI_AUTH=local in .env would start with no sign-in at all. As with
+# Compose, a variable already set in the shell wins over the file.
+if [ "$MODE" = uv ] && [ -z "${UV_ENV_FILE:-}" ] && [ -f .env ]; then
+	export UV_ENV_FILE=.env
+fi
+
+# A setting this script reads itself: the shell's, else (under uv) the env
+# file's, else the default. Plain KEY=value lines, as .env.example has them.
+setting() {
+	eval "val=\${$1:-}"
+	if [ -z "$val" ] && [ -n "${UV_ENV_FILE:-}" ] && [ -f "$UV_ENV_FILE" ]; then
+		val=$(sed -n "s/^[[:space:]]*\(export[[:space:]]\{1,\}\)\{0,1\}$1=//p" "$UV_ENV_FILE" |
+			tail -n 1 | sed -e 's/[[:space:]]\{1,\}#.*//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'\$/\\1/")
+	fi
+	echo "${val:-$2}"
+}
+
+HOST=$(setting HIKIDASHI_HOST 0.0.0.0)
+PORT=$(setting HIKIDASHI_PORT 8080)
+RUN_DIR=$(setting HIKIDASHI_RUN data/run)
+LOG_DIR=$(setting HIKIDASHI_LOGS data/logs)
+PIDFILE=$RUN_DIR/server.pid
+# uvicorn's stdout. The app writes server.log itself, rotated; a redirect into
+# the same file would double every line and keep writing past each rotation.
+OUTFILE=$LOG_DIR/server.out
+# The same for the worker, which writes worker.log.
+WORKER_PIDFILE=$RUN_DIR/worker.pid
+WORKER_OUTFILE=$LOG_DIR/worker.out
+STOP_TIMEOUT=$(setting HIKIDASHI_STOP_TIMEOUT 10)
+
+# --- uv ----------------------------------------------------------------------
+
+# The pid in a pidfile, if that process is alive and is ours: its command line
+# has $2 in it. A pidfile left by a crash or a reboot is removed: its pid may
+# since belong to anything.
+uv_pid_of() {
+	[ -f "$1" ] || return 1
+	pid=$(cat "$1" 2>/dev/null || true)
+	case $pid in '' | *[!0-9]*) rm -f "$1"; return 1 ;; esac
+	if kill -0 "$pid" 2>/dev/null && ps -p "$pid" -o args= 2>/dev/null | grep -q "$2"; then
+		echo "$pid"
+		return 0
+	fi
+	rm -f "$1"
+	return 1
+}
+
+uv_pid() { uv_pid_of "$PIDFILE" uvicorn; }
+uv_worker_pid() { uv_pid_of "$WORKER_PIDFILE" "hikidashi worker"; }
+
+# Signal a process's whole group: `uv run` starts its command as a child, and
+# SIGKILL, unlike SIGTERM, is not passed on to it.
+uv_signal() {
+	kill "-$1" "-$2" 2>/dev/null || kill "-$1" "$2" 2>/dev/null || true
+}
+
+# The web UI is built from frontend/ into app/web, which is not checked in.
+# Build it when it is missing, or older than its sources after a pull.
+uv_web() {
+	built=app/web/index.html
+	if [ -f "$built" ] && [ -z "$(find frontend/src frontend/static frontend/messages \
+			frontend/project.inlang frontend/package-lock.json -newer "$built" 2>/dev/null | head -n 1)" ]; then
+		return 0
+	fi
+	have npm || die "the web UI needs building and npm is not installed (Node 20 or later)"
+	# Older Node fails deep in the translation compiler with "LixError: unreachable".
+	node -e 'process.exit(+(process.versions.node.split(".")[0] < 20))' ||
+		die "the web UI needs Node 20 or later to build; this is Node $(node --version)"
+	echo "building the web UI..."
+	if [ ! -d frontend/node_modules ] || [ frontend/package-lock.json -nt frontend/node_modules ]; then
+		npm ci --prefix frontend --no-audit --no-fund >/dev/null || die "npm ci failed in frontend/"
+	fi
+	npm run build --prefix frontend >/dev/null || die "the web UI did not build; npm run build --prefix frontend"
+}
+
+# Start a command in the background, in a process group of its own so stop can
+# signal all of it, with its output appended to $1 and its pid in $2. setsid
+# where there is one (Linux), else job control, which needs a terminal. A bad
+# port or a broken import fails within a moment; say so here rather than leave
+# a pidfile for a process that is not there.
+uv_spawn() {
+	out=$1 pidfile=$2
+	shift 2
+	if have setsid; then
+		setsid nohup "$@" >>"$out" 2>&1 </dev/null &
+	else
+		set -m 2>/dev/null || true
+		nohup "$@" >>"$out" 2>&1 </dev/null &
+		set +m
+	fi
+	pid=$!
+	echo "$pid" >"$pidfile"
+	sleep 2
+	if ! kill -0 "$pid" 2>/dev/null; then
+		rm -f "$pidfile"
+		echo "hikidashi: $(basename -- "$pidfile" .pid) exited at once. The end of $out:" >&2
+		tail -n 20 "$out" >&2
+		return 1
+	fi
+}
+
+uv_start() {
+	mkdir -p "$RUN_DIR" "$LOG_DIR"
+	# The container runs as root, so directories it made are root's.
+	for dir in "$RUN_DIR" "$LOG_DIR"; do
+		[ -w "$dir" ] || die "$dir is not writable; if Docker made it, sudo chown -R \"\$(id -un)\" data"
+	done
+	if pid=$(uv_pid); then
+		echo "already running (pid $pid) at http://$HOST:$PORT"
+	else
+		# A bare `uv sync` leaves the web stack out (#86).
+		uv run python -c 'import fastapi, uvicorn' 2>/dev/null ||
+			die "the server needs its extra: uv sync --extra server --extra worker"
+		uv_web
+		uv_spawn "$OUTFILE" "$PIDFILE" uv run uvicorn app.api.main:app --host "$HOST" \
+			--port "$PORT" --workers 1 || return 1
+		echo "started (pid $pid) at http://$HOST:$PORT"
+		echo "log: $LOG_DIR/server.log"
+	fi
+	if pid=$(uv_worker_pid); then
+		echo "worker already running (pid $pid)"
+	else
+		uv_spawn "$WORKER_OUTFILE" "$WORKER_PIDFILE" uv run hikidashi worker || return 1
+		echo "worker started (pid $pid), stages: $(setting HIKIDASHI_LOCAL_STAGES all)"
+		echo "log: $LOG_DIR/worker.log"
+	fi
+}
+
+# Stop one process: $1 names it, $2 is its pid, $3 its pidfile. The worker
+# needs a moment on SIGTERM to give back the reels it holds.
+uv_stop_one() {
+	uv_signal TERM "$2"
+	waited=0
+	while kill -0 "$2" 2>/dev/null; do
+		if [ "$waited" -ge "$STOP_TIMEOUT" ]; then
+			echo "$1: no exit after ${STOP_TIMEOUT}s, killing"
+			uv_signal KILL "$2"
+			break
+		fi
+		sleep 1
+		waited=$((waited + 1))
+	done
+	rm -f "$3"
+	echo "$1 stopped (pid $2)"
+}
+
+uv_stop() {
+	stopped=
+	if pid=$(uv_worker_pid); then
+		uv_stop_one worker "$pid" "$WORKER_PIDFILE"
+		stopped=1
+	fi
+	if pid=$(uv_pid); then
+		uv_stop_one server "$pid" "$PIDFILE"
+		stopped=1
+	fi
+	[ -n "$stopped" ] || echo "not running"
+}
+
+uv_status() {
+	if pid=$(uv_pid); then
+		echo "  process     running (pid $pid)"
+		running=0
+	else
+		echo "  process     not running"
+		running=3
+	fi
+	if pid=$(uv_worker_pid); then
+		echo "  worker      running (pid $pid)"
+	else
+		echo "  worker      not running"
+	fi
+	uv run hikidashi status || true
+	return $running
+}
+
+# logs [-f] [worker | server-worker]: which log, and whether to follow it.
+logs_args() {
+	follow= which=server
+	for arg; do
+		case $arg in
+			-f | --follow) follow=1 ;;
+			worker | server | server-worker) which=$arg ;;
+			*) die "logs takes -f and worker or server-worker, not '$arg'" ;;
+		esac
+	done
+}
+
+uv_logs() {
+	logs_args "$@"
+	# Under uv one worker runs every stage.
+	[ "$which" = server-worker ] && which=worker
+	log=$LOG_DIR/$which.log
+	[ -f "$log" ] || die "no log yet at $log; ./hikidashi start first"
+	if [ -n "$follow" ]; then exec tail -n 100 -F "$log"; fi
+	exec tail -n 100 "$log"
+}
+
+# --- docker ------------------------------------------------------------------
+
+compose() { docker compose "$@"; }
+
+# Is a container running? The app's, unless named.
+docker_running() {
+	[ "$(docker container inspect -f '{{.State.Running}}' "${1:-$CONTAINER}" 2>/dev/null)" = true ]
+}
+
+# The compose service whose image has a command's tools (#86): the worker
+# image for ASR, OCR, tag and recipe; the server image for everything else.
+service_for() {
+	case $1 in
+		transcribe | ocr | tag | recipe) echo worker ;;
+		*) echo app ;;
+	esac
+}
+
+docker_start() {
+	build= profile=
+	for arg; do
+		case $arg in
+			--build) build=--build ;;
+			--ai) profile="--profile ai" ;;
+			*) die "start takes --build and --ai, not '$arg'" ;;
+		esac
+	done
+	# shellcheck disable=SC2086  # $profile and $build are one or two words, or none
+	compose $profile up -d $build
+}
+
+docker_status() {
+	if docker_running; then
+		compose ps
+		docker_exec app status || true
+		return 0
+	fi
+	echo "  container   not running"
+	return 3
+}
+
+# The host folder mounted at /data: HIKIDASHI_DATA, as the running container
+# has it, so a value in .env counts though this script never reads .env. Else
+# HIKIDASHI_DATA here, else ./data. Without symlinks, as `pwd -P` gives paths.
+data_dir() {
+	src=$(docker container inspect -f \
+		'{{range .Mounts}}{{if eq .Destination "/data"}}{{.Source}}{{end}}{{end}}' \
+		"$CONTAINER" 2>/dev/null) || src=
+	[ -n "$src" ] || src=${HIKIDASHI_DATA:-data}
+	case $src in /*) ;; *) src=$ROOT/$src ;; esac
+	(CDPATH= cd -- "$src" 2>/dev/null && pwd -P) || echo "$src"
+}
+
+# Paths on the host are not paths in the container. Anything under the data
+# folder is, because that is the volume mounted at /data; anything else
+# cannot be reached.
+container_path() {
+	[ -e "$1" ] || { echo "$1"; return; }
+	abs=$(CDPATH= cd -- "$(dirname -- "$1")" && pwd -P)/$(basename -- "$1")
+	data=$(data_dir)
+	case $abs in
+		"$data"/*) echo "/data/${abs#"$data"/}" ;;
+		*) die "$1 is outside $data, so the container cannot see it; move it into $data/imports" ;;
+	esac
+}
+
+# The same for where an export goes, which need not exist yet: under the data
+# folder it is made here, so that the container can write to it.
+container_out() {
+	case $1 in
+		/*) abs=$1 ;;
+		*) abs=$ROOT/$1 ;;
+	esac
+	data=$(data_dir)
+	# The deepest folder that exists, without symlinks, then the rest as given.
+	dir=$abs rest=
+	while [ ! -d "$dir" ]; do
+		rest=/$(basename -- "$dir")$rest
+		dir=$(dirname -- "$dir")
+	done
+	abs=$(CDPATH= cd -- "$dir" && pwd -P)$rest
+	case $abs in
+		"$data"/*) ;;
+		*) die "$1 is outside $data, so the container cannot write it; try $data/exports/" ;;
+	esac
+	case $abs in
+		*.json | *.csv | *.zip | *.paprikarecipes)
+			mkdir -p "$(dirname -- "$abs")"
+			dir=$(container_path "$(dirname -- "$abs")")
+			echo "$dir/$(basename -- "$abs")"
+			;;
+		*)
+			mkdir -p "$abs"
+			container_path "$abs"
+			;;
+	esac
+}
+
+# docker_exec <service> <command> [args]
+docker_exec() {
+	service=$1
+	container=$CONTAINER
+	[ "$service" = worker ] && container=$WORKER_CONTAINER
+	if ! docker_running "$container"; then
+		# A server-only setup (docker-compose.server-only.yml) has no worker.
+		[ "$service" = worker ] && ! docker container inspect "$container" >/dev/null 2>&1 &&
+			die "no worker container here: $2 runs on a worker, such as a desktop's with
+HIKIDASHI_SERVER set (see docs/remote-workers.md)"
+		die "the $service container is not running; ./hikidashi start first"
+	fi
+	cmd=$2
+	shift 2
+	# import <zip>, pipeline [<zip>] and export <format> <out> are the
+	# commands that take a path: the argument that is not a flag, or the value
+	# of --user or --format, or export's format.
+	if [ "$cmd" = import ] || [ "$cmd" = pipeline ] || [ "$cmd" = export ]; then
+		first=
+		[ "$cmd" = export ] && first=1
+		n=$#
+		value=
+		while [ "$n" -gt 0 ]; do
+			arg=$1
+			shift
+			if [ -n "$value" ]; then value=
+			elif [ "$arg" = --user ] || [ "$arg" = --format ]; then value=1
+			elif [ "${arg#-}" != "$arg" ]; then :
+			elif [ -n "$first" ]; then first=
+			elif [ "$cmd" = export ]; then arg=$(container_out "$arg")
+			else arg=$(container_path "$arg")
+			fi
+			set -- "$@" "$arg"
+			n=$((n - 1))
+		done
+	fi
+	# -T without a terminal (cron), or compose refuses to run.
+	tty=-T
+	if [ -t 0 ] && [ -t 1 ]; then tty=; fi
+	# The container has the environment it was started with. These are the
+	# ones a single run can set: HIKIDASHI_GEOCODER=public ./hikidashi places.
+	env=
+	for var in HIKIDASHI_GEOCODER HIKIDASHI_GEOCODER_DELAY; do
+		if printenv "$var" >/dev/null; then env="$env -e $var"; fi
+	done
+	rc=0
+	docker compose exec $tty $env "$service" hikidashi "$cmd" "$@" || rc=$?
+	# 126/127: the image was built before the CLI existed.
+	if [ "$rc" -eq 126 ] || [ "$rc" -eq 127 ]; then
+		echo "hikidashi: the image has no hikidashi command; ./hikidashi start --build" >&2
+	fi
+	return "$rc"
+}
+
+# The pipeline in three parts, each where its tools are. Each part holds the
+# pipeline lock, a file on the shared /data, while it runs. Not an && chain:
+# set -e is what stops at a failure, here and inside docker_exec.
+docker_pipeline() {
+	docker_exec app pipeline "$@" --steps=enrich
+	docker_exec worker pipeline --steps=transcribe,ocr,tag,recipe
+	docker_exec app pipeline --steps=embed,places
+}
+
+# --- dispatch ----------------------------------------------------------------
+
+[ $# -gt 0 ] || { usage >&2; exit 2; }
+cmd=$1
+shift
+
+case $MODE:$cmd in
+	*:-h | *:--help | *:help) usage ;;
+
+	uv:start) [ $# -eq 0 ] || die "--build and --ai are Docker options"; uv_start ;;
+	uv:stop) uv_stop ;;
+	uv:restart) uv_stop && uv_start ;;
+	uv:status) uv_status ;;
+	uv:logs) uv_logs "$@" ;;
+
+	docker:start) docker_start "$@" ;;
+	docker:stop) compose --profile ai stop ;;
+	# Recreated, not `compose restart`, which keeps each container's old
+	# environment: a change to .env would apply to nothing. No services named:
+	# naming one starts it even where a profile leaves it out.
+	docker:restart) compose up -d --force-recreate ;;
+	docker:status) docker_status ;;
+	docker:logs)
+		logs_args "$@"
+		service=app
+		[ "$which" = server ] || service=$which
+		if [ -n "$follow" ]; then exec docker compose logs -f "$service"; fi
+		exec docker compose logs "$service"
+		;;
+
+	*:import | *:enrich | *:transcribe | *:ocr | *:tag | *:recipe | *:embed | *:places | *:pipeline | *:worker | *:user | *:token | *:export)
+		if [ "$MODE" = uv ]; then
+			exec uv run hikidashi "$cmd" "$@"
+		fi
+		if [ "$cmd" = pipeline ]; then docker_pipeline "$@"; exit; fi
+		docker_exec "$(service_for "$cmd")" "$cmd" "$@"
+		;;
+
+	*) echo "hikidashi: unknown command '$cmd'" >&2; usage >&2; exit 2 ;;
+esac

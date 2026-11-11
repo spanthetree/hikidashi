@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!-- The Hikidashi server: the web UI and API, import, and the places locator.
+     It needs Hikidashi-Server-Worker beside it, on the same /data, to fetch
+     and embed new reels. See docs/install-unraid.md. -->
+<Container version="2">
+  <Name>Hikidashi</Name>
+  <Repository>ghcr.io/spanthetree/hikidashi-server:latest</Repository>
+  <Registry>https://github.com/spanthetree/hikidashi/pkgs/container/hikidashi-server</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/spanthetree/hikidashi/issues</Support>
+  <Project>https://github.com/spanthetree/hikidashi</Project>
+  <ReadMe>https://github.com/spanthetree/hikidashi/blob/master/docs/install-unraid.md</ReadMe>
+  <Overview>A self-hosted, searchable library for your Instagram saves. Import your data export, and Hikidashi downloads each reel and makes the archive searchable by what is said in it, written on it and shown in it, with local models only.[br][br]This is the server: the web UI, the API and import. Install [b]Hikidashi-Server-Worker[/b] too, with the same Data path, or new reels are never fetched. [b]Hikidashi-Worker[/b] (or [b]-Worker-CUDA[/b]) transcribes, reads, tags and finds recipes.[br][br]Keep Data on a pool, such as /mnt/cache/appdata/hikidashi, never /mnt/user: SQLite on a FUSE share can be corrupted.</Overview>
+  <Category>MediaApp:Video Productivity:</Category>
+  <WebUI>http://[IP]:[PORT:8080]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/spanthetree/hikidashi/master/deploy/unraid/hikidashi.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/spanthetree/hikidashi/master/deploy/unraid/icon.png</Icon>
+  <!-- Unraid's nobody:users, so appdata is not root-owned; host.docker.internal
+       for a geocoder on the host; and a health probe that needs no sign-in. -->
+  <ExtraParams>--user 99:100 --restart=unless-stopped --add-host=host.docker.internal:host-gateway --health-cmd="python -c 'import urllib.request as u; u.urlopen(\"http://localhost:8080/api/auth\")'" --health-interval=30s --health-timeout=5s --health-retries=3 --health-start-period=10s</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires>Hikidashi-Server-Worker, on the same Data path, to fetch and embed new reels.</Requires>
+  <Config Name="Data" Target="/data" Default="/mnt/cache/appdata/hikidashi" Mode="rw" Description="The database, media and models. A pool, never /mnt/user. The same path on every Hikidashi container." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/hikidashi</Config>
+  <Config Name="Web UI port" Target="8080" Default="8080" Mode="tcp" Description="The web UI and API. Remote workers reach the server here too." Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+  <Config Name="Accounts" Target="HIKIDASHI_AUTH" Default="none|local|proxy" Mode="" Description="none: no sign-in, one library. local: accounts, claimed with the setup link in the log on first start. proxy: a signing-in proxy names the user." Type="Variable" Display="always" Required="true" Mask="false">none</Config>
+  <Config Name="Public address" Target="HIKIDASHI_ORIGIN" Default="" Mode="" Description="The address browsers use, as https://reels.example.com, behind a reverse proxy. Empty otherwise." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Proxy header" Target="HIKIDASHI_PROXY_HEADER" Default="Remote-User" Mode="" Description="proxy accounts: the header naming the user." Type="Variable" Display="advanced" Required="false" Mask="false">Remote-User</Config>
+  <Config Name="Trusted proxies" Target="HIKIDASHI_TRUSTED_PROXIES" Default="127.0.0.1/32,::1/128" Mode="" Description="proxy accounts: the addresses that header is believed from, as the container sees them." Type="Variable" Display="advanced" Required="false" Mask="false">127.0.0.1/32,::1/128</Config>
+  <Config Name="Proxy creates accounts" Target="HIKIDASHI_PROXY_CREATES" Default="" Mode="" Description="proxy accounts: 1 makes an account for a name that has none." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Geocoder" Target="HIKIDASHI_GEOCODER" Default="" Mode="" Description="A Nominatim to look places up on, or public for OpenStreetMap's. Empty: no lookups, and no map." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Geocoder delay" Target="HIKIDASHI_GEOCODER_DELAY" Default="1" Mode="" Description="Seconds between lookups. The public server asks for 1." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
+  <Config Name="Map tiles" Target="HIKIDASHI_TILES" Default="" Mode="" Description="Map tiles, as https://tiles.example.com/{z}/{x}/{y}.png. Empty: OpenStreetMap's." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Map tiles credit" Target="HIKIDASHI_TILES_ATTRIBUTION" Default="" Mode="" Description="The credit shown on the map, as HTML." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+</Container>

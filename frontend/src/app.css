@@ -1,0 +1,168 @@
+/* Design tokens and the few rules every page shares. Everything else lives in
+   the component that draws it.
+
+   These are the Instagram theme, and the defaults every theme starts from.
+   The others, in themes/, override the tokens for their data-theme on <html>
+   and add their own motion; data-scheme picks light or dark
+   (src/lib/theme.svelte.ts). */
+:root {
+  /* Instagram's palette: white and near-black with grey rules, its blue for
+     anything you can act on, and the brand gradient kept for a few marks. */
+  --paper: #fff;
+  --surface: #fff;
+  --surface-2: #efefef;
+  --surface-3: #dbdbdb;
+  --field: #efefef;
+  --ink: #0c1014;
+  --ink-2: #363636;
+  --muted: #737373;
+  --rule: #dbdbdb;
+  /* --accent is for text and rings; --accent-fill is the button blue, which
+     is too light for small text on white. */
+  --accent: #0074cc;
+  --accent-fill: #0095f6;
+  --accent-soft: #e0f1ff;
+  --ok: #0a7d45;
+  --warn: #8a5d00;
+  --risk: #c92a3e;
+  --on-accent: #fff;
+  --accent-fill-hover: #1877f2;
+  --brand: linear-gradient(45deg, #feda75 0%, #fa7e1e 25%, #d62976 50%, #962fbf 75%, #4f5bd5 100%);
+  /* Japanese falls through to the first font that has it. Without these a
+     Windows browser draws kana in the mono labels and chips with MS Gothic. */
+  --cjk: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI",
+         "Yu Gothic", Meiryo;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, var(--cjk), monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, var(--cjk), sans-serif;
+  /* Labels and buttons, then the wordmark and headings: where a theme's
+     faces show, besides --sans for the text itself. */
+  --display: var(--sans);
+  --title: var(--display);
+
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  --topbar-h: 53px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: light;
+  /* The detail sheet locks page scroll; a reserved gutter keeps the grid from
+     jumping sideways when the scrollbar goes away. */
+  scrollbar-gutter: stable;
+}
+
+:root[data-scheme="dark"] {
+  --paper: #0c1014;
+  --surface: #0c1014;
+  --surface-2: #25292e;
+  --surface-3: #343a40;
+  --field: #25292e;
+  --ink: #f5f5f5;
+  --ink-2: #d4d4d4;
+  --muted: #a8a8a8;
+  --rule: #30363c;
+  --accent: #0095f6;
+  --accent-fill: #0095f6;
+  --accent-soft: #0b2438;
+  --ok: #4cc38a;
+  --warn: #e0ae4e;
+  --risk: #ff6b78;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+body.is-locked { overflow: hidden; }
+
+/* Japanese has no spaces to break at. Headings and short prose break between
+   phrases rather than mid-word where the browser can (Chrome); captions and
+   other people's text are left to the default. */
+:lang(ja) :is(h1, h2, h3, .empty p, .lede, .r-note) { word-break: auto-phrase; }
+
+button, input, select { font: inherit; color: inherit; }
+
+h1, h2, h3 { font-family: var(--title); }
+.btn { font-family: var(--display); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+code { font-family: var(--mono); }
+
+/* ---------- shared pieces ---------- */
+.btn {
+  padding: 7px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease;
+}
+
+.btn:hover { background: var(--surface-3); }
+.btn.primary { background: var(--accent-fill); color: var(--on-accent); }
+.btn.primary:hover { background: var(--accent-fill-hover); }
+.btn:disabled { opacity: 0.45; cursor: default; pointer-events: none; }
+
+.hint { margin: 0; font-size: 12px; color: var(--muted); white-space: pre-line; }
+
+.mention { color: var(--accent); text-decoration: none; }
+.mention:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+.empty {
+  max-width: 54ch;
+  margin: 40px auto;
+  padding: 26px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.empty h3 { margin: 0; }
+.empty p { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+.page {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.page h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.01em; }
+.page .lede { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 62ch; }
+.page .lede code { font-size: 12.5px; }
+
+.back { align-self: flex-start; font-size: 13px; color: var(--muted); text-decoration: none; }
+.back:hover { color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

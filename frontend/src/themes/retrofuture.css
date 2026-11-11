@@ -1,0 +1,206 @@
+/* Retrofuturism: the space age as the fifties drew it. Cream, atomic
+   orange and turquoise by day; a midnight sky of stars by night. Futura-ish
+   Jost with Righteous for titles, capsule buttons, print-style offset
+   shadows, an atom orbiting the chosen row, and a starburst when you
+   press. */
+@import "@fontsource/righteous/400.css";
+@import "@fontsource/jost/400.css";
+@import "@fontsource/jost/500.css";
+@import "@fontsource/jost/600.css";
+@import "@fontsource/jost/700.css";
+
+:root[data-theme="retrofuture"] {
+  --paper: #f3e9d2;
+  --surface: #faf4e4;
+  --surface-2: #ece0c2;
+  --surface-3: #e0d0a8;
+  --field: #fffaf0;
+  --ink: #1b2a38;
+  --ink-2: #34485a;
+  --muted: #5c6a73;
+  --rule: #d6c49c;
+  --accent: #0b6e6b;
+  --accent-fill: #d4491f;
+  --accent-fill-hover: #b83c16;
+  --accent-soft: #d4efec;
+  --on-accent: #fff;
+  --ok: #2a7a3a;
+  --warn: #8a5d00;
+  --risk: #b3261e;
+  --brand: conic-gradient(from 20deg, #d4491f, #f2b134, #3fb8af, #0b6e6b, #d4491f);
+  --sans: "Jost", system-ui, -apple-system, "Segoe UI", var(--cjk), sans-serif;
+  --display: "Jost", system-ui, var(--cjk), sans-serif;
+  --title: "Righteous", "Jost", var(--cjk), sans-serif;
+  --print: #3fb8af;
+  --sky: none;
+
+  --radius-sm: 6px;
+  --radius: 14px;
+  --radius-lg: 22px;
+
+  color-scheme: light;
+}
+
+:root[data-theme="retrofuture"][data-scheme="dark"] {
+  --paper: #0d1b2a;
+  --surface: #13263a;
+  --surface-2: #1d3550;
+  --surface-3: #284563;
+  --field: #0f2133;
+  --ink: #f5ecd7;
+  --ink-2: #d9cfb6;
+  --muted: #9fb0bf;
+  --rule: #2b4a66;
+  --accent: #5fd3c8;
+  --accent-fill: #f08a3c;
+  --accent-fill-hover: #ffa45c;
+  --accent-soft: #163a4a;
+  --on-accent: #1a1206;
+  --ok: #7fdc9a;
+  --warn: #f2b134;
+  --risk: #ff8a7a;
+  --print: #d4491f;
+  /* Stars, scattered at three sizes. */
+  --sky:
+    radial-gradient(2px 2px at 20px 30px, #f5ecd7 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 90px 120px, #f5ecd7 50%, transparent 51%),
+    radial-gradient(3px 3px at 160px 60px, #f2b134 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 230px 170px, #5fd3c8 50%, transparent 51%);
+
+  color-scheme: dark;
+}
+
+/* ---------- type ---------- */
+:root[data-theme="retrofuture"] body { font-size: 15.5px; }
+:root[data-theme="retrofuture"] .brand strong { font-size: 20px; font-weight: 400; letter-spacing: 0.01em; }
+:root[data-theme="retrofuture"] .brand strong::after {
+  content: "✦";
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--accent-fill);
+  animation: rf-spin 8s linear infinite;
+}
+:root[data-theme="retrofuture"] :is(.page h1, .sheet-head h2) { font-weight: 400; }
+:root[data-theme="retrofuture"] :is(.slabel, .d-label, .r-label, legend, .btn, .upload) {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+:root[data-theme="retrofuture"] :is(.slabel, .d-label, .r-label, legend) { font-size: 11.5px; }
+:root[data-theme="retrofuture"] :is(.btn, .upload) { font-size: 12.5px; }
+
+/* ---------- the sky ---------- */
+:root[data-theme="retrofuture"] body {
+  background:
+    var(--sky) 0 0 / 260px 220px,
+    radial-gradient(60% 50% at 100% 0%, color-mix(in srgb, var(--print) 14%, transparent), transparent 70%) fixed,
+    var(--paper);
+}
+:root[data-theme="retrofuture"][data-scheme="dark"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--sky) 130px 110px / 260px 220px;
+  animation: rf-twinkle 3.5s ease-in-out infinite alternate;
+}
+:root[data-theme="retrofuture"] body { isolation: isolate; }
+
+@keyframes rf-twinkle { from { opacity: 0.2; } to { opacity: 0.9; } }
+@keyframes rf-spin { to { transform: rotate(360deg); } }
+
+/* A stripe of the space-age palette under the top bar. */
+:root[data-theme="retrofuture"] .topbar {
+  border-bottom: 4px solid transparent;
+  border-image: linear-gradient(90deg, #3fb8af 0 33%, #f2b134 0 66%, #d4491f 0) 1;
+}
+
+/* Windows: rounded, with an offset shadow in a second ink, as printed. */
+:root[data-theme="retrofuture"] :is(.sheet-panel, .pop, .empty, .a-sec, .creds form) {
+  border: 2px solid var(--ink);
+  box-shadow: 8px 8px 0 var(--print);
+}
+
+/* ---------- capsule buttons ---------- */
+:root[data-theme="retrofuture"] :is(.btn, .upload) {
+  position: relative;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--print);
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 180ms ease, background-color 120ms ease;
+}
+:root[data-theme="retrofuture"] :is(.btn, .upload):hover { transform: translate(-2px, -2px) rotate(-1.5deg); box-shadow: 5px 5px 0 var(--print); }
+:root[data-theme="retrofuture"] :is(.btn, .upload):active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--print); transition-duration: 60ms; }
+
+/* Pressed: a starburst flares behind the button. */
+:root[data-theme="retrofuture"] :is(.btn, .upload).is-pressed::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px;
+  background: repeating-conic-gradient(var(--accent-fill) 0 6deg, transparent 6deg 24deg);
+  -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%);
+  mask: radial-gradient(circle, #000 30%, transparent 70%);
+  pointer-events: none;
+  animation: rf-burst 0.55s ease-out forwards;
+}
+
+@keyframes rf-burst {
+  from { transform: scale(0.2) rotate(0); opacity: 1; }
+  to { transform: scale(1.6) rotate(40deg); opacity: 0; }
+}
+
+/* ---------- an atom at the chosen row ---------- */
+:root[data-theme="retrofuture"] .srow { position: relative; padding-left: 30px; }
+:root[data-theme="retrofuture"] .srow.sub { padding-left: 42px; }
+:root[data-theme="retrofuture"] .srow.is-active { background: var(--accent-soft); color: var(--accent); }
+:root[data-theme="retrofuture"] .srow.is-active b { color: var(--accent); }
+:root[data-theme="retrofuture"] :is(.srow.is-active, .theme:has(:checked))::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: calc(50% - 4px);
+  width: 16px;
+  height: 8px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+  animation: rf-orbit 2.4s linear infinite;
+}
+:root[data-theme="retrofuture"] :is(.srow.is-active, .theme:has(:checked))::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--accent-fill);
+  color: transparent;
+}
+:root[data-theme="retrofuture"] .srow.sub.is-active::before { left: 19px; }
+:root[data-theme="retrofuture"] .srow.sub.is-active::after { left: 25px; }
+
+@keyframes rf-orbit { to { transform: rotate(360deg); } }
+
+/* ---------- cards lift off ---------- */
+:root[data-theme="retrofuture"] .thumb { transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 260ms ease; }
+:root[data-theme="retrofuture"] .thumb:hover {
+  transform: translate(-3px, -5px) rotate(-1.5deg);
+  box-shadow: 7px 7px 0 var(--print);
+}
+:root[data-theme="retrofuture"] .thumb:hover::after { animation: rf-ring 3s linear infinite; }
+
+@keyframes rf-ring { to { filter: hue-rotate(360deg); } }
+
+/* The menu swings in like a boomerang. */
+:root[data-theme="retrofuture"] .pop:popover-open { animation: rf-swing 280ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes rf-swing { from { opacity: 0; transform: translate(10px, -8px) rotate(4deg) scale(0.94); } }

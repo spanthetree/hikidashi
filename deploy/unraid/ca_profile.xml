@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!-- The repository's page in Community Applications. CA reads it from the
+     root of the repository submitted, so it is copied there, beside a
+     LICENSE, when the templates are submitted (docs/install-unraid.md). -->
+<CommunityApplications>
+  <Profile>Hikidashi: a self-hosted, searchable library for your Instagram saves. Its reels are transcribed, read, tagged and turned into recipes by local models. Install Hikidashi and Hikidashi-Server-Worker on one Data path, then Hikidashi-Worker or Hikidashi-Worker-CUDA. Questions and problems go to the GitHub issues.</Profile>
+  <Icon>https://raw.githubusercontent.com/spanthetree/hikidashi/master/deploy/unraid/icon.png</Icon>
+  <WebPage>https://github.com/spanthetree/hikidashi</WebPage>
+  <Forum>https://github.com/spanthetree/hikidashi/issues</Forum>
+</CommunityApplications>

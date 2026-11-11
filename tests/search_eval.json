@@ -1,0 +1,27 @@
+{
+  "about": "Graded search queries over the demo library (scripts/demo_library.py), for python -m app.search.eval. Each query lists the shortcodes that should come back: 2 = exactly it, 1 = relevant. A negative has none, and should return little or nothing. To score your own library, put a set in the same format at data/search_eval.json (git-ignored), which the eval reads in place of this one.",
+  "queries": [
+    {"kind": "phrase", "q": "the sauce cooks while the roast rests", "relevant": {"DQpRoastAp1": 2}},
+    {"kind": "phrase", "q": "party food that disappears first", "relevant": {"DQcrabdip01": 2}},
+    {"kind": "phrase", "q": "one pot to wash", "relevant": {"DQturkey001": 2}},
+    {"kind": "keyword", "q": "onigiri", "relevant": {"DQonigiri01": 2}},
+    {"kind": "keyword", "q": "sourdough", "relevant": {"DQsourdough": 2}},
+    {"kind": "keyword", "q": "lathe", "relevant": {"DQlathefin1": 2, "DQbenchtl01": 1}},
+    {"kind": "paraphrase", "q": "something with coconut", "relevant": {"DQcurry0001": 2}},
+    {"kind": "paraphrase", "q": "a quick weeknight dinner with chicken", "relevant": {"DQchicknrc1": 2, "DQmilanese1": 1}},
+    {"kind": "paraphrase", "q": "a vegetarian sandwich", "relevant": {"DQbanhmi001": 2}},
+    {"kind": "paraphrase", "q": "making bread at home", "relevant": {"DQsourdough": 2, "DQpasta0001": 1}},
+    {"kind": "paraphrase", "q": "outer space", "relevant": {"DQblackhol1": 2}},
+    {"kind": "paraphrase", "q": "funny cat videos", "relevant": {"DQcatpigeo1": 2, "DQkittens01": 1}},
+    {"kind": "paraphrase", "q": "espresso drinks", "relevant": {"DQlatteart1": 2, "DQcafemenu1": 1, "DQcoffeesr1": 1}},
+    {"kind": "place", "q": "things to see in Kyoto", "relevant": {"DQfushimi01": 2, "DQkyotost01": 2}},
+    {"kind": "place", "q": "cheap eats in Tokyo", "relevant": {"DQshioramen": 2}},
+    {"kind": "place", "q": "beaches", "relevant": {"DQblackhd01": 2, "DQtofino001": 2}},
+    {"kind": "place", "q": "Lisbon", "relevant": {"DQlisbon001": 2}},
+    {"kind": "non-english", "q": "塩ラーメン", "relevant": {"DQshioramen": 2}},
+    {"kind": "non-english", "q": "伏見稲荷", "relevant": {"DQfushimi01": 2}},
+    {"kind": "non-english", "q": "高雄 早餐", "relevant": {"DQkaohsiun1": 2}},
+    {"kind": "negative", "q": "knitting a sweater", "relevant": {}},
+    {"kind": "negative", "q": "car engine repair", "relevant": {}}
+  ]
+}

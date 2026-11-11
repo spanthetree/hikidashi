@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 330" width="900" height="330" role="img" aria-label="Search fusion for the query potato soup: a keyword list and a semantic list fill in, their reels merge into one list by reciprocal rank fusion, and the one reel containing the exact phrase potato soup moves from last to first.">
+<title>Search fusion for the query potato soup: a keyword list and a semantic list fill in, their reels merge into one list by reciprocal rank fusion, and the one reel containing the exact phrase potato soup moves from last to first.</title>
+<style>
+text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);font-size:11px}
+.bg{fill:var(--bg)}.box{fill:var(--panel);stroke:var(--line)}
+.l{font-size:12px;font-weight:600}.s{font-size:9.5px;fill:var(--sub)}
+.c{font-size:10px;fill:var(--sub)}.m{text-anchor:middle}.e{text-anchor:end}
+.ln{stroke:var(--line);stroke-width:1.4;fill:none}.ah{fill:var(--line)}
+.tok{fill:var(--acc)}
+:root{--bg:#f6f8fa;--panel:#ffffff;--line:#d0d7de;--text:#1f2328;--sub:#59636e;--acc:#8250df;--accbg:#fbefff;--bad:#cf222e;--badbg:#ffebe9;--good:#1a7f37;--goodbg:#dafbe1;--blue:#0969da;--bluebg:#ddf4ff;--warn:#9a6700}
+@media (prefers-color-scheme:dark){:root{--bg:#101220;--panel:#191c2b;--line:#333852;--text:#e8e9f2;--sub:#8d92a8;--acc:#a59bff;--accbg:#242244;--bad:#f1877b;--badbg:#301b19;--good:#5fcc9f;--goodbg:#16302a;--blue:#6cb6ff;--bluebg:#172a45;--warn:#e3b341}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.row{fill:var(--panel);stroke:var(--line)}
+.pin{fill:var(--acc);font-size:9px;font-weight:600}
+.dim{opacity:.6}
+.kw0{animation:kw0 14s infinite}@keyframes kw0{0%{opacity:0.22}8%{opacity:0.22}10%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.kw1{animation:kw1 14s infinite}@keyframes kw1{0%{opacity:0.22}11%{opacity:0.22}13%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.kw2{animation:kw2 14s infinite}@keyframes kw2{0%{opacity:0.22}14%{opacity:0.22}16%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.sem0{animation:sem0 14s infinite}@keyframes sem0{0%{opacity:0.22}20%{opacity:0.22}22%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.sem1{animation:sem1 14s infinite}@keyframes sem1{0%{opacity:0.22}23%{opacity:0.22}25%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.sem2{animation:sem2 14s infinite}@keyframes sem2{0%{opacity:0.22}26%{opacity:0.22}28%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.f0{transform:translate(0px,30px);animation:f0 14s infinite}@keyframes f0{0%{transform:translate(0px,0px);opacity:0.22}36%{transform:translate(-24px,0px);opacity:0.22}38%{transform:translate(0px,0px);opacity:1}60%{transform:translate(0px,0px);opacity:1}66%{transform:translate(0px,30px);opacity:1}97%{transform:translate(0px,30px);opacity:1}99%{transform:translate(0px,0px);opacity:0.22}100%{transform:translate(0px,0px);opacity:0.22}}
+.f1{transform:translate(0px,60px);animation:f1 14s infinite}@keyframes f1{0%{transform:translate(0px,30px);opacity:0.22}39%{transform:translate(-24px,30px);opacity:0.22}41%{transform:translate(0px,30px);opacity:1}60%{transform:translate(0px,30px);opacity:1}66%{transform:translate(0px,60px);opacity:1}97%{transform:translate(0px,60px);opacity:1}99%{transform:translate(0px,30px);opacity:0.22}100%{transform:translate(0px,30px);opacity:0.22}}
+.f2{transform:translate(0px,90px);animation:f2 14s infinite}@keyframes f2{0%{transform:translate(0px,60px);opacity:0.22}42%{transform:translate(-24px,60px);opacity:0.22}44%{transform:translate(0px,60px);opacity:1}60%{transform:translate(0px,60px);opacity:1}66%{transform:translate(0px,90px);opacity:1}97%{transform:translate(0px,90px);opacity:1}99%{transform:translate(0px,60px);opacity:0.22}100%{transform:translate(0px,60px);opacity:0.22}}
+.f3{transform:translate(0px,0px);animation:f3 14s infinite}@keyframes f3{0%{transform:translate(0px,90px);opacity:0.22}45%{transform:translate(-24px,90px);opacity:0.22}47%{transform:translate(0px,90px);opacity:1}60%{transform:translate(0px,90px);opacity:1}66%{transform:translate(0px,0px);opacity:1}97%{transform:translate(0px,0px);opacity:1}99%{transform:translate(0px,90px);opacity:0.22}100%{transform:translate(0px,90px);opacity:0.22}}
+.pin{animation:pin 14s infinite}@keyframes pin{0%{opacity:0.22}62%{opacity:0.22}64%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0L10,5L0,10z"/></marker></defs>
+<rect class="bg" width="900" height="330" rx="8"/>
+<rect class="box" x="20" y="16" width="260" height="34" rx="5"/>
+<text class="l" x="32" y="37">search: potato soup</text>
+<text class="s" x="300" y="37">one person's library, filtered inside each list</text>
+<text class="l" x="20" y="82">keyword · FTS5 bm25</text><text class="s" x="20" y="97">every word, best first</text>
+<text class="l" x="310" y="82">semantic · cosine</text><text class="s" x="310" y="97">summary ≥ 0.27, voiceover chunk ≥ 0.5</text>
+<text class="l" x="620" y="82">fused · Σ w / (60 + rank)</text><text class="s" x="620" y="97">then exact phrase first</text>
+<g class="kw0"><rect class="row" x="20" y="118" width="260" height="24" rx="5"/>
+<text class="" x="30" y="134">1  potato and leek soup</text></g>
+<g class="kw1"><rect class="row" x="20" y="148" width="260" height="24" rx="5"/>
+<text class="" x="30" y="164">2  soup with roast potato</text></g>
+<g class="kw2"><rect class="row" x="20" y="178" width="260" height="24" rx="5"/>
+<text class="" x="30" y="194">3  best potato soup</text></g>
+<g class="sem0"><rect class="row" x="310" y="118" width="260" height="24" rx="5"/>
+<text class="" x="320" y="134">1  warm broth for a cold night</text></g>
+<g class="sem1"><rect class="row" x="310" y="148" width="260" height="24" rx="5"/>
+<text class="" x="320" y="164">2  potato and leek soup</text></g>
+<g class="sem2"><rect class="row" x="310" y="178" width="260" height="24" rx="5"/>
+<text class="" x="320" y="194">3  soup with roast potato</text></g>
+<text class="s dim" x="20" y="226">content words, × 0.5: only when no</text>
+<text class="s dim" x="20" y="239">reel has every word (none here)</text>
+<g class="f0"><rect class="row" x="620" y="118" width="260" height="24" rx="5"/>
+<text class="" x="630" y="134">potato and leek soup</text><text class="s e" x="872" y="134">.0325</text>
+</g>
+<g class="f1"><rect class="row" x="620" y="118" width="260" height="24" rx="5"/>
+<text class="" x="630" y="134">soup with roast potato</text><text class="s e" x="872" y="134">.0320</text>
+</g>
+<g class="f2"><rect class="row" x="620" y="118" width="260" height="24" rx="5"/>
+<text class="" x="630" y="134">warm broth for a cold…</text><text class="s e" x="872" y="134">.0164</text>
+</g>
+<g class="f3"><rect class="row" x="620" y="118" width="260" height="24" rx="5"/>
+<text class="" x="630" y="134">best potato soup</text><text class="s e" x="872" y="134">.0159</text>
+<text class="pin e" x="830" y="134">phrase</text>
+</g>
+<text class="c" x="20" y="262">Each list ranks one way; fusion adds weight / (60 + rank) for every list a reel is on, so bm25 and cosine</text><text class="c" x="20" y="276">never share a scale, and a reel two lists found beats one only one did. A reel with the query as an exact</text><text class="c" x="20" y="290">phrase is then pinned first. There is no reranker: cross-encoders were measured, and rejected</text><text class="c" x="20" y="304">(docs/search.md).</text>
+</svg>

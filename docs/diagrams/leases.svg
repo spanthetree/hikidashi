@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300" role="img" aria-label="Leases: six reels ready for asr. Worker A claims three and worker B the other three. Worker A stops checking in; its lease drains and expires, its three reels return to the pool with one attempt counted, and worker B claims and finishes them.">
+<title>Leases: six reels ready for asr. Worker A claims three and worker B the other three. Worker A stops checking in; its lease drains and expires, its three reels return to the pool with one attempt counted, and worker B claims and finishes them.</title>
+<style>
+text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);font-size:11px}
+.bg{fill:var(--bg)}.box{fill:var(--panel);stroke:var(--line)}
+.l{font-size:12px;font-weight:600}.s{font-size:9.5px;fill:var(--sub)}
+.c{font-size:10px;fill:var(--sub)}.m{text-anchor:middle}.e{text-anchor:end}
+.ln{stroke:var(--line);stroke-width:1.4;fill:none}.ah{fill:var(--line)}
+.tok{fill:var(--acc)}
+:root{--bg:#f6f8fa;--panel:#ffffff;--line:#d0d7de;--text:#1f2328;--sub:#59636e;--acc:#8250df;--accbg:#fbefff;--bad:#cf222e;--badbg:#ffebe9;--good:#1a7f37;--goodbg:#dafbe1;--blue:#0969da;--bluebg:#ddf4ff;--warn:#9a6700}
+@media (prefers-color-scheme:dark){:root{--bg:#101220;--panel:#191c2b;--line:#333852;--text:#e8e9f2;--sub:#8d92a8;--acc:#a59bff;--accbg:#242244;--bad:#f1877b;--badbg:#301b19;--good:#5fcc9f;--goodbg:#16302a;--blue:#6cb6ff;--bluebg:#172a45;--warn:#e3b341}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.chip{fill:var(--panel);stroke:var(--line)}
+.dead{stroke:var(--line);stroke-dasharray:4 3}
+.bar{fill:var(--acc)}
+.b-a{animation:b-a 16s infinite}@keyframes b-a{0%{fill:var(--panel);stroke:var(--line)}5%{fill:var(--panel);stroke:var(--line)}6%{fill:var(--accbg,var(--panel));stroke:var(--acc)}34%{fill:var(--accbg,var(--panel));stroke:var(--acc)}35%{fill:var(--badbg,var(--panel));stroke:var(--bad)}97%{fill:var(--badbg,var(--panel));stroke:var(--bad)}98%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.b-b{animation:b-b 16s infinite}@keyframes b-b{0%{fill:var(--panel);stroke:var(--line)}9%{fill:var(--panel);stroke:var(--line)}10%{fill:var(--bluebg,var(--panel));stroke:var(--blue)}97%{fill:var(--bluebg,var(--panel));stroke:var(--blue)}98%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.lostA{animation:lostA 16s infinite}@keyframes lostA{0%{opacity:0.22}34%{opacity:0.22}36%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.lease{transform:scaleX(0);animation:lease 16s infinite}@keyframes lease{0%{transform:scaleX(1)}36%{transform:scaleX(1)}60%{transform:scaleX(0)}97%{transform:scaleX(0)}99%{transform:scaleX(1)}100%{transform:scaleX(1)}}
+.lease{transform-box:fill-box;transform-origin:left}
+.hbA{opacity:.15;animation:hbA 16s infinite}@keyframes hbA{0%{opacity:.15}11%{opacity:.15}12%{opacity:1}14%{opacity:.15}17%{opacity:.15}18%{opacity:1}20%{opacity:.15}23%{opacity:.15}24%{opacity:1}26%{opacity:.15}29%{opacity:.15}30%{opacity:1}32%{opacity:.15}100%{opacity:.15}}
+.hbB{animation:hbB 2s infinite}@keyframes hbB{0%,100%{opacity:.15}10%{opacity:1}30%{opacity:.15}}
+.hb{fill:var(--good)}
+.r1{transform:translate(660px,150px);animation:r1 16s infinite}@keyframes r1{0%{transform:translate(350px,112px)}3%{transform:translate(350px,112px)}6%{transform:translate(40px,120px)}60%{transform:translate(40px,120px)}63%{transform:translate(350px,112px)}68%{transform:translate(350px,112px)}72%{transform:translate(660px,150px)}100%{transform:translate(660px,150px)}}
+.r2{transform:translate(730px,150px);animation:r2 16s infinite}@keyframes r2{0%{transform:translate(420px,112px)}3%{transform:translate(420px,112px)}6%{transform:translate(110px,120px)}60%{transform:translate(110px,120px)}63%{transform:translate(420px,112px)}68%{transform:translate(420px,112px)}72%{transform:translate(730px,150px)}100%{transform:translate(730px,150px)}}
+.r3{transform:translate(800px,150px);animation:r3 16s infinite}@keyframes r3{0%{transform:translate(490px,112px)}3%{transform:translate(490px,112px)}6%{transform:translate(180px,120px)}60%{transform:translate(180px,120px)}63%{transform:translate(490px,112px)}68%{transform:translate(490px,112px)}72%{transform:translate(800px,150px)}100%{transform:translate(800px,150px)}}
+.r4{transform:translate(660px,112px);animation:r4 16s infinite}@keyframes r4{0%{transform:translate(350px,150px)}7%{transform:translate(350px,150px)}10%{transform:translate(660px,112px)}100%{transform:translate(660px,112px)}}
+.r5{transform:translate(730px,112px);animation:r5 16s infinite}@keyframes r5{0%{transform:translate(420px,150px)}7%{transform:translate(420px,150px)}10%{transform:translate(730px,112px)}100%{transform:translate(730px,112px)}}
+.r6{transform:translate(800px,112px);animation:r6 16s infinite}@keyframes r6{0%{transform:translate(490px,150px)}7%{transform:translate(490px,150px)}10%{transform:translate(800px,112px)}100%{transform:translate(800px,112px)}}
+.kA{animation:kA 16s infinite}@keyframes kA{0%{fill:var(--panel);stroke:var(--line)}5%{fill:var(--panel);stroke:var(--line)}6%{fill:var(--accbg,var(--panel));stroke:var(--acc)}60%{fill:var(--accbg,var(--panel));stroke:var(--acc)}60.5%{fill:var(--warnbg,var(--panel));stroke:var(--warn)}71.5%{fill:var(--warnbg,var(--panel));stroke:var(--warn)}72%{fill:var(--bluebg,var(--panel));stroke:var(--blue)}85.5%{fill:var(--bluebg,var(--panel));stroke:var(--blue)}86%{fill:var(--goodbg,var(--panel));stroke:var(--good)}97%{fill:var(--goodbg,var(--panel));stroke:var(--good)}98%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.kB{animation:kB 16s infinite}@keyframes kB{0%{fill:var(--panel);stroke:var(--line)}9%{fill:var(--panel);stroke:var(--line)}10%{fill:var(--bluebg,var(--panel));stroke:var(--blue)}29.5%{fill:var(--bluebg,var(--panel));stroke:var(--blue)}30%{fill:var(--goodbg,var(--panel));stroke:var(--good)}97%{fill:var(--goodbg,var(--panel));stroke:var(--good)}98%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.kA,.kB{fill:var(--goodbg);stroke:var(--good)}.plus{fill:var(--warn);font-size:9px;font-weight:600;text-anchor:end}
+.plus{animation:plus 16s infinite}@keyframes plus{0%{opacity:0.22}60%{opacity:0.22}62%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.note1{animation:note1 16s infinite}@keyframes note1{0%{opacity:0.22}60%{opacity:0.22}62%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0L10,5L0,10z"/></marker></defs>
+<rect class="bg" width="900" height="300" rx="8"/>
+<rect class="box b-a" x="20" y="60" width="240" height="150" rx="5"/>
+<text class="l m" x="140" y="82">worker A · desktop</text>
+<text class="s m" x="140" y="97">asr, renews every 30 s</text>
+<rect class="box" x="330" y="60" width="240" height="150" rx="5"/>
+<text class="l m" x="450" y="82">ready for asr</text>
+<text class="s m" x="450" y="97">the stage's pending query</text>
+<rect class="box b-b" x="640" y="60" width="240" height="150" rx="5"/>
+<text class="l m" x="760" y="82">worker B · always on</text>
+<text class="s m" x="760" y="97">asr, renews every 30 s</text>
+<text class="s m lostA" x="140" y="200">lost: no check-in for 2 min</text>
+<text class="s" x="40" y="178">lease, 5 min</text>
+<rect x="130" y="170" width="110" height="9" rx="2" class="box"/>
+<rect x="130" y="170" width="110" height="9" rx="2" class="bar lease"/>
+<circle class="hb hbA" cx="244" cy="72" r="4"/>
+<circle class="hb hbB" cx="864" cy="72" r="4"/>
+<g class="r1"><rect class="chip kA" width="60" height="26" rx="4"/>
+<text class="m" x="30" y="17">r1</text><text class="plus" x="56" y="11">+1</text></g>
+<g class="r2"><rect class="chip kA" width="60" height="26" rx="4"/>
+<text class="m" x="30" y="17">r2</text><text class="plus" x="56" y="11">+1</text></g>
+<g class="r3"><rect class="chip kA" width="60" height="26" rx="4"/>
+<text class="m" x="30" y="17">r3</text><text class="plus" x="56" y="11">+1</text></g>
+<g class="r4"><rect class="chip kB" width="60" height="26" rx="4"/>
+<text class="m" x="30" y="17">r4</text></g>
+<g class="r5"><rect class="chip kB" width="60" height="26" rx="4"/>
+<text class="m" x="30" y="17">r5</text></g>
+<g class="r6"><rect class="chip kB" width="60" height="26" rx="4"/>
+<text class="m" x="30" y="17">r6</text></g>
+<text class="s m note1" x="450" y="196">expired: back, attempt counted</text>
+<text class="c" x="20" y="240">A worker claims a few reels for one stage and holds them on a 5-minute lease, which each 30 s check-in</text><text class="c" x="20" y="254">renews. Worker A goes away mid-batch: its lease runs out, its reels go back with one attempt counted, and</text><text class="c" x="20" y="268">worker B claims them. A worker stopped cleanly gives its reels back at once, uncounted.</text>
+</svg>

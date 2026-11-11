@@ -1,0 +1,133 @@
+[project]
+name = "hikidashi"
+version = "0.18.0"
+description = "A self-hosted, searchable library for Instagram saves"
+readme = "README.md"
+requires-python = ">=3.12"
+
+# Nothing by default: app/db.py and app/importer/ are stdlib-only by design, so
+# the core stays testable on a bare checkout with nothing installed, and a bare
+# `uv sync` already runs the CLI, import, exports, and a worker for tag and
+# recipe (and OCR, given tesseract and ffmpeg). The two halves share no
+# third-party package, so each is an extra, and the Docker images take one each
+# (#86). One host with uv: `uv sync --extra server --extra worker`.
+dependencies = []
+
+[project.optional-dependencies]
+# The web UI and API, and the stages that run beside them: enrich and embed.
+server = [
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.34.0",
+    "python-multipart==0.0.20", # required by the export-ZIP upload endpoint
+    # Called as a subprocess, never imported. Pinned here rather than taken from
+    # apt because Instagram extractors break often and the distro package lags.
+    # The server's, not the worker's: the Retry button runs enrich in-process.
+    "yt-dlp==2026.8.19",
+    # Search embeds queries with the same model, so embed runs here only.
+    "fastembed==0.9.0",       # embeddinggemma-300m on ONNX Runtime; no torch
+    "sqlite-vec==0.1.9",
+    "argon2-cffi==25.1.0",    # local account passwords; app/accounts imports it lazily
+]
+# ASR. OCR shells out to tesseract, and tag and recipe talk to Ollama over
+# HTTP, so they need nothing more.
+worker = [
+    "faster-whisper==1.2.1",
+]
+# The GPU libraries for ASR, with `worker`: `uv sync --extra worker --extra cuda`.
+cuda = [
+    "nvidia-cublas-cu12==12.9.2.10",
+    "nvidia-cudnn-cu12==9.*",
+]
+
+[project.scripts]
+hikidashi = "app.cli:main"
+
+# Built only so the `hikidashi` command exists, in the uv venv and in the
+# Docker image alike. uv installs it editable: app/ is still run in place.
+[build-system]
+requires = ["uv_build>=0.11.14,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "app"
+module-root = ""
+
+# Tools for working on Hikidashi, never needed to run it: `uv sync --group
+# test --group lint`. A plain `uv sync` and the Docker image (--no-dev) leave
+# them out, and the stdlib-only core never imports them; `python3 -m unittest`
+# still runs the whole suite on a bare checkout. See docs/testing.md.
+[dependency-groups]
+lint = [
+    "mypy==2.4.0",
+    "ruff==0.17.0",
+]
+test = [
+    "coverage==7.17.0",
+    "hypothesis==6.170.9",
+]
+
+# `uv run --group test coverage run -m unittest discover -s tests -t .`, then
+# `coverage report`. Report only: no threshold fails the build.
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = ["app/web/*"]
+
+[tool.coverage.report]
+skip_empty = true
+show_missing = false
+sort = "cover"
+
+# `uv run --group lint ruff format` and `ruff check`. CI fails on either.
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["app/web", "frontend"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle, line length included
+    "F",        # pyflakes
+    "I",        # import order
+    "B",        # bugbear
+    "UP",       # pyupgrade, to 3.12
+    "SIM",      # simplify
+    "C90",      # complexity
+    "RUF",
+]
+ignore = [
+    "B008",     # FastAPI's Query(...) defaults are calls by design
+    "SIM117",   # nested `with`s read better than one long one around mocks
+    "SIM118",   # `k in row.keys()`: on a sqlite3.Row, `k in row` looks at the values
+    "SIM905",   # word lists written as one string and split read better than a list
+    # Captions, ingredients and Japanese text are full of these on purpose.
+    "RUF001", "RUF002", "RUF003",
+]
+
+# The most tangled function today (import_export) is 15. Lower this as the
+# three above 12 are split up.
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+# `uv run --group lint mypy`. Strict, CI fails on any error.
+[tool.mypy]
+python_version = "3.12"
+files = ["app", "tests", "scripts"]
+exclude = ["^app/web/"]
+strict = true
+warn_unreachable = true
+
+# Imported lazily, only once a model loads, and untyped or not installed
+# where the checks run.
+[[tool.mypy.overrides]]
+module = ["ctranslate2", "faster_whisper", "fastembed", "nvidia", "nvidia.*", "sqlite_vec"]
+ignore_missing_imports = true
+
+# Tests are checked, bodies and all, but a test method needs no annotations.
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+# fetchone() is Any: a helper returning a row needn't cast it.
+warn_return_any = false

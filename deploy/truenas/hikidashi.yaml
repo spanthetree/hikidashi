@@ -1,0 +1,91 @@
+# Hikidashi on TrueNAS SCALE 24.10 or later: Apps > Discover Apps > ⋮ >
+# Install via YAML, name it hikidashi, and paste this file in. See
+# docs/install-truenas.md for the dataset to make first.
+#
+#   app            the web UI and API, import, places   server image
+#   server-worker  enrich and embed, on new reels        server image
+#   worker         asr, ocr, tag and recipe              worker image
+#
+# Before pasting, change the dataset path, /mnt/tank/apps/hikidashi, in all
+# three services if yours differs. All three share it: they meet in its
+# SQLite file, and nowhere else. The images are pinned to one release, which
+# the server and the worker must share. To update, change all three tags.
+
+services:
+  app:
+    image: ghcr.io/spanthetree/hikidashi-server:0.18.0
+    # TrueNAS's apps user, which the dataset's Apps preset lets write.
+    user: "568:568"
+    restart: unless-stopped
+    environment:
+      # Accounts: none (everyone is the owner), local or proxy. local prints a
+      # setup link in this container's log on its first start.
+      HIKIDASHI_AUTH: none
+      HIKIDASHI_ORIGIN: ""
+      # Maps: a Nominatim to look places up on, or "public"; empty is off.
+      HIKIDASHI_GEOCODER: ""
+    ports:
+      - "8080:8080"
+    volumes:
+      # A dataset on this machine. Never an SMB or NFS share: SQLite on one
+      # can be corrupted.
+      - /mnt/tank/apps/hikidashi:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      # /api/auth answers without signing in.
+      test: ["CMD", "python", "-c",
+             "import urllib.request;urllib.request.urlopen('http://localhost:8080/api/auth')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Fetches and embeds each new reel. Every install needs it.
+  server-worker:
+    image: ghcr.io/spanthetree/hikidashi-server:0.18.0
+    user: "568:568"
+    restart: unless-stopped
+    command: ["hikidashi", "worker", "--log", "server-worker.log"]
+    hostname: hikidashi-server-worker
+    environment:
+      HIKIDASHI_LOCAL_STAGES: enrich,embed
+    volumes:
+      - /mnt/tank/apps/hikidashi:/data
+    cpus: 2
+    stop_grace_period: 30s
+
+  # Transcribes, reads, tags and finds recipes. Leave it out (delete this
+  # service) when a GPU desktop does all of it; or set asr,ocr below to leave
+  # tagging and recipes to the desktop, or when there is no Ollama.
+  worker:
+    # hikidashi-worker-cuda for an NVIDIA card; then uncomment deploy below.
+    image: ghcr.io/spanthetree/hikidashi-worker:0.18.0
+    user: "568:568"
+    restart: unless-stopped
+    hostname: hikidashi-worker
+    environment:
+      HIKIDASHI_LOCAL_STAGES: asr,ocr,tag,recipe
+      # auto, cpu, or cuda with the -cuda image.
+      HIKIDASHI_PROFILE: auto
+      # The Ollama tag and recipe call: TrueNAS's Ollama app, on this host.
+      OLLAMA_URL: http://host.docker.internal:30068
+    volumes:
+      - /mnt/tank/apps/hikidashi:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # The cores it may use, so the NAS stays responsive. Remove for a GPU.
+    cpus: 2
+    stop_grace_period: 30s
+    # For an NVIDIA card, with the -cuda image and HIKIDASHI_PROFILE: cuda.
+    # The card's UUID is in `midclt call app.gpu_choices` or `nvidia-smi -L`.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           device_ids: ["GPU-<uuid>"]
+    #           capabilities: [gpu]
+    # and in environment above:
+    #   NVIDIA_VISIBLE_DEVICES: GPU-<uuid>
+    #   NVIDIA_DRIVER_CAPABILITIES: compute,utility

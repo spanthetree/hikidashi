@@ -1,0 +1,8 @@
+# A Compose Manager stack: everything on this server (docs/install-unraid.md).
+# Point the stack's directory here, never at the checkout: the plugin loads
+# every *compose*.yml in a stack's folder, docker-compose.worker.yml too.
+# Paths are relative to the checkout, so `git pull` keeps this current, and
+# the settings are the checkout's .env, copied from deploy/unraid/compose.env.
+include:
+  - path:
+      - ../../../../docker-compose.yml

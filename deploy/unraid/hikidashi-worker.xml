@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!-- ASR, OCR, tagging and recipes on new reels, on this server's CPU. The
+     same Data path as Hikidashi's, which it shares the database with. -->
+<Container version="2">
+  <Name>Hikidashi-Worker</Name>
+  <Repository>ghcr.io/spanthetree/hikidashi-worker:latest</Repository>
+  <Registry>https://github.com/spanthetree/hikidashi/pkgs/container/hikidashi-worker</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/spanthetree/hikidashi/issues</Support>
+  <Project>https://github.com/spanthetree/hikidashi</Project>
+  <ReadMe>https://github.com/spanthetree/hikidashi/blob/master/docs/install-unraid.md</ReadMe>
+  <Overview>Transcribes, reads the text on screen, tags and finds recipes for each new reel, on the CPU. Tagging and recipes call Ollama: install Unraid's Ollama app, or set Stages to asr,ocr.[br][br]Give it exactly the same Data path as Hikidashi. For a GPU, use Hikidashi-Worker-CUDA instead; never both on one library unless each has its own Stages.</Overview>
+  <Category>MediaApp:Video Productivity:</Category>
+  <WebUI/>
+  <TemplateURL>https://raw.githubusercontent.com/spanthetree/hikidashi/master/deploy/unraid/hikidashi-worker.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/spanthetree/hikidashi/master/deploy/unraid/icon.png</Icon>
+  <!-- The same user as Hikidashi; its name in the Pipeline page; two cores, so
+       a small always-on box stays responsive; time to give back reels in hand. -->
+  <ExtraParams>--user 99:100 --restart=unless-stopped --hostname=hikidashi-worker --cpus=2 --stop-timeout=30 --add-host=host.docker.internal:host-gateway</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires>Hikidashi and Hikidashi-Server-Worker, on the same Data path.</Requires>
+  <Config Name="Data" Target="/data" Default="/mnt/cache/appdata/hikidashi" Mode="rw" Description="Exactly Hikidashi's Data path. A pool, never /mnt/user." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/hikidashi</Config>
+  <Config Name="Stages" Target="HIKIDASHI_LOCAL_STAGES" Default="asr,ocr,tag,recipe" Mode="" Description="Of asr, ocr, tag and recipe. asr,ocr when a GPU desktop tags for this box, or when there is no Ollama." Type="Variable" Display="always" Required="true" Mask="false">asr,ocr,tag,recipe</Config>
+  <Config Name="Ollama URL" Target="OLLAMA_URL" Default="http://host.docker.internal:11434" Mode="" Description="The Ollama that tag and recipe call: Unraid's Ollama app on this server, with its port 11434 published, by default." Type="Variable" Display="always" Required="false" Mask="false">http://host.docker.internal:11434</Config>
+  <Config Name="Profile" Target="HIKIDASHI_PROFILE" Default="auto|cpu" Mode="" Description="The models: cpu, or auto to pick from the hardware." Type="Variable" Display="advanced" Required="true" Mask="false">auto</Config>
+  <Config Name="Unload after" Target="HIKIDASHI_UNLOAD_AFTER" Default="300" Mode="" Description="Seconds with no work before Whisper is unloaded." Type="Variable" Display="advanced" Required="false" Mask="false">300</Config>
+</Container>

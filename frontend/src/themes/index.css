@@ -1,0 +1,8 @@
+/* Every theme but Instagram, whose tokens are the defaults in app.css. Loaded
+   after it, so a theme's light tokens win over Instagram's dark ones. Fonts
+   are self-hosted; the browser fetches a face only when a theme uses it. */
+@import "./cyberpunk.css";
+@import "./retrowave.css";
+@import "./retrofuture.css";
+/* Last: pixel art draws over whichever theme is on. */
+@import "./pixel.css";

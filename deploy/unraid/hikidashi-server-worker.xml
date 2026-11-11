@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!-- Enrich and embed on new reels: `hikidashi worker` in the server image,
+     apart from the web UI so a yt-dlp hang never takes it down. The same
+     Data path as Hikidashi's, which it shares the database with. -->
+<Container version="2">
+  <Name>Hikidashi-Server-Worker</Name>
+  <Repository>ghcr.io/spanthetree/hikidashi-server:latest</Repository>
+  <Registry>https://github.com/spanthetree/hikidashi/pkgs/container/hikidashi-server</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/spanthetree/hikidashi/issues</Support>
+  <Project>https://github.com/spanthetree/hikidashi</Project>
+  <ReadMe>https://github.com/spanthetree/hikidashi/blob/master/docs/install-unraid.md</ReadMe>
+  <Overview>The Hikidashi server's own worker: it downloads each new reel and its thumbnail, and embeds reels for search by meaning. Every Hikidashi install needs it, beside the Hikidashi container.[br][br]Give it exactly the same Data path as Hikidashi: they share the database there, and nothing else. No port: it serves nothing, but it does reach Instagram and downloads the embedder once.</Overview>
+  <Category>MediaApp:Video Productivity:</Category>
+  <WebUI/>
+  <TemplateURL>https://raw.githubusercontent.com/spanthetree/hikidashi/master/deploy/unraid/hikidashi-server-worker.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/spanthetree/hikidashi/master/deploy/unraid/icon.png</Icon>
+  <!-- The same user as Hikidashi; its name in the Pipeline page; two cores. -->
+  <ExtraParams>--user 99:100 --restart=unless-stopped --hostname=hikidashi-server-worker --cpus=2 --stop-timeout=30</ExtraParams>
+  <!-- Its own log file: two writers rotating one file lose lines. -->
+  <PostArgs>hikidashi worker --log server-worker.log</PostArgs>
+  <CPUset/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires>Hikidashi, on the same Data path.</Requires>
+  <Config Name="Data" Target="/data" Default="/mnt/cache/appdata/hikidashi" Mode="rw" Description="Exactly Hikidashi's Data path. A pool, never /mnt/user." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/hikidashi</Config>
+  <Config Name="Stages" Target="HIKIDASHI_LOCAL_STAGES" Default="enrich,embed" Mode="" Description="Of enrich and embed. The other stages need the worker image." Type="Variable" Display="advanced" Required="true" Mask="false">enrich,embed</Config>
+  <Config Name="Unload after" Target="HIKIDASHI_UNLOAD_AFTER" Default="300" Mode="" Description="Seconds with no work before the embedder is unloaded." Type="Variable" Display="advanced" Required="false" Mask="false">300</Config>
+</Container>

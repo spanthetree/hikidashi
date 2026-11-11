@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="%sveltekit.assets%/icon.svg" type="image/svg+xml">
+<script>
+  /* The saved theme, mode and pixel art, before the first paint;
+     src/lib/theme.svelte.ts takes over from here and uses the same keys. */
+  (function () {
+    var theme = "instagram", mode = "system", pixel = "off";
+    try {
+      theme = localStorage.getItem("theme") || theme;
+      mode = localStorage.getItem("mode") || mode;
+      pixel = localStorage.getItem("pixel") || pixel;
+    } catch (e) {}
+    if (mode !== "light" && mode !== "dark")
+      mode = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.scheme = mode;
+    if (pixel === "on") document.documentElement.dataset.pixel = "on";
+  })();
+</script>
+<title>Hikidashi</title>
+%sveltekit.head%
+</head>
+<body data-sveltekit-preload-data="hover">
+<div style="display: contents">%sveltekit.body%</div>
+</body>
+</html>

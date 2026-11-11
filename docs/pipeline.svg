@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 290" width="900" height="290" role="img" aria-label="A reel moving through the pipeline: imported, enrich, asr, ocr and tag, then recipe and embed side by side, then searchable. At asr it fails once, is counted in job_attempt as attempt 1 of 3, waits out its backoff and is claimed again, and this time succeeds.">
+<title>A reel moving through the pipeline: imported, enrich, asr, ocr and tag, then recipe and embed side by side, then searchable. At asr it fails once, is counted in job_attempt as attempt 1 of 3, waits out its backoff and is claimed again, and this time succeeds.</title>
+<style>
+text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);font-size:11px}
+.bg{fill:var(--bg)}.box{fill:var(--panel);stroke:var(--line)}
+.l{font-size:12px;font-weight:600}.s{font-size:9.5px;fill:var(--sub)}
+.c{font-size:10px;fill:var(--sub)}.m{text-anchor:middle}.e{text-anchor:end}
+.ln{stroke:var(--line);stroke-width:1.4;fill:none}.ah{fill:var(--line)}
+.tok{fill:var(--acc)}
+:root{--bg:#f6f8fa;--panel:#ffffff;--line:#d0d7de;--text:#1f2328;--sub:#59636e;--acc:#8250df;--accbg:#fbefff;--bad:#cf222e;--badbg:#ffebe9;--good:#1a7f37;--goodbg:#dafbe1;--blue:#0969da;--bluebg:#ddf4ff;--warn:#9a6700}
+@media (prefers-color-scheme:dark){:root{--bg:#101220;--panel:#191c2b;--line:#333852;--text:#e8e9f2;--sub:#8d92a8;--acc:#a59bff;--accbg:#242244;--bad:#f1877b;--badbg:#301b19;--good:#5fcc9f;--goodbg:#16302a;--blue:#6cb6ff;--bluebg:#172a45;--warn:#e3b341}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.t1{transform:translate(828px,120px);animation:t1 14s infinite}@keyframes t1{0%{transform:translate(68px,120px);opacity:1}6%{transform:translate(68px,120px);opacity:1}10%{transform:translate(188px,120px);opacity:1}16%{transform:translate(188px,120px);opacity:1}20%{transform:translate(308px,120px);opacity:1}24%{transform:translate(308px,120px);opacity:1}29%{transform:translate(316px,176px);opacity:1}39%{transform:translate(316px,176px);opacity:1}43%{transform:translate(308px,120px);opacity:1}48%{transform:translate(308px,120px);opacity:1}52%{transform:translate(428px,120px);opacity:1}56%{transform:translate(428px,120px);opacity:1}60%{transform:translate(548px,120px);opacity:1}65%{transform:translate(548px,120px);opacity:1}70%{transform:translate(688px,162px);opacity:1}76%{transform:translate(688px,162px);opacity:1}81%{transform:translate(828px,120px);opacity:1}98%{transform:translate(828px,120px);opacity:1}99%{transform:translate(828px,120px);opacity:0}100%{transform:translate(68px,120px);opacity:0}}
+.t2{transform:translate(828px,120px);opacity:0;animation:t2 14s infinite}@keyframes t2{0%{transform:translate(548px,120px);opacity:0}64%{transform:translate(548px,120px);opacity:0}65%{transform:translate(548px,120px);opacity:.7}70%{transform:translate(688px,78px);opacity:.7}76%{transform:translate(688px,78px);opacity:.7}81%{transform:translate(828px,120px);opacity:.7}83%{transform:translate(828px,120px);opacity:0}100%{transform:translate(828px,120px);opacity:0}}
+.b-import{animation:b-import 14s infinite}@keyframes b-import{0%{fill:var(--accbg,var(--panel));stroke:var(--acc)}6%{fill:var(--accbg,var(--panel));stroke:var(--acc)}7%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.b-enrich{animation:b-enrich 14s infinite}@keyframes b-enrich{0%{fill:var(--panel);stroke:var(--line)}9%{fill:var(--panel);stroke:var(--line)}10%{fill:var(--accbg,var(--panel));stroke:var(--acc)}16%{fill:var(--accbg,var(--panel));stroke:var(--acc)}17%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.b-asr{animation:b-asr 14s infinite}@keyframes b-asr{0%{fill:var(--panel);stroke:var(--line)}19%{fill:var(--panel);stroke:var(--line)}20%{fill:var(--accbg,var(--panel));stroke:var(--acc)}24%{fill:var(--accbg,var(--panel));stroke:var(--acc)}24.5%{fill:var(--badbg,var(--panel));stroke:var(--bad)}29%{fill:var(--badbg,var(--panel));stroke:var(--bad)}30%{fill:var(--panel);stroke:var(--line)}42%{fill:var(--panel);stroke:var(--line)}43%{fill:var(--goodbg,var(--panel));stroke:var(--good)}48%{fill:var(--goodbg,var(--panel));stroke:var(--good)}49%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.b-ocr{animation:b-ocr 14s infinite}@keyframes b-ocr{0%{fill:var(--panel);stroke:var(--line)}51%{fill:var(--panel);stroke:var(--line)}52%{fill:var(--accbg,var(--panel));stroke:var(--acc)}56%{fill:var(--accbg,var(--panel));stroke:var(--acc)}57%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.b-tag{animation:b-tag 14s infinite}@keyframes b-tag{0%{fill:var(--panel);stroke:var(--line)}59%{fill:var(--panel);stroke:var(--line)}60%{fill:var(--accbg,var(--panel));stroke:var(--acc)}65%{fill:var(--accbg,var(--panel));stroke:var(--acc)}66%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.b-recipe{animation:b-recipe 14s infinite}@keyframes b-recipe{0%{fill:var(--panel);stroke:var(--line)}69%{fill:var(--panel);stroke:var(--line)}70%{fill:var(--accbg,var(--panel));stroke:var(--acc)}76%{fill:var(--accbg,var(--panel));stroke:var(--acc)}77%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.b-embed{animation:b-embed 14s infinite}@keyframes b-embed{0%{fill:var(--panel);stroke:var(--line)}69%{fill:var(--panel);stroke:var(--line)}70%{fill:var(--accbg,var(--panel));stroke:var(--acc)}76%{fill:var(--accbg,var(--panel));stroke:var(--acc)}77%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.b-done{animation:b-done 14s infinite}@keyframes b-done{0%{fill:var(--panel);stroke:var(--line)}80%{fill:var(--panel);stroke:var(--line)}81%{fill:var(--accbg,var(--panel));stroke:var(--acc)}97%{fill:var(--accbg,var(--panel));stroke:var(--acc)}98%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.b-retry{animation:b-retry 14s infinite}@keyframes b-retry{0%{fill:var(--panel);stroke:var(--line)}25%{fill:var(--panel);stroke:var(--line)}26%{fill:var(--badbg,var(--panel));stroke:var(--bad)}41%{fill:var(--badbg,var(--panel));stroke:var(--bad)}42%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.fail{stroke:var(--bad);stroke-dasharray:4 4}.back{stroke:var(--good);stroke-dasharray:5 4}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0L10,5L0,10z"/></marker></defs>
+<rect class="bg" width="900" height="290" rx="8"/>
+<rect class="box b-import" x="16" y="64" width="104" height="56" rx="5"/>
+<text class="l m" x="68" y="84">imported</text>
+<text class="s m" x="68" y="98">caption, FTS5</text>
+<text class="s m" x="68" y="111">server image</text>
+<rect class="box b-enrich" x="136" y="64" width="104" height="56" rx="5"/>
+<text class="l m" x="188" y="84">enrich</text>
+<text class="s m" x="188" y="98">yt-dlp: video</text>
+<text class="s m" x="188" y="111">server image</text>
+<rect class="box b-asr" x="256" y="64" width="104" height="56" rx="5"/>
+<text class="l m" x="308" y="84">asr</text>
+<text class="s m" x="308" y="98">faster-whisper</text>
+<text class="s m" x="308" y="111">worker image</text>
+<rect class="box b-ocr" x="376" y="64" width="104" height="56" rx="5"/>
+<text class="l m" x="428" y="84">ocr</text>
+<text class="s m" x="428" y="98">tesseract</text>
+<text class="s m" x="428" y="111">worker image</text>
+<rect class="box b-tag" x="496" y="64" width="104" height="56" rx="5"/>
+<text class="l m" x="548" y="84">tag</text>
+<text class="s m" x="548" y="98">Ollama: summary</text>
+<text class="s m" x="548" y="111">worker image</text>
+<rect class="box b-recipe" x="636" y="22" width="104" height="56" rx="5"/>
+<text class="l m" x="688" y="42">recipe</text>
+<text class="s m" x="688" y="56">Ollama, if food</text>
+<text class="s m" x="688" y="69">worker image</text>
+<rect class="box b-embed" x="636" y="106" width="104" height="56" rx="5"/>
+<text class="l m" x="688" y="126">embed</text>
+<text class="s m" x="688" y="140">embeddinggemma</text>
+<text class="s m" x="688" y="153">server image</text>
+<rect class="box b-done" x="776" y="64" width="104" height="56" rx="5"/>
+<text class="l m" x="828" y="84">searchable</text>
+<text class="s m" x="828" y="98">words + meaning</text>
+<path class="ln" d="M120,92L134,92" marker-end="url(#a)"/>
+<path class="ln" d="M240,92L254,92" marker-end="url(#a)"/>
+<path class="ln" d="M360,92L374,92" marker-end="url(#a)"/>
+<path class="ln" d="M480,92L494,92" marker-end="url(#a)"/>
+<path class="ln" d="M600,92L634,50" marker-end="url(#a)"/>
+<path class="ln" d="M600,92L634,134" marker-end="url(#a)"/>
+<path class="ln" d="M740,50L774,92" marker-end="url(#a)"/>
+<path class="ln" d="M740,134L774,92" marker-end="url(#a)"/>
+<rect class="box b-retry" x="196" y="176" width="240" height="58" rx="5"/>
+<text class="l m" x="316" y="194">job_attempt: 1 of 3</text>
+<text class="s m" x="316" y="209">not offered again for 60 s,</text>
+<text class="s m" x="316" y="222">then 120 s; at 3, failed at asr</text>
+<path class="ln fail" d="M296,120L296,174" marker-end="url(#a)"/>
+<path class="ln back" d="M336,176L336,122" marker-end="url(#a)"/>
+<text class="s e" x="290" y="150">fails</text>
+<text class="s" x="342" y="150">claimed again</text>
+<circle class="tok t2" r="6"/>
+<circle class="tok t1" r="7"/>
+<text class="c" x="20" y="252">Each stage claims a reel only once the stages before it are done with it. A failure is counted, and the reel</text><text class="c" x="20" y="266">waits 60 s, then 120 s; at the third it is failed at that stage and later stages go on without it.</text>
+</svg>

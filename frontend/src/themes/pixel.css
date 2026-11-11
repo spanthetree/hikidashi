@@ -1,0 +1,102 @@
+/* Pixel art: any theme, drawn in pixels. The theme keeps its colours; this
+   swaps its faces for pixel fonts, squares its corners, draws outlines as
+   blocks with the corners knocked out, makes every motion move in whole
+   steps, and swaps each icon for its pixel version (Icon.svelte). Pictures
+   are left alone. Loaded last, so it wins over whichever theme is on. */
+@import "@fontsource/press-start-2p/400.css";
+@import "@fontsource/pixelify-sans/400.css";
+@import "@fontsource/pixelify-sans/600.css";
+@import "@fontsource/pixelify-sans/700.css";
+@import "@fontsource/dotgothic16/400.css";
+
+:root[data-pixel="on"] {
+  /* Pixelify has no kana or kanji; DotGothic16, a Famicom-era dot font, does. */
+  --sans: "Pixelify Sans", "DotGothic16", var(--cjk), monospace;
+  --display: "Pixelify Sans", "DotGothic16", var(--cjk), monospace;
+  --title: "Press Start 2P", "DotGothic16", var(--cjk), monospace;
+  --mono: "DotGothic16", var(--cjk), monospace;
+
+  --radius-sm: 0;
+  --radius: 0;
+  --radius-lg: 0;
+  --radius-pill: 0;
+  --px: 3px;
+  /* A block outline: four offset copies, so the corners stay empty. */
+  --outline: 0 calc(-1 * var(--px)) var(--rule), 0 var(--px) var(--rule),
+             calc(-1 * var(--px)) 0 var(--rule), var(--px) 0 var(--rule);
+  --notch: polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+                   100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+                   4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px));
+}
+
+/* Everything moves in whole steps, the way sprites do. */
+:root[data-pixel="on"] *,
+:root[data-pixel="on"] *::before,
+:root[data-pixel="on"] *::after {
+  transition-timing-function: steps(3, end) !important;
+  animation-timing-function: steps(6, end) !important;
+}
+
+/* ---------- type: the title face is wide, so it runs small ---------- */
+:root[data-pixel="on"] .brand strong { font-size: 12px; font-weight: 400; letter-spacing: 0; }
+:root[data-pixel="on"] .page h1 { font-size: 16px; font-weight: 400; line-height: 1.6; }
+:root[data-pixel="on"] .sheet-head h2 { font-size: 13px; font-weight: 400; line-height: 1.7; }
+:root[data-pixel="on"] :is(.slabel, .d-label, .r-label, legend) { letter-spacing: 0.04em; }
+:root[data-pixel="on"]:lang(ja) :is(.brand strong, .page h1, .sheet-head h2) { font-size: 17px; }
+
+/* ---------- outlines ---------- */
+:root[data-pixel="on"] .topbar { border-bottom-width: var(--px); }
+:root[data-pixel="on"] .side { border-right-width: var(--px); }
+:root[data-pixel="on"] :is(.sheet-panel, .pop, .empty, .notice, .a-sec, .creds form, .l-out) {
+  border: 0;
+  box-shadow: var(--outline), calc(2 * var(--px)) calc(2 * var(--px)) 0 calc(var(--px)) rgb(0 0 0 / 25%);
+}
+:root[data-pixel="on"] :is(.search input, .sort, .r-edit input, .r-edit textarea, .a-sec input, .creds input) {
+  border: 0;
+  box-shadow: inset var(--px) var(--px) 0 rgb(0 0 0 / 18%);
+}
+
+/* Buttons: a block outline, a darker lower-right edge, and a press that
+   moves the shade to the upper left. */
+:root[data-pixel="on"] :is(.btn, .upload) {
+  border: 0;
+  margin: var(--px);
+  box-shadow: var(--outline), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 rgb(0 0 0 / 28%);
+}
+:root[data-pixel="on"] :is(.btn, .upload):hover { transform: translateY(-2px); }
+:root[data-pixel="on"] :is(.btn, .upload):active {
+  transform: translateY(1px);
+  box-shadow: var(--outline), inset var(--px) var(--px) 0 rgb(0 0 0 / 28%);
+}
+
+:root[data-pixel="on"] :is(.thumb, .chips a, .d-chips span, .d-chips button, .d-chips a, .badge, .pill-clear, .seg) {
+  clip-path: var(--notch);
+}
+:root[data-pixel="on"] .thumb::after { padding: 4px; }
+:root[data-pixel="on"] :is(.avatar, .avatar svg, .knob, .knob::after) { border-radius: 0; }
+
+/* ---------- a blinking cursor at the chosen row ---------- */
+:root[data-pixel="on"] :is(.srow, .theme) { position: relative; }
+:root[data-pixel="on"] .srow.is-active { background: none; }
+:root[data-pixel="on"] :is(.srow.is-active, .theme:has(:checked))::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: calc(50% - 5px);
+  width: 0;
+  height: 0;
+  border: 0;
+  border-block: 5px solid transparent;
+  border-left: 6px solid currentColor;
+  border-radius: 0;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+  clip-path: none;
+  animation: pixel-blink 0.8s steps(1) infinite !important;
+}
+:root[data-pixel="on"] .theme:has(:checked)::before { left: 13px; }
+/* A theme's own marker may have a second part; the cursor replaces it. */
+:root[data-pixel="on"] :is(.srow.is-active, .theme:has(:checked))::after { content: none; }
+
+@keyframes pixel-blink { 50% { opacity: 0; } }

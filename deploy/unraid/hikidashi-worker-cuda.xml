@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!-- The worker with the GPU libraries, for an NVIDIA card: the Nvidia Driver
+     plugin, then the nvidia runtime. The same Data path as Hikidashi's. -->
+<Container version="2">
+  <Name>Hikidashi-Worker-CUDA</Name>
+  <Repository>ghcr.io/spanthetree/hikidashi-worker-cuda:latest</Repository>
+  <Registry>https://github.com/spanthetree/hikidashi/pkgs/container/hikidashi-worker-cuda</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/spanthetree/hikidashi/issues</Support>
+  <Project>https://github.com/spanthetree/hikidashi</Project>
+  <ReadMe>https://github.com/spanthetree/hikidashi/blob/master/docs/install-unraid.md</ReadMe>
+  <Overview>Hikidashi-Worker with the CUDA libraries, for an NVIDIA card: larger Whisper models, about 50x realtime. Needs the Nvidia Driver plugin; set NVIDIA_VISIBLE_DEVICES to the GPU UUID it shows. Tagging and recipes call Ollama, which wants the GPU too.[br][br]Give it exactly the same Data path as Hikidashi. Use it instead of Hikidashi-Worker, not beside it.</Overview>
+  <Category>MediaApp:Video Productivity:</Category>
+  <WebUI/>
+  <TemplateURL>https://raw.githubusercontent.com/spanthetree/hikidashi/master/deploy/unraid/hikidashi-worker-cuda.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/spanthetree/hikidashi/master/deploy/unraid/icon.png</Icon>
+  <!-- As Hikidashi-Worker, plus the NVIDIA runtime, and no core limit: the
+       card does the work. -->
+  <ExtraParams>--user 99:100 --restart=unless-stopped --hostname=hikidashi-worker --runtime=nvidia --stop-timeout=30 --add-host=host.docker.internal:host-gateway</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires>Hikidashi and Hikidashi-Server-Worker, on the same Data path.</Requires>
+  <Config Name="Data" Target="/data" Default="/mnt/cache/appdata/hikidashi" Mode="rw" Description="Exactly Hikidashi's Data path. A pool, never /mnt/user." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/hikidashi</Config>
+  <Config Name="Stages" Target="HIKIDASHI_LOCAL_STAGES" Default="asr,ocr,tag,recipe" Mode="" Description="Of asr, ocr, tag and recipe. asr,ocr when a GPU desktop tags for this box, or when there is no Ollama." Type="Variable" Display="always" Required="true" Mask="false">asr,ocr,tag,recipe</Config>
+  <Config Name="Ollama URL" Target="OLLAMA_URL" Default="http://host.docker.internal:11434" Mode="" Description="The Ollama that tag and recipe call: Unraid's Ollama app on this server, with its port 11434 published, by default." Type="Variable" Display="always" Required="false" Mask="false">http://host.docker.internal:11434</Config>
+  <Config Name="Profile" Target="HIKIDASHI_PROFILE" Default="cuda|auto|cpu" Mode="" Description="The models: cuda for the card." Type="Variable" Display="advanced" Required="true" Mask="false">cuda</Config>
+  <Config Name="Unload after" Target="HIKIDASHI_UNLOAD_AFTER" Default="300" Mode="" Description="Seconds with no work before Whisper is unloaded." Type="Variable" Display="advanced" Required="false" Mask="false">300</Config>
+  <Config Name="GPU" Target="NVIDIA_VISIBLE_DEVICES" Default="all" Mode="" Description="The card: its UUID from the Nvidia Driver plugin, or all." Type="Variable" Display="always" Required="true" Mask="false">all</Config>
+  <Config Name="GPU capabilities" Target="NVIDIA_DRIVER_CAPABILITIES" Default="compute,utility" Mode="" Description="What the container may use of the card." Type="Variable" Display="advanced" Required="true" Mask="false">compute,utility</Config>
+</Container>

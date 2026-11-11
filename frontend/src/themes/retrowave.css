@@ -1,0 +1,163 @@
+/* Retrowave: a sunset gradient, neon pink and cyan, and a grid rolling
+   toward you under the library. Light is the pastel vaporwave version.
+   Things glow on hover and flare when pressed. */
+@import "@fontsource/audiowide/400.css";
+@import "@fontsource/exo-2/400.css";
+@import "@fontsource/exo-2/600.css";
+@import "@fontsource/exo-2/700.css";
+
+:root[data-theme="retrowave"] {
+  --paper: #fdf0ff;
+  --surface: #fff;
+  --surface-2: #f6e0fc;
+  --surface-3: #eccaf7;
+  --field: #f6e0fc;
+  --ink: #2b1446;
+  --ink-2: #4a2a6a;
+  --muted: #74558c;
+  --rule: #e6c3f2;
+  --accent: #b3126a;
+  --accent-fill: #e8186d;
+  --accent-fill-hover: #ff3d88;
+  --accent-soft: #ffe0ef;
+  --on-accent: #fff;
+  --ok: #0a7d6a;
+  --warn: #8a5d00;
+  --risk: #c4123e;
+  --brand: linear-gradient(45deg, #ffd319, #ff901f 25%, #ff2975 50%, #f222ff 75%, #8c1eff);
+  --sans: "Exo 2", system-ui, -apple-system, "Segoe UI", Roboto, var(--cjk), sans-serif;
+  --display: "Audiowide", var(--sans);
+  --neon: 0 0 8px rgb(232 24 109 / 45%);
+  --grid: rgb(242 34 255 / 32%);
+  --horizon: rgb(1 205 254 / 22%);
+
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  color-scheme: light;
+}
+
+:root[data-theme="retrowave"][data-scheme="dark"] {
+  --paper: #140726;
+  --surface: #1e0c36;
+  --surface-2: #2c1350;
+  --surface-3: #3b1c68;
+  --field: #2a1248;
+  --ink: #fff0fb;
+  --ink-2: #ecd0f4;
+  --muted: #b68ccb;
+  --rule: #4a2373;
+  --accent: #2de2e6;
+  --accent-fill: #ff2a6d;
+  --accent-fill-hover: #ff5a8f;
+  --accent-soft: #35134f;
+  --on-accent: #fff;
+  --ok: #3cf0b0;
+  --warn: #ffd319;
+  --risk: #ff5c7a;
+  --neon: 0 0 10px rgb(255 42 109 / 75%), 0 0 22px rgb(255 42 109 / 35%);
+  --grid: rgb(242 34 255 / 45%);
+  --horizon: rgb(255 41 117 / 35%);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="retrowave"] .brand strong {
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #ffd319 10%, #ff2975 60%, #8c1eff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 6px rgb(255 41 117 / 45%));
+}
+:root[data-theme="retrowave"] :is(.btn, .upload) { font-weight: 400; letter-spacing: 0.03em; }
+:root[data-theme="retrowave"] :is(.slabel, .d-label, .r-label, legend) { font-weight: 400; letter-spacing: 0.06em; }
+:root[data-theme="retrowave"][data-scheme="dark"] :is(.page h1, .sheet-head h2) { text-shadow: 0 0 12px rgb(45 226 230 / 55%); }
+
+/* ---------- the grid ---------- */
+/* A horizon glow and a floor of lines in perspective, scrolling toward you.
+   It sits behind everything at the foot of the window. */
+:root[data-theme="retrowave"] body::before {
+  content: "";
+  position: fixed;
+  left: -50%;
+  right: -50%;
+  bottom: 0;
+  height: 55vh;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 60px 60px,
+    linear-gradient(0deg, var(--grid) 1px, transparent 1px) 0 0 / 60px 60px;
+  transform: perspective(300px) rotateX(62deg);
+  transform-origin: 50% 100%;
+  -webkit-mask: linear-gradient(0deg, #000 30%, transparent 95%);
+  mask: linear-gradient(0deg, #000 30%, transparent 95%);
+  animation: rw-roll 2.4s linear infinite;
+}
+:root[data-theme="retrowave"] body {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 40% at 50% 100%, var(--horizon), transparent 70%) fixed,
+    var(--paper);
+}
+
+@keyframes rw-roll { to { background-position: 0 60px, 0 60px; } }
+
+/* ---------- glow ---------- */
+:root[data-theme="retrowave"] :is(.btn, .upload) {
+  transition: box-shadow 200ms ease, transform 160ms var(--ease-out), background-color 120ms ease;
+}
+:root[data-theme="retrowave"] :is(.btn.primary, .upload.primary) { box-shadow: var(--neon); }
+:root[data-theme="retrowave"] :is(.btn, .upload):hover { animation: rw-pulse 1.2s ease-in-out infinite; transform: translateY(-1px); }
+:root[data-theme="retrowave"] :is(.btn, .upload):active {
+  animation: none;
+  transform: scale(0.95);
+  box-shadow: 0 0 0 2px var(--accent-fill), 0 0 26px 6px rgb(255 42 109 / 70%);
+  transition-duration: 40ms;
+}
+
+@keyframes rw-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgb(255 42 109 / 45%); }
+  50% { box-shadow: 0 0 16px 2px rgb(255 42 109 / 75%), 0 0 30px rgb(45 226 230 / 35%); }
+}
+
+:root[data-theme="retrowave"] .srow.is-active {
+  background: linear-gradient(90deg, rgb(255 42 109 / 22%), rgb(140 30 255 / 10%));
+  color: var(--ink);
+  box-shadow: inset 2px 0 0 var(--accent-fill);
+}
+:root[data-theme="retrowave"][data-scheme="dark"] .srow.is-active { text-shadow: 0 0 8px rgb(255 42 109 / 80%); }
+
+/* The chosen theme in the menu: a striped sunset sun, rising into place. */
+:root[data-theme="retrowave"] .theme:has(:checked)::before {
+  left: 9px;
+  top: calc(50% - 7px);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffd319, #ff2975 65%, #8c1eff);
+  -webkit-mask: linear-gradient(#000 0 52%, transparent 0 60%, #000 0 70%, transparent 0 76%, #000 0 85%, transparent 0 90%, #000 0);
+  mask: linear-gradient(#000 0 52%, transparent 0 60%, #000 0 70%, transparent 0 76%, #000 0 85%, transparent 0 90%, #000 0);
+  animation: rw-rise 420ms var(--ease-out);
+}
+
+@keyframes rw-rise { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---------- cards rise into the light ---------- */
+:root[data-theme="retrowave"] .thumb { transition: transform 260ms var(--ease-out), box-shadow 260ms ease; }
+:root[data-theme="retrowave"] .thumb:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 10px 30px -8px rgb(255 41 117 / 60%), 0 0 0 1px rgb(242 34 255 / 30%);
+}
+:root[data-theme="retrowave"] .thumb:hover::after { animation: rw-ring 2s linear infinite; }
+
+@keyframes rw-ring { to { filter: hue-rotate(360deg); } }
+
+:root[data-theme="retrowave"] :is(.topbar, .side) { background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(8px); }
+:root[data-theme="retrowave"] .topbar { border-bottom: 1px solid transparent; border-image: var(--brand) 1; }
+:root[data-theme="retrowave"] .pop:popover-open { box-shadow: 0 0 0 1px var(--rule), 0 20px 50px -14px rgb(140 30 255 / 55%); }

@@ -1,0 +1,11 @@
+# A Compose Manager stack: the server and its worker only, the heavy stages
+# left to a GPU desktop (docs/install-unraid.md, docs/remote-workers.md).
+# Point the stack's directory here, never at the checkout: the plugin loads
+# every *compose*.yml in a stack's folder, docker-compose.worker.yml too, and
+# passes each with -f, so COMPOSE_FILE in .env would never be read.
+# Paths are relative to the checkout, so `git pull` keeps this current, and
+# the settings are the checkout's .env, copied from deploy/unraid/compose.env.
+include:
+  - path:
+      - ../../../../docker-compose.yml
+      - ../../../../docker-compose.server-only.yml

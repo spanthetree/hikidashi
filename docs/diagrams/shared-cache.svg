@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 330" width="900" height="330" role="img" aria-label="Shared cache, separate libraries: user 1 imports reels a, b and c, making three item rows, three downloads and three user_item rows. User 2 imports b, c and d: b and c are already there, so only d is added and downloaded, and user 2 gets three user_item rows of their own.">
+<title>Shared cache, separate libraries: user 1 imports reels a, b and c, making three item rows, three downloads and three user_item rows. User 2 imports b, c and d: b and c are already there, so only d is added and downloaded, and user 2 gets three user_item rows of their own.</title>
+<style>
+text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);font-size:11px}
+.bg{fill:var(--bg)}.box{fill:var(--panel);stroke:var(--line)}
+.l{font-size:12px;font-weight:600}.s{font-size:9.5px;fill:var(--sub)}
+.c{font-size:10px;fill:var(--sub)}.m{text-anchor:middle}.e{text-anchor:end}
+.ln{stroke:var(--line);stroke-width:1.4;fill:none}.ah{fill:var(--line)}
+.tok{fill:var(--acc)}
+:root{--bg:#f6f8fa;--panel:#ffffff;--line:#d0d7de;--text:#1f2328;--sub:#59636e;--acc:#8250df;--accbg:#fbefff;--bad:#cf222e;--badbg:#ffebe9;--good:#1a7f37;--goodbg:#dafbe1;--blue:#0969da;--bluebg:#ddf4ff;--warn:#9a6700}
+@media (prefers-color-scheme:dark){:root{--bg:#101220;--panel:#191c2b;--line:#333852;--text:#e8e9f2;--sub:#8d92a8;--acc:#a59bff;--accbg:#242244;--bad:#f1877b;--badbg:#301b19;--good:#5fcc9f;--goodbg:#16302a;--blue:#6cb6ff;--bluebg:#172a45;--warn:#e3b341}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.row{fill:var(--panel);stroke:var(--line)}
+.file{fill:var(--accbg);stroke:var(--acc)}
+.have{font-size:9px;fill:var(--warn);font-weight:600}
+.u1{animation:u1 16s infinite}@keyframes u1{0%{fill:var(--panel);stroke:var(--line)}4%{fill:var(--panel);stroke:var(--line)}5%{fill:var(--accbg,var(--panel));stroke:var(--acc)}32%{fill:var(--accbg,var(--panel));stroke:var(--acc)}33%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.u2{animation:u2 16s infinite}@keyframes u2{0%{fill:var(--panel);stroke:var(--line)}39%{fill:var(--panel);stroke:var(--line)}40%{fill:var(--bluebg,var(--panel));stroke:var(--blue)}70%{fill:var(--bluebg,var(--panel));stroke:var(--blue)}71%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.ia{animation:ia 16s infinite}@keyframes ia{0%{opacity:0.22}10%{opacity:0.22}12%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.ib{animation:ib 16s infinite}@keyframes ib{0%{opacity:0.22}13%{opacity:0.22}15%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.ic{animation:ic 16s infinite}@keyframes ic{0%{opacity:0.22}16%{opacity:0.22}18%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.id{animation:id 16s infinite}@keyframes id{0%{opacity:0.22}50%{opacity:0.22}52%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.hb{animation:hb 16s infinite}@keyframes hb{0%{opacity:0.22}43%{opacity:0.22}45%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.hc{animation:hc 16s infinite}@keyframes hc{0%{opacity:0.22}46%{opacity:0.22}48%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.s1a{animation:s1a 16s infinite}@keyframes s1a{0%{opacity:0.22}12%{opacity:0.22}14%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.s1b{animation:s1b 16s infinite}@keyframes s1b{0%{opacity:0.22}15%{opacity:0.22}17%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.s1c{animation:s1c 16s infinite}@keyframes s1c{0%{opacity:0.22}18%{opacity:0.22}20%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.s2b{animation:s2b 16s infinite}@keyframes s2b{0%{opacity:0.22}44%{opacity:0.22}46%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.s2c{animation:s2c 16s infinite}@keyframes s2c{0%{opacity:0.22}47%{opacity:0.22}49%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.s2d{animation:s2d 16s infinite}@keyframes s2d{0%{opacity:0.22}51%{opacity:0.22}53%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.ma{animation:ma 16s infinite}@keyframes ma{0%{opacity:0.22}22%{opacity:0.22}24%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.mb{animation:mb 16s infinite}@keyframes mb{0%{opacity:0.22}24%{opacity:0.22}26%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.mc{animation:mc 16s infinite}@keyframes mc{0%{opacity:0.22}26%{opacity:0.22}28%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.md{animation:md 16s infinite}@keyframes md{0%{opacity:0.22}58%{opacity:0.22}60%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.tot{animation:tot 16s infinite}@keyframes tot{0%{opacity:0.22}62%{opacity:0.22}64%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0L10,5L0,10z"/></marker></defs>
+<rect class="bg" width="900" height="330" rx="8"/>
+<rect class="box u1" x="20" y="60" width="200" height="70" rx="5"/>
+<text class="l m" x="120" y="84">user 1 imports</text>
+<text class="s m" x="120" y="100">export: a b c</text>
+<rect class="box u2" x="20" y="170" width="200" height="70" rx="5"/>
+<text class="l m" x="120" y="194">user 2 imports</text>
+<text class="s m" x="120" y="210">export: b c d</text>
+<text class="l" x="300" y="40">item · shared cache</text>
+<text class="s" x="300" y="54">one row per shortcode</text>
+<text class="l" x="620" y="40">user_item · one library each</text>
+<text class="s" x="620" y="54">every read goes through here</text>
+<text class="l" x="300" y="226">data/media · one download each</text>
+<g class="ia"><rect class="row" x="300" y="66" width="200" height="24" rx="5"/><text class="" x="312" y="82">a</text></g>
+<g class="ib"><rect class="row" x="300" y="96" width="200" height="24" rx="5"/><text class="" x="312" y="112">b</text></g>
+<g class="ic"><rect class="row" x="300" y="126" width="200" height="24" rx="5"/><text class="" x="312" y="142">c</text></g>
+<g class="id"><rect class="row" x="300" y="156" width="200" height="24" rx="5"/><text class="" x="312" y="172">d</text></g>
+<text class="have e hb" x="490" y="112">already here</text>
+<text class="have e hc" x="490" y="142">already here</text>
+<g class="s1a"><rect class="row" x="620" y="66" width="260" height="22" rx="5"/>
+<text class="" x="632" y="81">user 1 · a</text></g>
+<g class="s1b"><rect class="row" x="620" y="92" width="260" height="22" rx="5"/>
+<text class="" x="632" y="107">user 1 · b</text></g>
+<g class="s1c"><rect class="row" x="620" y="118" width="260" height="22" rx="5"/>
+<text class="" x="632" y="133">user 1 · c</text></g>
+<g class="s2b"><rect class="row" x="620" y="144" width="260" height="22" rx="5"/>
+<text class="" x="632" y="159">user 2 · b</text></g>
+<g class="s2c"><rect class="row" x="620" y="170" width="260" height="22" rx="5"/>
+<text class="" x="632" y="185">user 2 · c</text></g>
+<g class="s2d"><rect class="row" x="620" y="196" width="260" height="22" rx="5"/>
+<text class="" x="632" y="211">user 2 · d</text></g>
+<g class="ma"><rect class="file" x="300" y="236" width="44" height="26" rx="5"/>
+<text class="s m" x="322" y="253">a.mp4</text></g>
+<g class="mb"><rect class="file" x="352" y="236" width="44" height="26" rx="5"/>
+<text class="s m" x="374" y="253">b.mp4</text></g>
+<g class="mc"><rect class="file" x="404" y="236" width="44" height="26" rx="5"/>
+<text class="s m" x="426" y="253">c.mp4</text></g>
+<g class="md"><rect class="file" x="456" y="236" width="44" height="26" rx="5"/>
+<text class="s m" x="478" y="253">d.mp4</text></g>
+<text class="l tot" x="620" y="248">4 items, 4 downloads, 6 saves</text>
+<text class="s tot" x="620" y="264">user 2 asks for a: 404, as if it never existed</text>
+<text class="c" x="20" y="290">A reel and what is made from it (media, transcript, tag, vectors) is fetched and computed once, whoever</text><text class="c" x="20" y="304">saved it. The save is each person's own: a user_item row with their save time, tag and collections.</text>
+</svg>

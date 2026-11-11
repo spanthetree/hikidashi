@@ -1,0 +1,146 @@
+# Hikidashi on one host: the server, the two workers that run the pipeline on
+# new reels, and (with --profile ai) Ollama. One SQLite file, no orchestration.
+#
+# Two images (#86). The server image has the web stack, yt-dlp and the
+# embedder; the worker image has Whisper and tesseract. Each tag is built by
+# one service, as two services building one tag at once collide (#79).
+#
+#   app            server image   the web UI and API, import, places
+#   server-worker  server image   enrich and embed, on new reels
+#   worker         worker image   asr, ocr, tag and recipe, on new reels
+#   ollama         ollama/ollama  the models tag and recipe call (--ai)
+
+# What every Hikidashi container shares: restarts, the user, and the data.
+x-hikidashi: &hikidashi
+  restart: unless-stopped
+  # The user the containers write /data as: root unless set, or a NAS's own,
+  # as HIKIDASHI_USER=99:100 on Unraid or 568:568 on TrueNAS. All of them on
+  # one library run as the same user (docs/adr/0012).
+  user: ${HIKIDASHI_USER:-0:0}
+  volumes:
+    # HIKIDASHI_DATA: the database, media and models. Keep it on local block
+    # storage. SQLite over NFS or SMB is a corruption path, and so is a FUSE
+    # share like Unraid's /mnt/user: use a pool, as /mnt/cache/appdata/hikidashi.
+    - ${HIKIDASHI_DATA:-./data}:/data
+
+# A worker on new reels: its name, its share of the CPU, its models.
+x-worker: &worker
+  <<: *hikidashi
+  command: ["hikidashi", "worker"]
+  # Cores it may use, so a small always-on box stays responsive. Raise it on
+  # a desktop with cores to spare; 0 lifts the limit.
+  cpus: ${HIKIDASHI_WORKER_CPUS:-2}
+  # Time to give back the reels in hand before Docker kills it.
+  stop_grace_period: 30s
+
+services:
+  app:
+    <<: *hikidashi
+    image: hikidashi-server:local
+    container_name: hikidashi
+    build:
+      context: .
+      target: server
+    environment:
+      # Accounts: none (everyone is the owner), local or proxy. See the README.
+      HIKIDASHI_AUTH: ${HIKIDASHI_AUTH:-none}
+      HIKIDASHI_ORIGIN: ${HIKIDASHI_ORIGIN:-}
+      HIKIDASHI_PROXY_HEADER: ${HIKIDASHI_PROXY_HEADER:-Remote-User}
+      HIKIDASHI_TRUSTED_PROXIES: ${HIKIDASHI_TRUSTED_PROXIES:-127.0.0.1/32,::1/128}
+      HIKIDASHI_PROXY_CREATES: ${HIKIDASHI_PROXY_CREATES:-}
+      # Maps: where places are looked up (off when empty), and the tiles drawn.
+      HIKIDASHI_GEOCODER: ${HIKIDASHI_GEOCODER:-}
+      HIKIDASHI_GEOCODER_DELAY: ${HIKIDASHI_GEOCODER_DELAY:-1}
+      HIKIDASHI_LOCATE_EVERY: ${HIKIDASHI_LOCATE_EVERY:-300}
+      HIKIDASHI_TILES: ${HIKIDASHI_TILES:-}
+      HIKIDASHI_TILES_ATTRIBUTION: ${HIKIDASHI_TILES_ATTRIBUTION:-}
+    # A Nominatim on the Docker host, for HIKIDASHI_GEOCODER: Docker Desktop
+    # has host.docker.internal on its own, Linux only with this.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      # HIKIDASHI_HOST / HIKIDASHI_PORT, as for ./hikidashi in uv mode.
+      - "${HIKIDASHI_HOST:-0.0.0.0}:${HIKIDASHI_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request;urllib.request.urlopen('http://localhost:8080/api/auth')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # Stages run by hand: ./hikidashi runs import, enrich, embed and places in
+    # here, and transcribe, ocr, tag and recipe in the worker.
+
+  # Enrich and embed on new reels: `hikidashi worker` in the server image.
+  # Apart from the app, so a yt-dlp hang or a backlog of embeddings never
+  # takes the web UI down, and it restarts and logs on its own.
+  server-worker:
+    <<: *worker
+    # The image the app builds; never looked for in a registry.
+    image: hikidashi-server:local
+    pull_policy: never
+    container_name: hikidashi-server-worker
+    # Its own log file: the worker container writes worker.log in the same
+    # folder, and two writers rotating one file lose lines.
+    command: ["hikidashi", "worker", "--log", "server-worker.log"]
+    # Its name in `./hikidashi status`.
+    hostname: ${HIKIDASHI_SERVER_WORKER_NAME:-hikidashi-server-worker}
+    environment:
+      # Of enrich and embed. The other stages need the worker image.
+      HIKIDASHI_LOCAL_STAGES: ${HIKIDASHI_SERVER_STAGES:-enrich,embed}
+      HIKIDASHI_UNLOAD_AFTER: ${HIKIDASHI_UNLOAD_AFTER:-300}
+
+  # ASR, OCR, tagging and recipes on new reels. Apart from the server, so
+  # Whisper and Ollama never compete with page loads, and a crash
+  # mid-transcription never takes the web UI down with it.
+  worker:
+    <<: *worker
+    image: hikidashi-worker:local
+    container_name: hikidashi-worker
+    build:
+      context: .
+      target: worker
+      args:
+        # "--extra cuda" on a GPU host. Also uncomment the deploy block below.
+        EXTRAS: ${HIKIDASHI_EXTRAS:-}
+    # Its name in `./hikidashi status`; give each worker on a database its own.
+    hostname: ${HIKIDASHI_WORKER_NAME:-hikidashi-worker}
+    environment:
+      HIKIDASHI_PROFILE: ${HIKIDASHI_PROFILE:-auto}
+      # Of asr, ocr, tag and recipe. On a box that leaves tagging to a GPU
+      # desktop's worker: asr,ocr.
+      HIKIDASHI_LOCAL_STAGES: ${HIKIDASHI_LOCAL_STAGES:-asr,ocr,tag,recipe}
+      HIKIDASHI_UNLOAD_AFTER: ${HIKIDASHI_UNLOAD_AFTER:-300}
+      # The Ollama that tag and recipe call: the bundled one (--ai) unless set.
+      # Its own name, so .env's OLLAMA_URL (for uv, often localhost) is never
+      # read: in a container, localhost is the container itself.
+      OLLAMA_URL: ${HIKIDASHI_OLLAMA_URL:-http://ollama:11434}
+    # For HIKIDASHI_PROFILE=cuda (or auto on a GPU host), pass the card through:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # The tagger and the recipe pass. Start it with:  ./hikidashi start --ai
+  ollama:
+    image: ollama/ollama:latest
+    container_name: hikidashi-ollama
+    restart: unless-stopped
+    profiles: ["ai"]
+    volumes:
+      - ollama-models:/root/.ollama
+    # Ollama finds a GPU on its own; this block is all that enabling one takes.
+    # Uncomment once the VM has a card passed through via DirectPath I/O.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  ollama-models:

@@ -1,0 +1,8 @@
+# Commits that only reformat, so `git blame` looks past them. GitHub reads
+# this file; locally: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Format: ruff format, line length 100 (#39)
+fc1a54a231c82ee63f899fe5072e27e378174799
+
+# Format: ruff format cook mode's code (#48, #39)
+39a6cc89ef93c4f926b43ff12c764c9463960f32

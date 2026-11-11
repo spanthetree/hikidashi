@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540" width="900" height="540" role="img" aria-label="A remote worker's round trip, as a sequence: the desktop claims asr work, the server leases four reels and sends their rows, the desktop downloads the videos it lacks, transcribes them on its GPU, posts one result per reel, and the server checks the versions, the shape and the lease, records them and releases the leases. A check-in every 30 seconds keeps the leases alive.">
+<title>A remote worker's round trip, as a sequence: the desktop claims asr work, the server leases four reels and sends their rows, the desktop downloads the videos it lacks, transcribes them on its GPU, posts one result per reel, and the server checks the versions, the shape and the lease, records them and releases the leases. A check-in every 30 seconds keeps the leases alive.</title>
+<style>
+text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);font-size:11px}
+.bg{fill:var(--bg)}.box{fill:var(--panel);stroke:var(--line)}
+.l{font-size:12px;font-weight:600}.s{font-size:9.5px;fill:var(--sub)}
+.c{font-size:10px;fill:var(--sub)}.m{text-anchor:middle}.e{text-anchor:end}
+.ln{stroke:var(--line);stroke-width:1.4;fill:none}.ah{fill:var(--line)}
+.tok{fill:var(--acc)}
+:root{--bg:#f6f8fa;--panel:#ffffff;--line:#d0d7de;--text:#1f2328;--sub:#59636e;--acc:#8250df;--accbg:#fbefff;--bad:#cf222e;--badbg:#ffebe9;--good:#1a7f37;--goodbg:#dafbe1;--blue:#0969da;--bluebg:#ddf4ff;--warn:#9a6700}
+@media (prefers-color-scheme:dark){:root{--bg:#101220;--panel:#191c2b;--line:#333852;--text:#e8e9f2;--sub:#8d92a8;--acc:#a59bff;--accbg:#242244;--bad:#f1877b;--badbg:#301b19;--good:#5fcc9f;--goodbg:#16302a;--blue:#6cb6ff;--bluebg:#172a45;--warn:#e3b341}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.life{stroke-dasharray:3 4}.pk{fill:var(--acc)}.hbt{fill:var(--good)}
+.r0{animation:r0 15s infinite}@keyframes r0{0%{opacity:0.22}4%{opacity:0.22}6%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.p0{opacity:0;animation:p0 15s infinite}@keyframes p0{0%{transform:translate(750px,96px);opacity:0}3.5%{transform:translate(750px,96px);opacity:0}4%{transform:translate(750px,96px);opacity:1}12.3333%{transform:translate(150px,96px);opacity:1}12.8333%{transform:translate(150px,96px);opacity:0}100%{transform:translate(150px,96px);opacity:0}}
+.r1{animation:r1 15s infinite}@keyframes r1{0%{opacity:0.22}13.3333%{opacity:0.22}15.3333%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.n1{animation:n1 15s infinite}@keyframes n1{0%{fill:var(--panel);stroke:var(--line)}12.3333%{fill:var(--panel);stroke:var(--line)}13.3333%{fill:var(--accbg,var(--panel));stroke:var(--acc)}22.6667%{fill:var(--accbg,var(--panel));stroke:var(--acc)}23.6667%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.r2{animation:r2 15s infinite}@keyframes r2{0%{opacity:0.22}22.6667%{opacity:0.22}24.6667%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.p2{opacity:0;animation:p2 15s infinite}@keyframes p2{0%{transform:translate(150px,180px);opacity:0}22.1667%{transform:translate(150px,180px);opacity:0}22.6667%{transform:translate(150px,180px);opacity:1}31%{transform:translate(750px,180px);opacity:1}31.5%{transform:translate(750px,180px);opacity:0}100%{transform:translate(750px,180px);opacity:0}}
+.r3{animation:r3 15s infinite}@keyframes r3{0%{opacity:0.22}32%{opacity:0.22}34%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.p3{opacity:0;animation:p3 15s infinite}@keyframes p3{0%{transform:translate(750px,222px);opacity:0}31.5%{transform:translate(750px,222px);opacity:0}32%{transform:translate(750px,222px);opacity:1}40.3333%{transform:translate(150px,222px);opacity:1}40.8333%{transform:translate(150px,222px);opacity:0}100%{transform:translate(150px,222px);opacity:0}}
+.r4{animation:r4 15s infinite}@keyframes r4{0%{opacity:0.22}41.3333%{opacity:0.22}43.3333%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.p4{opacity:0;animation:p4 15s infinite}@keyframes p4{0%{transform:translate(150px,264px);opacity:0}40.8333%{transform:translate(150px,264px);opacity:0}41.3333%{transform:translate(150px,264px);opacity:1}49.6667%{transform:translate(750px,264px);opacity:1}50.1667%{transform:translate(750px,264px);opacity:0}100%{transform:translate(750px,264px);opacity:0}}
+.r5{animation:r5 15s infinite}@keyframes r5{0%{opacity:0.22}50.6667%{opacity:0.22}52.6667%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.n5{animation:n5 15s infinite}@keyframes n5{0%{fill:var(--panel);stroke:var(--line)}49.6667%{fill:var(--panel);stroke:var(--line)}50.6667%{fill:var(--accbg,var(--panel));stroke:var(--acc)}60%{fill:var(--accbg,var(--panel));stroke:var(--acc)}61%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.r6{animation:r6 15s infinite}@keyframes r6{0%{opacity:0.22}60%{opacity:0.22}62%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.p6{opacity:0;animation:p6 15s infinite}@keyframes p6{0%{transform:translate(750px,348px);opacity:0}59.5%{transform:translate(750px,348px);opacity:0}60%{transform:translate(750px,348px);opacity:1}68.3333%{transform:translate(150px,348px);opacity:1}68.8333%{transform:translate(150px,348px);opacity:0}100%{transform:translate(150px,348px);opacity:0}}
+.r7{animation:r7 15s infinite}@keyframes r7{0%{opacity:0.22}69.3333%{opacity:0.22}71.3333%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.n7{animation:n7 15s infinite}@keyframes n7{0%{fill:var(--panel);stroke:var(--line)}68.3333%{fill:var(--panel);stroke:var(--line)}69.3333%{fill:var(--accbg,var(--panel));stroke:var(--acc)}78.6667%{fill:var(--accbg,var(--panel));stroke:var(--acc)}79.6667%{fill:var(--panel);stroke:var(--line)}100%{fill:var(--panel);stroke:var(--line)}}
+.r8{animation:r8 15s infinite}@keyframes r8{0%{opacity:0.22}78.6667%{opacity:0.22}80.6667%{opacity:1}97%{opacity:1}99%{opacity:0.22}100%{opacity:0.22}}
+.p8{opacity:0;animation:p8 15s infinite}@keyframes p8{0%{transform:translate(150px,432px);opacity:0}78.1667%{transform:translate(150px,432px);opacity:0}78.6667%{transform:translate(150px,432px);opacity:1}87%{transform:translate(750px,432px);opacity:1}87.5%{transform:translate(750px,432px);opacity:0}100%{transform:translate(750px,432px);opacity:0}}
+.hbt{animation:hbt 3s linear infinite}@keyframes hbt{0%{transform:translate(750px,474px);opacity:0}5%{opacity:1}60%{transform:translate(150px,474px);opacity:1}65%,100%{transform:translate(150px,474px);opacity:0}}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0L10,5L0,10z"/></marker></defs>
+<rect class="bg" width="900" height="540" rx="8"/>
+<rect class="box" x="40" y="16" width="220" height="48" rx="5"/>
+<text class="l m" x="150" y="37">server · always on</text>
+<text class="s m" x="150" y="52">SQLite, media, LocalJobs</text>
+<rect class="box" x="640" y="16" width="220" height="48" rx="5"/>
+<text class="l m" x="750" y="37">worker · GPU desktop</text>
+<text class="s m" x="750" y="52">HttpJobs, media cache</text>
+<path class="ln life" d="M150,64L150,474"/>
+<path class="ln life" d="M750,64L750,474"/>
+<g class="r0"><path class="ln" d="M750,96L154,96" marker-end="url(#a)"/>
+<text class="l m" x="450" y="84">POST /api/worker/claim</text><text class="s m" x="450" y="108">stage asr, limit 4, protocol, stage versions</text></g>
+<circle class="pk p0" r="5"/>
+<g class="r1"><rect class="box n1" x="20" y="122" width="260" height="32" rx="5"/>
+<text class="l m" x="150" y="136">leases 4 reels</text><text class="s m" x="150" y="149">readiness, attempts cap: as locally</text></g>
+<g class="r2"><path class="ln" d="M150,180L746,180" marker-end="url(#a)"/>
+<text class="l m" x="450" y="168">the rows</text><text class="s m" x="450" y="192">shortcode, media_path: what asr reads</text></g>
+<circle class="pk p2" r="5"/>
+<g class="r3"><path class="ln" d="M750,222L154,222" marker-end="url(#a)"/>
+<text class="l m" x="450" y="210">GET /api/worker/media/&lt;path&gt;</text><text class="s m" x="450" y="234">only what the cache lacks</text></g>
+<circle class="pk p3" r="5"/>
+<g class="r4"><path class="ln" d="M150,264L746,264" marker-end="url(#a)"/>
+<text class="l m" x="450" y="252">the video, into the cache</text><text class="s m" x="450" y="276">kept; least recently used go past 2 GB</text></g>
+<circle class="pk p4" r="5"/>
+<g class="r5"><rect class="box n5" x="620" y="290" width="260" height="32" rx="5"/>
+<text class="l m" x="750" y="304">faster-whisper on the GPU</text><text class="s m" x="750" y="317">transcribe_one, per reel</text></g>
+<g class="r6"><path class="ln" d="M750,348L154,348" marker-end="url(#a)"/>
+<text class="l m" x="450" y="336">POST /api/worker/results</text><text class="s m" x="450" y="360">one per reel: transcript, or why it failed</text></g>
+<circle class="pk p6" r="5"/>
+<g class="r7"><rect class="box n7" x="20" y="374" width="260" height="32" rx="5"/>
+<text class="l m" x="150" y="388">checks, then records</text><text class="s m" x="150" y="401">versions match? shape right? lease held?</text></g>
+<g class="r8"><path class="ln" d="M150,432L746,432" marker-end="url(#a)"/>
+<text class="l m" x="450" y="420">done · again · failed</text><text class="s m" x="450" y="444">asr.record(), then the leases released</text></g>
+<circle class="pk p8" r="5"/>
+<path class="ln life" d="M750,474L154,474" marker-end="url(#a)"/>
+<text class="s m" x="450" y="466">POST /api/worker/check-in every 30 s: alive, and keep my leases</text>
+<circle class="hbt" r="3.5"/>
+<text class="c" x="20" y="500">The server stays the only writer: it records each result with the stage's own record function. A worker on</text><text class="c" x="20" y="514">another release, or a protocol it does not speak, is refused with a 409 and stops.</text>
+</svg>

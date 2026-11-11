@@ -1,0 +1,101 @@
+name: tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The suite is stdlib only by design. A few exceptions are worth
+      # installing: without sqlite-vec the semantic search tests skip, and
+      # without the web layer and argon2 so do the API and account tests,
+      # which are what show one person's library is invisible to another.
+      - run: pip install sqlite-vec==0.1.9
+      - run: pip install fastapi==0.115.6 httpx==0.28.1 python-multipart==0.0.20 argon2-cffi==25.1.0
+      # Under coverage, so the summary shows where the tests are thin. Report
+      # only: no threshold fails the build (docs/testing.md). Hypothesis runs
+      # the property tests, which skip without it.
+      - run: pip install coverage==7.17.0 hypothesis==6.170.9
+      - run: coverage run -m unittest discover -s tests -t .
+      - run: coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+
+  # ruff (lint and format) and mypy --strict, configured in pyproject.toml.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.17.0 mypy==2.4.0
+      # What the type checker reads the app against: the web layer, argon2,
+      # numpy and hypothesis are typed. The models' own packages are not
+      # installed and are ignored (pyproject.toml).
+      - run: pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" httpx==0.28.1 python-multipart==0.0.20 argon2-cffi==25.1.0 numpy==2.5.3 hypothesis==6.170.9
+      - run: ruff check --output-format github
+      - run: ruff format --check
+      - run: mypy
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm run coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 14
+
+  # Playwright against the real server on a seeded library (frontend/e2e,
+  # docs/testing.md). Chromium only for now.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # What the server needs to run, without the models: search falls back
+      # to keywords, and nothing is fetched or transcribed.
+      - run: pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" python-multipart==0.0.20 argon2-cffi==25.1.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run e2e
+        working-directory: frontend
+        env:
+          HIKIDASHI_PYTHON: python
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 14

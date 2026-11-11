@@ -1,0 +1,17 @@
+# The server alone: `app` and `server-worker`, with no `worker` container, so
+# the worker image is never built here. For an always-on box, such as a NAS,
+# whose ASR, OCR, tagging and recipes are done by a worker on another machine,
+# left running or run by hand (docs/remote-workers.md). In .env:
+#
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.server-only.yml
+#
+# Unraid's Compose Manager never reads COMPOSE_FILE: its stack goes on
+# deploy/unraid/compose-manager/server-only instead (docs/install-unraid.md).
+#
+# New reels are fetched and embedded from their captions as they arrive, and
+# embedded again as the desktop's transcripts and summaries come back.
+
+services:
+  worker:
+    # Off unless asked for by name: `docker compose up -d worker` still runs it.
+    profiles: ["worker"]

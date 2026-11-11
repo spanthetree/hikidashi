@@ -1,0 +1,63 @@
+# A Hikidashi worker on another machine, such as a GPU desktop, working for a
+# server elsewhere (#35). No database here: it claims reels from the server,
+# downloads their media, and sends back what it found. See
+# docs/remote-workers.md.
+#
+#   docker compose -f docker-compose.worker.yml up -d --build
+#
+# It builds the cuda image unless HIKIDASHI_EXTRAS says otherwise; for the GPU
+# itself, uncomment the deploy block at the end.
+#
+# HIKIDASHI_WORKER_TOKEN is a worker token the server made (its Pipeline page,
+# or `hikidashi token make <name> --worker` there). Run the server's release.
+
+# Its own project, so it never touches the single-host stack's worker when both
+# files sit in one checkout.
+name: hikidashi-remote
+
+services:
+  worker:
+    # The worker image (#86): Whisper and tesseract, no web stack.
+    image: hikidashi-worker:local
+    build:
+      context: .
+      target: worker
+      args:
+        # The GPU libraries unless HIKIDASHI_EXTRAS is set, even to nothing:
+        # HIKIDASHI_EXTRAS= builds the smaller CPU image. Without the deploy
+        # block below uncommented, they sit unused and the worker runs on the CPU.
+        EXTRAS: ${HIKIDASHI_EXTRAS---extra cuda}
+    container_name: hikidashi-remote-worker
+    restart: unless-stopped
+    # Root unless set; any user who can write HIKIDASHI_DATA will do.
+    user: ${HIKIDASHI_USER:-0:0}
+    command: ["hikidashi", "worker"]
+    # Its name in the server's status; each worker on a server needs its own.
+    hostname: ${HIKIDASHI_WORKER_NAME:-hikidashi-remote-worker}
+    environment:
+      # The server, as this machine reaches it, and its worker token.
+      HIKIDASHI_SERVER: ${HIKIDASHI_SERVER:?set HIKIDASHI_SERVER to the server's address}
+      HIKIDASHI_WORKER_TOKEN: ${HIKIDASHI_WORKER_TOKEN:?set HIKIDASHI_WORKER_TOKEN}
+      HIKIDASHI_PROFILE: ${HIKIDASHI_PROFILE:-auto}
+      # Of asr, ocr, tag and recipe; all four unless narrowed.
+      HIKIDASHI_LOCAL_STAGES: ${HIKIDASHI_LOCAL_STAGES:-asr,ocr,tag,recipe}
+      HIKIDASHI_UNLOAD_AFTER: ${HIKIDASHI_UNLOAD_AFTER:-300}
+      # This machine's Ollama, for tagging and recipes. On the Docker host:
+      # http://host.docker.internal:11434 (with extra_hosts below on Linux).
+      OLLAMA_URL: ${HIKIDASHI_OLLAMA_URL:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Models and the media cache only. Any disk will do: no SQLite here.
+      - ${HIKIDASHI_DATA:-./data}:/data
+    # Time to give back the reels in hand before Docker kills it.
+    stop_grace_period: 30s
+    # For HIKIDASHI_PROFILE=cuda (or auto), pass the card through. Needs the
+    # NVIDIA container toolkit on the host.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]

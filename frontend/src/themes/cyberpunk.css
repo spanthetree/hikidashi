@@ -1,0 +1,197 @@
+/* Cyberpunk: neon cyan and red on near-black, or black on hazard yellow in
+   light. Corners are cut, labels are HUD caps, and things glitch when you
+   touch them. */
+@import "@fontsource/orbitron/500.css";
+@import "@fontsource/orbitron/700.css";
+@import "@fontsource/rajdhani/500.css";
+@import "@fontsource/rajdhani/600.css";
+@import "@fontsource/rajdhani/700.css";
+
+:root[data-theme="cyberpunk"] {
+  --paper: #fcee0a;
+  --surface: #fcee0a;
+  --surface-2: #ecdd00;
+  --surface-3: #d9cb00;
+  --field: #fff8b0;
+  --ink: #0a0a0f;
+  --ink-2: #23222a;
+  --muted: #4d4826;
+  --rule: #0a0a0f;
+  --accent: #b8002c;
+  --accent-fill: #0a0a0f;
+  --accent-fill-hover: #b8002c;
+  --accent-soft: #fff8b0;
+  --on-accent: #fcee0a;
+  --ok: #006b3c;
+  --warn: #7a4a00;
+  --risk: #b8002c;
+  --brand: linear-gradient(135deg, #00b8c8, #0a0a0f 50%, #e0003c);
+  --display: "Orbitron", var(--sans);
+  --sans: "Rajdhani", system-ui, -apple-system, "Segoe UI", Roboto, var(--cjk), sans-serif;
+  --glow: none;
+  --cut: 10px;
+
+  --radius-sm: 0;
+  --radius: 0;
+  --radius-lg: 0;
+  --radius-pill: 0;
+
+  color-scheme: light;
+}
+
+:root[data-theme="cyberpunk"][data-scheme="dark"] {
+  --paper: #07080c;
+  --surface: #0c0e15;
+  --surface-2: #151a26;
+  --surface-3: #1f2738;
+  --field: #0a0c12;
+  --ink: #e8fbff;
+  --ink-2: #a8dce8;
+  --muted: #6b8a96;
+  --rule: #1d3a46;
+  --accent: #00f0ff;
+  --accent-fill: #fcee0a;
+  --accent-fill-hover: #fff56a;
+  --accent-soft: #05282e;
+  --on-accent: #07080c;
+  --ok: #00ff9c;
+  --warn: #fcee0a;
+  --risk: #ff003c;
+  --brand: linear-gradient(135deg, #00f0ff, #ff003c);
+  --glow: 0 0 6px rgb(0 240 255 / 70%);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="cyberpunk"] body { font-size: 16px; font-weight: 500; }
+/* Rajdhani runs narrow and small; the card text needs a size up. */
+:root[data-theme="cyberpunk"] .ccap { font-size: 13.5px; }
+:root[data-theme="cyberpunk"] .cmeta { font-size: 14px; }
+
+:root[data-theme="cyberpunk"] :is(.search input, .sort, .r-edit input, .r-edit textarea, .a-sec input, .creds input) {
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+}
+
+/* HUD labels. */
+:root[data-theme="cyberpunk"] :is(.slabel, .d-label, .r-label, legend, .btn, .upload, .badge) {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+:root[data-theme="cyberpunk"] :is(.slabel, .d-label, .r-label, legend) { font-size: 10.5px; }
+:root[data-theme="cyberpunk"] :is(.btn, .upload) { font-size: 11px; font-weight: 700; }
+:root[data-theme="cyberpunk"] .brand strong {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  animation: cp-flicker 6s infinite;
+}
+
+/* ---------- cut corners ---------- */
+:root[data-theme="cyberpunk"] :is(.btn, .upload, .thumb, .sheet-panel, .pop, .empty, .a-sec, .creds form) {
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
+}
+:root[data-theme="cyberpunk"] :is(.btn, .upload) { --cut: 7px; }
+/* A clipped box clips its own focus ring, so draw it inside. */
+:root[data-theme="cyberpunk"] :is(.btn, .thumb):focus-visible { outline-offset: -4px; }
+:root[data-theme="cyberpunk"] .upload:focus-within { outline-offset: -4px; }
+
+:root[data-theme="cyberpunk"] .topbar { border-bottom: 2px solid var(--accent); box-shadow: var(--glow); }
+:root[data-theme="cyberpunk"] .side { border-right: 1px solid var(--rule); }
+
+/* ---------- buttons glitch ---------- */
+:root[data-theme="cyberpunk"] :is(.btn, .upload) { border: 0; transition: background-color 80ms linear, color 80ms linear; }
+:root[data-theme="cyberpunk"] :is(.btn, .upload):hover { animation: cp-glitch 280ms steps(2) 1; }
+:root[data-theme="cyberpunk"] :is(.btn, .upload):active {
+  background: var(--accent);
+  color: var(--paper);
+  transform: translate(1px, 1px);
+}
+
+@keyframes cp-glitch {
+  0% { text-shadow: 2px 0 #ff003c, -2px 0 #00f0ff; transform: translate(-1px, 0); }
+  33% { text-shadow: -2px 0 #ff003c, 2px 0 #00f0ff; transform: translate(1px, -1px); }
+  66% { text-shadow: 1px 1px #ff003c, -1px -1px #00f0ff; transform: translate(0, 1px); }
+  100% { text-shadow: none; transform: none; }
+}
+
+@keyframes cp-flicker {
+  0%, 91%, 93%, 95%, 100% { opacity: 1; text-shadow: var(--glow); }
+  92%, 94% { opacity: 0.35; text-shadow: 2px 0 #ff003c, -2px 0 #00f0ff; }
+}
+
+/* ---------- sidebar: a lit bar on the selected row ---------- */
+:root[data-theme="cyberpunk"] .srow { border-left: 2px solid transparent; }
+:root[data-theme="cyberpunk"] .srow:hover { color: var(--accent); background: var(--surface-2); }
+:root[data-theme="cyberpunk"] .srow.is-active {
+  border-left-color: var(--accent);
+  background: linear-gradient(90deg, var(--accent-soft), transparent);
+  color: var(--accent);
+  text-shadow: var(--glow);
+}
+:root[data-theme="cyberpunk"] .srow.is-active b { color: var(--accent); }
+
+/* The chosen theme in the menu: a neon chevron that flickers. */
+:root[data-theme="cyberpunk"] .theme:has(:checked)::before {
+  left: 12px;
+  top: calc(50% - 6px);
+  width: 8px;
+  height: 12px;
+  border-radius: 0;
+  background: var(--accent);
+  -webkit-mask: none;
+  mask: none;
+  clip-path: polygon(0 0, 100% 50%, 0 100%, 0 72%, 50% 50%, 0 28%);
+  animation: cp-flicker 3s steps(1) infinite;
+}
+
+/* ---------- cards: a scan and a jolt ---------- */
+:root[data-theme="cyberpunk"] .thumb { transition: none; }
+:root[data-theme="cyberpunk"] .thumb:hover { animation: cp-jolt 320ms steps(3) 1; transform: none; }
+:root[data-theme="cyberpunk"] .thumb:hover .visual { animation: cp-split 320ms steps(3) 1; }
+:root[data-theme="cyberpunk"] .thumb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, transparent 0 46%, rgb(0 240 255 / 35%) 50%, transparent 54%);
+  background-size: 100% 300%;
+  opacity: 0;
+  pointer-events: none;
+}
+:root[data-theme="cyberpunk"] .thumb:hover::before { animation: cp-scan 700ms linear 1; }
+
+@keyframes cp-jolt {
+  0% { transform: translate(3px, 0); }
+  50% { transform: translate(-2px, -1px); }
+  100% { transform: none; }
+}
+@keyframes cp-split {
+  0% { filter: drop-shadow(4px 0 0 rgb(255 0 60 / 70%)) hue-rotate(40deg); }
+  50% { filter: drop-shadow(-4px 0 0 rgb(0 240 255 / 70%)); }
+  100% { filter: none; }
+}
+@keyframes cp-scan {
+  0% { opacity: 1; background-position: 0 100%; }
+  100% { opacity: 1; background-position: 0 0; }
+}
+
+:root[data-theme="cyberpunk"] .avatar { border-radius: 0; clip-path: polygon(0 0, 75% 0, 100% 25%, 100% 100%, 25% 100%, 0 75%); }
+:root[data-theme="cyberpunk"] .avatar svg { border-radius: 0; }
+:root[data-theme="cyberpunk"] .pop:popover-open { animation: cp-boot 260ms steps(4); }
+
+@keyframes cp-boot {
+  0% { clip-path: inset(0 0 100% 0); }
+  60% { clip-path: inset(0 0 20% 0); filter: brightness(1.8); }
+  100% { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))); }
+}
+
+/* Dark: faint scanlines over everything. */
+:root[data-theme="cyberpunk"][data-scheme="dark"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgb(255 255 255 / 2.5%) 0 1px, transparent 1px 3px);
+}

@@ -1,0 +1,31 @@
+# Personal data — never commit. The export lists everything you have ever saved.
+/data/
+/data/imports/
+/data/media/
+instagram-*.zip
+*.zip
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Built from frontend/ by `npm run build`.
+/app/web/
+node_modules/
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+
+# Claude Code session state (worktrees etc.)
+.claude/
+
+# Raw captures from frontend/scripts/record-demo.mjs --keep
+/docs/demo/*.raw.mkv

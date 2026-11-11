@@ -1,0 +1,13 @@
+# Personal data and local environments stay out of the build context.
+data/
+*.zip
+*.sqlite3*
+.venv/
+.git/
+.claude/
+**/__pycache__/
+
+# The front end is installed and built inside the image.
+frontend/node_modules/
+frontend/.svelte-kit/
+app/web/
