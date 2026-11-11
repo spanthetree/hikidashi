@@ -70,8 +70,15 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Playwright's own image, which already has Chromium and every system
+    # package it needs, so nothing comes from Ubuntu's mirrors: when they were
+    # unreachable, e2e failed before a test ran (#131). The tag moves with
+    # @playwright/test in frontend/package.json; tests/test_ci.py checks.
+    container: mcr.microsoft.com/playwright:v1.64.0-noble
     steps:
       - uses: actions/checkout@v4
+      # From GitHub's Python builds, not apt: the image's own Python has no
+      # venv or pip.
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -84,8 +91,6 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-        working-directory: frontend
-      - run: npx playwright install --with-deps chromium
         working-directory: frontend
       - run: npm run e2e
         working-directory: frontend
