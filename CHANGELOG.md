@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.18.4] — 2026-11-11
+
+### Changed
+
+- **The docs no longer describe the real library** (#123). The search,
+  tags, design and operation pages, ADR 0009 and the README quoted real
+  search queries, captions and tag counts. Their examples now come from the
+  demo library or are described generically. The measured numbers are
+  unchanged.
+
 ## [0.18.2] — 2026-11-11
 
 ### Added
