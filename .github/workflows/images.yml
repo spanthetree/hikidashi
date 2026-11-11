@@ -85,8 +85,9 @@ jobs:
         if: env.SKIP != 'true' && matrix.image == 'hikidashi-worker-cuda'
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
 
+      # arm64 is only built to push, so a pull request needs no emulator.
       - uses: docker/setup-qemu-action@v3
-        if: env.SKIP != 'true' && contains(matrix.platforms, 'arm64')
+        if: env.SKIP != 'true' && env.PUSH == 'true' && contains(matrix.platforms, 'arm64')
       - uses: docker/setup-buildx-action@v3
         if: env.SKIP != 'true'
 
@@ -107,6 +108,7 @@ jobs:
           labels: |
             org.opencontainers.image.title=${{ matrix.image }}
             org.opencontainers.image.description=Hikidashi, a searchable archive of your saved Instagram reels (${{ matrix.target }} image)
+            org.opencontainers.image.licenses=PolyForm-Noncommercial-1.0.0
 
       # amd64 first, loaded here, so it can be started before anything is
       # pushed. The push below reuses its layers from the cache.

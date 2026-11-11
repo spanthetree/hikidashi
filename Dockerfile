@@ -72,7 +72,9 @@ RUN apt-get update \
 RUN uv sync --frozen --no-dev --no-install-project --extra server
 
 # Then the project itself, editable, which is what puts `hikidashi` on PATH.
-COPY README.md ./
+# LICENSE is in pyproject.toml's license-files, so the build needs it, and the
+# license requires that anyone given a copy, an image included, gets it too.
+COPY README.md LICENSE THIRD_PARTY.md ./
 COPY app ./app
 RUN uv sync --frozen --no-dev --extra server
 COPY --from=web /src/app/web ./app/web
@@ -100,7 +102,7 @@ RUN apt-get update \
 ARG EXTRAS=""
 RUN uv sync --frozen --no-dev --no-install-project --extra worker $EXTRAS
 
-COPY README.md ./
+COPY README.md LICENSE THIRD_PARTY.md ./
 COPY app ./app
 RUN uv sync --frozen --no-dev --extra worker $EXTRAS
 
