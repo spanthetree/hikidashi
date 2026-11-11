@@ -112,14 +112,15 @@ export usually arrives within the hour.
 **2. Start Hikidashi.**
 
 ```bash
-./hikidashi --docker start --build --ai   # Docker, with Ollama for tagging
+./hikidashi --docker start --ai          # Docker, with Ollama for tagging
 # or
 uv sync --extra server --extra worker && ./hikidashi start   # uv
 ```
 
 `./hikidashi` runs under Docker once its container exists, and under uv
 otherwise, so the first Docker start says `--docker`. After that it finds the
-container on its own.
+container on its own. Docker pulls the published images from
+`ghcr.io/spanthetree`; `--build` builds them from the checkout instead.
 
 **3. Import.** Open <http://localhost:8080>. A new library opens on the
 import box: drop the ZIP on it, or click (or tap, on a phone) to choose it.
@@ -182,7 +183,7 @@ the host. `./hikidashi <command> --help` lists every command's flags.
 ### Updating
 
 ```bash
-git pull && ./hikidashi start --build             # Docker: rebuild, then recreate
+git pull && ./hikidashi start                     # Docker: pull the images, then recreate
 git pull && uv sync --extra server --extra worker && ./hikidashi restart   # uv
 ```
 
@@ -358,9 +359,9 @@ can see one.
 | `cpu` | `distil-small.en` | `qwen2.5:3b` | ~25× realtime on 28 threads |
 | `cuda` | `distil-large-v3` | `qwen2.5:7b` | ~50× realtime on an RTX 3080 |
 
-For the GPU path, add `--extra cuda` to `uv sync`, or build the worker image
-with `HIKIDASHI_EXTRAS="--extra cuda"` and uncomment the worker's GPU block in
-`docker-compose.yml`. See
+For the GPU path, add `--extra cuda` to `uv sync`, or under Docker set
+`HIKIDASHI_WORKER_IMAGE=hikidashi-worker-cuda` and uncomment the worker's GPU
+block in `docker-compose.yml`. See
 [hardware profiles](docs/pipeline.md#hardware-profiles) for details.
 
 Under Docker there are two images. `hikidashi-server` has the web UI, the
@@ -521,7 +522,9 @@ read it: add `UV_ENV_FILE=.env`.
 | `HIKIDASHI_LOCATE_EVERY` | `300` | Seconds between the server's looks for new places to put on the map. `0`: only `./hikidashi places` looks |
 | `HIKIDASHI_TILES` | OpenStreetMap's | Map tiles, as `https://tiles.example.com/{z}/{x}/{y}.png` |
 | `HIKIDASHI_TILES_ATTRIBUTION` | OpenStreetMap's | The credit shown on the map, as HTML. Empty for your own tiles unless set |
-| `HIKIDASHI_EXTRAS` | *(empty)*; `--extra cuda` in `docker-compose.worker.yml` | Docker build only. `--extra cuda` adds the GPU libraries to the worker image; set to nothing for the CPU one |
+| `HIKIDASHI_VERSION` | `latest` | Docker: the release of the published images, as `0.19.0`. A tag nobody published, as `dev`, keeps your own `--build` images |
+| `HIKIDASHI_WORKER_IMAGE` | `hikidashi-worker`; `hikidashi-worker-cuda` in `docker-compose.worker.yml` | Docker: the worker image, `hikidashi-worker-cuda` for a GPU |
+| `HIKIDASHI_EXTRAS` | *(empty)*; `--extra cuda` in `docker-compose.worker.yml` | Docker builds only. `--extra cuda` adds the GPU libraries to the worker image; set to nothing for the CPU one |
 
 ## Roadmap
 

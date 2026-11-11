@@ -221,14 +221,17 @@ no database:
 
 ```sh
 HIKIDASHI_SERVER=http://nas.lan:8080 HIKIDASHI_WORKER_TOKEN=<the token> \
-  docker compose -f docker-compose.worker.yml up -d --build
+  docker compose -f docker-compose.worker.yml up -d
 ```
 
 Tag and recipe use the desktop's own Ollama, a native install or
 `ollama/ollama`, at `HIKIDASHI_OLLAMA_URL` (unset: the Docker host's,
-`http://host.docker.internal:11434`). It builds the cuda image
-(`hikidashi-worker-cuda`) unless `HIKIDASHI_EXTRAS` is set; set to nothing,
-the smaller CPU one. For the GPU itself, it needs the NVIDIA container
+`http://host.docker.internal:11434`). It pulls the published cuda image
+(`ghcr.io/spanthetree/hikidashi-worker-cuda`) unless
+`HIKIDASHI_WORKER_IMAGE=hikidashi-worker` asks for the smaller CPU one. Set
+`HIKIDASHI_VERSION` to the server's release, such as `0.19.0`; unset, it is
+`latest`. With `--build` it builds from the checkout instead, the cuda image
+unless `HIKIDASHI_EXTRAS` is set to nothing. For the GPU itself, it needs the NVIDIA container
 toolkit and the `deploy` block uncommented, as for the single-host setup
 (#64); without them, `auto` runs on the CPU. A container has no terminal to
 ask for the token at, so `HIKIDASHI_WORKER_TOKEN` is required here.

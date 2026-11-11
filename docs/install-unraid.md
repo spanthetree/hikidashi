@@ -10,12 +10,10 @@ instead. [ADR 0012](adr/0012-nas-installs-templates-and-yaml.md) says why
 these two and not others. [TrueNAS SCALE](install-truenas.md) ·
 [Back to the README](../README.md)
 
-> **Not yet installable.** The templates pull the published images
-> (`ghcr.io/spanthetree/hikidashi-server`, `-worker`, `-worker-cuda`), and
-> those wait on #77. Until then, use
-> [Compose Manager](#the-alternative-compose-manager), which builds them on
-> the box. The templates aren't in Community Applications search yet either
-> (#102). Install them by hand, as below.
+> The templates pull the published images
+> (`ghcr.io/spanthetree/hikidashi-server`, `-worker`, `-worker-cuda`), which
+> each release publishes (#77). They aren't in Community Applications search
+> yet (#102): install them by hand, as below.
 
 ## What you install
 
@@ -160,8 +158,8 @@ The desktop has to run the same release as the server.
 
 The **Compose Manager** plugin (from Community Applications) runs
 Hikidashi's own compose files, so the whole stack is one thing to start,
-stop and update. It's also the only way to run Hikidashi on Unraid before the
-images are published, because it builds them on the box. This was checked on
+stop and update. It pulls the same published images as the templates, and
+needs a checkout only for the compose files and `.env`. This was checked on
 **Compose Manager Plus**, a fork of it. The original plugin works the same
 way where it matters here.
 
@@ -200,13 +198,17 @@ each holding one file that includes the checkout's compose files:
    docker compose config --services     # app, server-worker
    ```
 
-5. Build the server image (and the worker's, for `everything`). Compose Up
-   would build it too, but a terminal shows the progress, and the first build
-   takes a while on a small CPU:
+5. Pull the server image (and the worker's, for `everything`). Compose Up
+   would pull them too, but a terminal shows the progress:
 
    ```sh
-   docker compose build
+   docker compose pull
    ```
+
+   To stay on one release, set `HIKIDASHI_VERSION` in `.env` to it, such as
+   `0.19.0`; unset, it is `latest`. Building from the checkout instead
+   (`docker compose build`) still works, and is what happens when there is
+   nothing to pull.
 
 6. In **Docker** → **Compose**, **Add New Stack**, named `hikidashi`, with
    its directory set to the stack folder:
@@ -219,17 +221,19 @@ each holding one file that includes the checkout's compose files:
    and on `server-only` the worker too. Then, as for the templates, the
    [first run](#first-run).
 
-**To update:** `git pull` in the checkout, then build and bring it up:
+**To update:** `git pull` in the checkout, for the compose files, then pull
+the images:
 
 ```sh
 cd /mnt/cache/appdata/hikidashi-src && git pull
-cd deploy/unraid/compose-manager/server-only && docker compose build
+cd deploy/unraid/compose-manager/server-only && docker compose pull
 ```
 
 Then **Compose Up** on the stack, which recreates the containers on the new
-image. Compose Up alone doesn't rebuild: the image already exists, so it
-starts the old one. The original plugin's **Update Stack** does both, as
-`up --build`. The images left behind go with `docker image prune`. A
+images. Compose Up alone doesn't pull: the images already exist, so it
+starts the old ones. Skip the original plugin's **Update Stack**: it runs
+`up --build`, which builds from the checkout rather than pulling. The images
+left behind go with `docker image prune`. A
 [remote worker](remote-workers.md) has to be updated to the same release.
 
 ## Updating

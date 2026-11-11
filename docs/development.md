@@ -51,7 +51,7 @@ Each command is a module run with `python -m`, and the wrapper only picks how:
 
 | `./hikidashi` | uv | Docker Compose |
 |---------------|----|----------------|
-| `start` | `uv run uvicorn app.api.main:app --port 8080` | `docker compose up --build -d` |
+| `start` | `uv run uvicorn app.api.main:app --port 8080` | `docker compose pull --ignore-pull-failures && docker compose up -d` (`--build`: `docker compose up -d --build`) |
 | `import <zip>` | `uv run python -m app.importer <zip>` | `docker compose exec app python -m app.importer <zip>` |
 | `enrich` | `uv run python -m app.enrich` | `docker compose exec app python -m app.enrich` |
 | `transcribe` | `uv run python -m app.asr` | `docker compose exec worker python -m app.asr` |
