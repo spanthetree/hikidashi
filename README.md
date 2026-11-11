@@ -589,3 +589,9 @@ repackaging it, or building it into something sold needs other terms; ask.
 Contributions are welcome, on the terms in
 [CONTRIBUTING](CONTRIBUTING.md#licensing-your-contribution). Why this license:
 [decision record 0016](docs/adr/0016-polyform-noncommercial.md).
+
+The models, programs and services it uses keep their own terms, some of them
+noncommercial: [THIRD_PARTY.md](THIRD_PARTY.md).
+
+Hikidashi is not affiliated with, endorsed by or sponsored by Instagram or
+Meta.
