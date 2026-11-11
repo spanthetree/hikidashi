@@ -26,6 +26,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **About Hikidashi**, at the foot of the account page: the license, a link
   to it and the third-party terms, and that Hikidashi isn't affiliated with
   Instagram or Meta. The README says the same.
+- The images carry `LICENSE` and `THIRD_PARTY.md` in `/srv`, and the OCI
+  `org.opencontainers.image.licenses` label.
 
 ## [0.18.2] — 2026-11-11
 
