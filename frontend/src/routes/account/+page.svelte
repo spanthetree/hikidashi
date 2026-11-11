@@ -7,6 +7,7 @@
   import Notice from "$lib/components/Notice.svelte";
   import Rich from "$lib/components/Rich.svelte";
   import Topbar from "$lib/components/Topbar.svelte";
+  import { copyFailure, copyText, type Copied } from "$lib/clipboard";
   import { ago, nf, savedDate } from "$lib/format";
   import { tagLabel } from "$lib/i18n";
   import { m } from "$lib/paraglide/messages";
@@ -71,12 +72,16 @@
 
   async function copyToken(what: "token" | "example") {
     if (!freshToken) return;
-    try {
-      await navigator.clipboard.writeText(what === "token" ? freshToken.token : example);
-      tokenCopied = what;
-    } catch {
-      document.querySelector<HTMLInputElement>(`#t-fresh-${what}`)?.select();
-    }
+    const field = document.querySelector<HTMLInputElement>(`#t-fresh-${what}`);
+    const how = await copyText(what === "token" ? freshToken.token : example, field);
+    tokenCopied = how === "copied" ? what : null;
+    copyNotice(how);
+  }
+
+  /* A copy that didn't work says so at the top; one that did clears that. */
+  function copyNotice(how: Copied) {
+    if (how !== "copied") notice = { text: copyFailure(how), kind: "error" };
+    else if (notice?.kind === "error") notice = null;
   }
 
   /* ---------- the export form ---------- */
@@ -195,13 +200,9 @@
 
   async function copy() {
     if (!fresh) return;
-    try {
-      await navigator.clipboard.writeText(fresh);
-      copied = true;
-    } catch {
-      // No clipboard here (plain http to another host): the link is selectable.
-      document.querySelector<HTMLInputElement>("#a-fresh")?.select();
-    }
+    const how = await copyText(fresh, document.querySelector<HTMLInputElement>("#a-fresh"));
+    copied = how === "copied";
+    copyNotice(how);
   }
 </script>
 
@@ -349,7 +350,7 @@
             <div class="a-row">
               <input id="t-fresh-token" type="text" readonly value={freshToken.token}
                      onfocus={(e) => e.currentTarget.select()}>
-              <button class="btn" type="button" onclick={() => copyToken("token")}>
+              <button class="btn" type="button" aria-live="polite" onclick={() => copyToken("token")}>
                 {tokenCopied === "token" ? m.invites_copied() : m.invites_copy()}
               </button>
             </div>
@@ -357,7 +358,7 @@
             <div class="a-row">
               <input id="t-fresh-example" type="text" readonly value={example}
                      onfocus={(e) => e.currentTarget.select()}>
-              <button class="btn" type="button" onclick={() => copyToken("example")}>
+              <button class="btn" type="button" aria-live="polite" onclick={() => copyToken("example")}>
                 {tokenCopied === "example" ? m.invites_copied() : m.invites_copy()}
               </button>
             </div>
@@ -458,7 +459,7 @@
               <div class="a-row">
                 <input id="a-fresh" type="text" readonly value={fresh}
                        onfocus={(e) => e.currentTarget.select()}>
-                <button class="btn" type="button" onclick={copy}>{copied ? m.invites_copied() : m.invites_copy()}</button>
+                <button class="btn" type="button" aria-live="polite" onclick={copy}>{copied ? m.invites_copied() : m.invites_copy()}</button>
               </div>
             </div>
           {/if}

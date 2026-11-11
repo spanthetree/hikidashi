@@ -6,6 +6,7 @@
   import Notice from "$lib/components/Notice.svelte";
   import Rich from "$lib/components/Rich.svelte";
   import Topbar from "$lib/components/Topbar.svelte";
+  import { copyFailure, copyText } from "$lib/clipboard";
   import { ago, list, nf, savedDate } from "$lib/format";
   import { stageLabel } from "$lib/i18n";
   import { m } from "$lib/paraglide/messages";
@@ -92,13 +93,11 @@
 
   async function copy(what: "token" | "command") {
     if (!fresh) return;
-    try {
-      await navigator.clipboard.writeText(what === "token" ? fresh.token : command);
-      copied = what;
-    } catch {
-      // No clipboard here (plain http to another host): the text is selectable.
-      document.querySelector<HTMLInputElement>(`#p-fresh-${what}`)?.select();
-    }
+    const field = document.querySelector<HTMLInputElement>(`#p-fresh-${what}`);
+    const how = await copyText(what === "token" ? fresh.token : command, field);
+    copied = how === "copied" ? what : null;
+    if (how !== "copied") notice = { text: copyFailure(how), kind: "error" };
+    else if (notice?.kind === "error") notice = null;
   }
 
   async function refresh() {
@@ -201,7 +200,7 @@
           <div class="p-row">
             <input id="p-fresh-token" type="text" readonly value={fresh.token}
                    onfocus={(e) => e.currentTarget.select()}>
-            <button class="btn" type="button" onclick={() => copy("token")}>
+            <button class="btn" type="button" aria-live="polite" onclick={() => copy("token")}>
               {copied === "token" ? m.invites_copied() : m.invites_copy()}
             </button>
           </div>
@@ -209,7 +208,7 @@
           <div class="p-row">
             <input id="p-fresh-command" type="text" readonly value={command}
                    onfocus={(e) => e.currentTarget.select()}>
-            <button class="btn" type="button" onclick={() => copy("command")}>
+            <button class="btn" type="button" aria-live="polite" onclick={() => copy("command")}>
               {copied === "command" ? m.invites_copied() : m.invites_copy()}
             </button>
           </div>

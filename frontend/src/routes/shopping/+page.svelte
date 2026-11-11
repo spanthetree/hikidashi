@@ -4,6 +4,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import Notice from "$lib/components/Notice.svelte";
   import Topbar from "$lib/components/Topbar.svelte";
+  import { copyFailure, copyText } from "$lib/clipboard";
   import { list, nf, tint } from "$lib/format";
   import { m } from "$lib/paraglide/messages";
   import { asText, byAisle } from "$lib/shopping";
@@ -82,13 +83,13 @@
   }
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(text());
-      copied = true;
-      setTimeout(() => (copied = false), 2000);
-    } catch (err) {
-      notice = { text: m.shop_failed({ error: (err as Error).message }), kind: "error" };
+    const how = await copyText(text());
+    if (how !== "copied") {
+      notice = { text: copyFailure(how), kind: "error" };
+      return;
     }
+    copied = true;
+    setTimeout(() => (copied = false), 2000);
   }
 </script>
 
@@ -120,7 +121,7 @@
       {#if canShare}
         <button class="btn primary" type="button" onclick={share}>{m.shop_share()}</button>
       {/if}
-      <button class="btn" type="button" onclick={copy}>{copied ? m.shop_copied() : m.shop_copy()}</button>
+      <button class="btn" type="button" aria-live="polite" onclick={copy}>{copied ? m.shop_copied() : m.shop_copy()}</button>
       {#if !confirming}
         <button class="btn quiet" type="button" onclick={() => (confirming = true)}>{m.shop_clear()}</button>
       {/if}

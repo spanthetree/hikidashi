@@ -6,6 +6,7 @@
   import RecipePanel from "$lib/components/RecipePanel.svelte";
   import Rich from "$lib/components/Rich.svelte";
   import { segments } from "$lib/caption";
+  import { copyFailure, copyText } from "$lib/clipboard";
   import { paragraphs, readingTime } from "$lib/transcript";
   import { duration, megabytes, nf, profileUrl, savedDate, tint } from "$lib/format";
   import { tagLabel, tagName } from "$lib/i18n";
@@ -211,13 +212,20 @@
   let copied = $state(false);
 
   async function copyNote() {
+    let note: string;
     try {
-      await navigator.clipboard.writeText(await getNote(shortcode));
-      copied = true;
-      setTimeout(() => (copied = false), 2000);
+      note = await getNote(shortcode);
     } catch (err) {
       onerror(m.export_copy_failed({ error: (err as Error).message }));
+      return;
     }
+    const how = await copyText(note);
+    if (how !== "copied") {
+      onerror(copyFailure(how));
+      return;
+    }
+    copied = true;
+    setTimeout(() => (copied = false), 2000);
   }
 
   const exports = $derived.by(() => {
