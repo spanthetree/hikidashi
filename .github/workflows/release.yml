@@ -1,0 +1,82 @@
+name: release
+
+# A release is a version bump merged to master (#77). The PR's last commit
+# sets the version in pyproject.toml and the changelog (CONTRIBUTING.md); once
+# it lands, this publishes the images for that version, then tags the commit
+# vX.Y.Z and makes a GitHub release from its changelog section. Nothing to do
+# when the tag already exists.
+#
+# The images go first, so a failed build leaves no tag behind. Run it by hand
+# (Actions → release → Run workflow) to try again.
+#
+# The images job is called, not triggered by the tag: a tag pushed with
+# GITHUB_TOKEN starts no other workflow.
+
+on:
+  push:
+    branches: [master]
+    paths: [pyproject.toml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One release at a time, and never one cancelled half-published.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      new: ${{ steps.read.outputs.new }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: read
+        name: Is this version released?
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' pyproject.toml)
+          [ -n "$version" ] || { echo "::error::no version in pyproject.toml"; exit 1; }
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null; then
+            echo "v$version is already released"
+            echo "new=false" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The changelog commit comes with every version (CONTRIBUTING.md).
+          grep -q "^## \[$version\]" CHANGELOG.md || {
+            echo "::error::CHANGELOG.md has no section for $version"; exit 1; }
+          echo "new=true" >>"$GITHUB_OUTPUT"
+
+  images:
+    needs: version
+    if: needs.version.outputs.new == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/images.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+
+  release:
+    needs: [version, images]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          # The version's own section of the changelog, without its heading.
+          awk -v v="$VERSION" '
+            index($0, "## [" v "]") == 1 { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md >notes.md
+          gh release create "v$VERSION" --target "$GITHUB_SHA" \
+            --title "Hikidashi $VERSION" --notes-file notes.md

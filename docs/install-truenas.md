@@ -9,9 +9,9 @@ remote worker, updating, backing up, and what goes wrong.
 and not a catalog app. [Unraid](install-unraid.md) ·
 [Back to the README](../README.md)
 
-> **Not yet installable.** The file pulls the published images
-> (`ghcr.io/spanthetree/hikidashi-server`, `-worker`, `-worker-cuda`), and
-> those wait on #77.
+> The file pulls the published images
+> (`ghcr.io/spanthetree/hikidashi-server`, `-worker`, `-worker-cuda`), which
+> each release publishes (#77), pinned to this release.
 
 ## What's in the file
 

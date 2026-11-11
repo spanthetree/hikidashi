@@ -45,6 +45,11 @@ flowchart LR
 | A Nominatim geocoder | the server's places locator | the place names read from captions | default: `HIKIDASHI_GEOCODER` is empty |
 | Map tiles | your browser, on the map view | the tile coordinates you look at | `HIKIDASHI_TILES` pointing at your own |
 
+Installing and updating under Docker pulls the images from GitHub's
+registry, `ghcr.io/spanthetree` (#77): an image pull, with nothing of your
+library in it. `--build` and a `HIKIDASHI_VERSION` nobody published build
+from the checkout instead.
+
 Ollama is part of the system, not outside it: it runs on the server
 (`./hikidashi start --ai`) or on the machine of the worker that calls it. The
 server itself never calls Ollama (#86).
@@ -52,6 +57,11 @@ server itself never calls Ollama (#86).
 ## Containers and images
 
 Two images built from one `Dockerfile`, plus the upstream Ollama image (#86).
+Each release publishes them to `ghcr.io/spanthetree`
+(`.github/workflows/release.yml`, #77): the server and worker images for
+amd64 and arm64, the cuda one for amd64. The compose files pull them, and
+build from the checkout only with `--build` or when there is nothing to
+pull.
 A worker in either Hikidashi image runs the stages that image has the tools
 for, and `HIKIDASHI_LOCAL_STAGES` picks among them.
 

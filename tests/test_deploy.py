@@ -143,5 +143,38 @@ class TestTrueNAS(unittest.TestCase):
         self.assertEqual(body.count('user: "568:568"'), 3)
 
 
+class TestCompose(unittest.TestCase):
+    """The checkout's compose files pull the images the release workflow
+    publishes (#77), and build only as a fallback."""
+
+    PUBLISHED = re.compile(
+        r"image: ghcr\.io/spanthetree/(?:\$\{HIKIDASHI_WORKER_IMAGE:-)?([\w-]+?)\}?"
+        r":\$\{HIKIDASHI_VERSION:-latest\}"
+    )
+
+    def images(self, name: str) -> list[str]:
+        return self.PUBLISHED.findall((ROOT / name).read_text())
+
+    def test_the_single_host_stack(self):
+        self.assertEqual(
+            self.images("docker-compose.yml"),
+            ["hikidashi-server", "hikidashi-server", "hikidashi-worker"],
+        )
+
+    def test_the_remote_worker(self):
+        self.assertEqual(self.images("docker-compose.worker.yml"), ["hikidashi-worker-cuda"])
+
+    def test_every_image_is_one_the_workflow_publishes(self):
+        workflow = (ROOT / ".github" / "workflows" / "images.yml").read_text()
+        published = set(re.findall(r"- image: ([\w-]+)", workflow))
+        self.assertEqual(published, IMAGES)
+
+    def test_no_local_only_images(self):
+        for name in ("docker-compose.yml", "docker-compose.worker.yml"):
+            text = (ROOT / name).read_text()
+            self.assertNotIn(":local", text, name)
+            self.assertNotIn("pull_policy: never", text, name)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -155,8 +155,9 @@ compete with page loads. Each worker may use 2 cores (`HIKIDASHI_WORKER_CPUS`;
 lower priority than the server under uv and Docker alike. Their names in
 status are their hostnames, `hikidashi-server-worker` and `hikidashi-worker`
 (`HIKIDASHI_SERVER_WORKER_NAME`, `HIKIDASHI_WORKER_NAME`); each worker on one
-database needs its own. For the GPU, build with `HIKIDASHI_EXTRAS="--extra
-cuda"` and uncomment the worker's `deploy` block.
+database needs its own. For the GPU, set
+`HIKIDASHI_WORKER_IMAGE=hikidashi-worker-cuda` (or build with
+`HIKIDASHI_EXTRAS="--extra cuda"`) and uncomment the worker's `deploy` block.
 
 A server whose heavy stages are all done elsewhere can leave the `worker`
 container out: `COMPOSE_FILE=docker-compose.yml:docker-compose.server-only.yml`
@@ -373,8 +374,10 @@ uv sync --extra worker --extra cuda   # NVIDIA wheels; no system CUDA needed
 They are loaded from the wheels at startup, so `LD_LIBRARY_PATH` needs no
 changes. The model also runs once at load time, so a library that will not load
 fails the run before it starts rather than marking every reel as failed. In
-Docker, build the worker with `HIKIDASHI_EXTRAS="--extra cuda"` (the
-`hikidashi-worker-cuda` image) and uncomment the worker's GPU `deploy` block.
+Docker, run the `hikidashi-worker-cuda` image
+(`HIKIDASHI_WORKER_IMAGE=hikidashi-worker-cuda`, or build it with
+`HIKIDASHI_EXTRAS="--extra cuda"`) and uncomment the worker's GPU `deploy`
+block.
 
 Weights download once into `HIKIDASHI_MODELS` (default `data/models`): about
 330 MB for `cpu` and 1.5 GB for `cuda`. Both models are English-only.

@@ -364,6 +364,8 @@ if [ "$(basename "$0")" = docker ] && [ "$1" = container ]; then
         *) echo false ;;
     esac
 fi
+# STUB_DOCKER_FAIL=pull: `docker compose ... pull` fails, as offline.
+case " $* " in *" ${STUB_DOCKER_FAIL:-none} "*) exit 1 ;; esac
 exit 0
 """
 
@@ -474,7 +476,18 @@ class TestWrapper(unittest.TestCase):
     def test_docker_lifecycle(self):
         self.stub("docker")
         for args, want in [
-            (["start"], "docker compose up -d"),
+            # The published images, pulled first (#77); --build builds instead.
+            (
+                ["start"],
+                ["docker compose pull --quiet --ignore-pull-failures", "docker compose up -d"],
+            ),
+            (
+                ["start", "--ai"],
+                [
+                    "docker compose --profile ai pull --quiet --ignore-pull-failures",
+                    "docker compose --profile ai up -d",
+                ],
+            ),
             (["start", "--build", "--ai"], "docker compose --profile ai up -d --build"),
             (["stop"], "docker compose --profile ai stop"),
             (["restart"], "docker compose up -d --force-recreate"),
@@ -486,7 +499,15 @@ class TestWrapper(unittest.TestCase):
             self.log.write_text("")
             proc = self.run_wrapper("--docker", *args)
             self.assertEqual(proc.returncode, 0, proc.stderr)
-            self.assertEqual(self.calls(), [want])
+            self.assertEqual(self.calls(), want if isinstance(want, list) else [want])
+
+    def test_docker_start_goes_on_when_the_pull_fails(self):
+        # Offline, or a HIKIDASHI_VERSION nobody published: what is here runs.
+        self.stub("docker")
+        proc = self.run_wrapper("--docker", "start", STUB_DOCKER_FAIL="pull")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("could not pull", proc.stderr)
+        self.assertEqual(self.calls()[-1], "docker compose up -d")
 
     def test_docker_import_path_becomes_the_container_path(self):
         self.stub("docker")

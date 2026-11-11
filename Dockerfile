@@ -7,10 +7,16 @@
 #       -t hikidashi-worker-cuda .                        the same, for a GPU
 #
 # Ollama, which tag and recipe call, is the upstream ollama/ollama image.
+#
+# Published to GHCR with every release (#77, .github/workflows/release.yml):
+# ghcr.io/spanthetree/hikidashi-server, -worker (amd64 and arm64) and
+# -worker-cuda (amd64).
 
 # The front end is built here and only its static output is copied on, so the
 # server image has no Node in it, and the worker image no front end at all.
-FROM node:22-slim AS web
+# Static files are the same on every architecture, so it is built once, on
+# the builder's own (an arm64 image is otherwise built under emulation).
+FROM --platform=$BUILDPLATFORM node:22-slim AS web
 
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./

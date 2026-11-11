@@ -3,10 +3,13 @@
 # downloads their media, and sends back what it found. See
 # docs/remote-workers.md.
 #
-#   docker compose -f docker-compose.worker.yml up -d --build
+#   docker compose -f docker-compose.worker.yml up -d
 #
-# It builds the cuda image unless HIKIDASHI_EXTRAS says otherwise; for the GPU
-# itself, uncomment the deploy block at the end.
+# It pulls the published cuda image (#77) unless HIKIDASHI_WORKER_IMAGE says
+# hikidashi-worker, the CPU one; for the GPU itself, uncomment the deploy
+# block at the end. With --build, or when there is nothing to pull, it builds
+# from this checkout instead, the cuda one unless HIKIDASHI_EXTRAS says
+# otherwise.
 #
 # HIKIDASHI_WORKER_TOKEN is a worker token the server made (its Pipeline page,
 # or `hikidashi token make <name> --worker` there). Run the server's release.
@@ -17,8 +20,9 @@ name: hikidashi-remote
 
 services:
   worker:
-    # The worker image (#86): Whisper and tesseract, no web stack.
-    image: hikidashi-worker:local
+    # The worker image (#86): Whisper and tesseract, no web stack. The same
+    # release as the server's: HIKIDASHI_VERSION, as 0.19.0.
+    image: ghcr.io/spanthetree/${HIKIDASHI_WORKER_IMAGE:-hikidashi-worker-cuda}:${HIKIDASHI_VERSION:-latest}
     build:
       context: .
       target: worker

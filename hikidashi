@@ -45,8 +45,9 @@ usage() {
 usage: ./hikidashi [--uv | --docker] <command> [flags]
 
 server:
-  start [--build] [--ai]   start the server and the workers (Docker: --build
-                           rebuilds the image, --ai also starts Ollama)
+  start [--build] [--ai]   start the server and the workers (Docker: pulls the
+                           published images first; --build builds them from
+                           here instead, --ai also starts Ollama)
   stop                     stop them
   restart                  stop, then start, with any changes to .env
   status                   are they running, and the pipeline's counts
@@ -329,6 +330,10 @@ service_for() {
 	esac
 }
 
+# The published images unless --build (#77): pulled first, so starting is
+# also updating. A pull that fails (offline, or a HIKIDASHI_VERSION nobody
+# published, as `dev`) leaves what is here, and Compose builds what is
+# missing from this checkout.
 docker_start() {
 	build= profile=
 	for arg; do
@@ -339,6 +344,9 @@ docker_start() {
 		esac
 	done
 	# shellcheck disable=SC2086  # $profile and $build are one or two words, or none
+	[ -n "$build" ] || compose $profile pull --quiet --ignore-pull-failures ||
+		echo "hikidashi: could not pull the images; starting what is here" >&2
+	# shellcheck disable=SC2086
 	compose $profile up -d $build
 }
 

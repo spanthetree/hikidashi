@@ -6,6 +6,33 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.18.2] — 2026-11-11
+
+### Added
+
+- **Published images** (#77). Each release publishes
+  `ghcr.io/spanthetree/hikidashi-server` and `hikidashi-worker` (amd64 and
+  arm64) and `hikidashi-worker-cuda` (amd64), tagged with the version, its
+  minor series and `latest`. Each image is started in CI before it's pushed.
+  The Unraid templates and the TrueNAS file, which already named these
+  images, now work as written.
+- **Merging a version bump releases it.** `.github/workflows/release.yml`
+  publishes the images when a new version lands on `master`, then tags the
+  commit and makes a GitHub release from the changelog.
+- `HIKIDASHI_VERSION` picks the release of the images (unset: `latest`), and
+  `HIKIDASHI_WORKER_IMAGE` picks `hikidashi-worker` or `hikidashi-worker-cuda`.
+
+### Changed
+
+- **Docker pulls instead of building.** `docker-compose.yml` and
+  `docker-compose.worker.yml` name the published images, and
+  `./hikidashi start` pulls them before it starts, so starting also updates.
+  `--build` still builds from the checkout, and so does Compose when there is
+  nothing to pull. To keep running your own builds, set `HIKIDASHI_VERSION`
+  to a tag nobody published, such as `dev`, so a start never pulls over them.
+- Compose Manager on Unraid pulls the images too: `docker compose pull`, then
+  **Compose Up**.
+
 ## [0.18.1] — 2026-11-11
 
 ### Fixed

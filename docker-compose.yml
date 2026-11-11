@@ -2,8 +2,12 @@
 # new reels, and (with --profile ai) Ollama. One SQLite file, no orchestration.
 #
 # Two images (#86). The server image has the web stack, yt-dlp and the
-# embedder; the worker image has Whisper and tesseract. Each tag is built by
-# one service, as two services building one tag at once collide (#79).
+# embedder; the worker image has Whisper and tesseract. Both are published
+# (#77): `docker compose up -d` pulls them, and builds from this checkout only
+# when there is nothing to pull, or with --build. HIKIDASHI_VERSION picks the
+# release (latest unless set, as 0.19.0); a tag nobody published, as `dev`,
+# keeps your own builds. Each tag is built by one service, as two services
+# building one tag at once collide (#79).
 #
 #   app            server image   the web UI and API, import, places
 #   server-worker  server image   enrich and embed, on new reels
@@ -36,7 +40,7 @@ x-worker: &worker
 services:
   app:
     <<: *hikidashi
-    image: hikidashi-server:local
+    image: ghcr.io/spanthetree/hikidashi-server:${HIKIDASHI_VERSION:-latest}
     container_name: hikidashi
     build:
       context: .
@@ -76,9 +80,8 @@ services:
   # takes the web UI down, and it restarts and logs on its own.
   server-worker:
     <<: *worker
-    # The image the app builds; never looked for in a registry.
-    image: hikidashi-server:local
-    pull_policy: never
+    # The app's image, which the app builds when it builds.
+    image: ghcr.io/spanthetree/hikidashi-server:${HIKIDASHI_VERSION:-latest}
     container_name: hikidashi-server-worker
     # Its own log file: the worker container writes worker.log in the same
     # folder, and two writers rotating one file lose lines.
@@ -95,13 +98,14 @@ services:
   # mid-transcription never takes the web UI down with it.
   worker:
     <<: *worker
-    image: hikidashi-worker:local
+    # hikidashi-worker-cuda on a GPU host, and uncomment the deploy block below.
+    image: ghcr.io/spanthetree/${HIKIDASHI_WORKER_IMAGE:-hikidashi-worker}:${HIKIDASHI_VERSION:-latest}
     container_name: hikidashi-worker
     build:
       context: .
       target: worker
       args:
-        # "--extra cuda" on a GPU host. Also uncomment the deploy block below.
+        # Building it: "--extra cuda" for the cuda image.
         EXTRAS: ${HIKIDASHI_EXTRAS:-}
     # Its name in `./hikidashi status`; give each worker on a database its own.
     hostname: ${HIKIDASHI_WORKER_NAME:-hikidashi-worker}

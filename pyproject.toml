@@ -1,6 +1,6 @@
 [project]
 name = "hikidashi"
-version = "0.18.1"
+version = "0.18.2"
 description = "A self-hosted, searchable library for Instagram saves"
 readme = "README.md"
 requires-python = ">=3.12"
