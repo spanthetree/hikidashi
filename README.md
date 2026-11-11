@@ -39,9 +39,9 @@ written on screen, and what it shows.
 - 🔎 **Search by meaning, not just words.** Captions, spoken words
   ([faster-whisper](https://github.com/SYSTRAN/faster-whisper) transcripts) and
   on-screen text (tesseract OCR) share one full-text index, blended with
-  semantic search. "Warm broth for a cold night" finds a reel captioned
-  *Loaded Potato Soup*, and "the one where she says soup doesn't count as a
-  meal" finds the reel that said it.
+  semantic search. "A vegetarian sandwich" finds a reel captioned
+  *Portobello banh mi*, and "the one where she says the sauce cooks while the
+  roast rests" finds the reel that said it.
 - 🏷️ **Automatic tags and summaries.** A local LLM via
   [Ollama](https://ollama.com) files every reel under one category and writes a
   one-line summary and keywords, falling back on its hashtags. Cleaned hashtags

@@ -100,16 +100,17 @@ Search quality is measured, not eyeballed: `python -m app.search.eval` scores
 73 graded queries, and `--against <git ref>` scores an older search beside
 it. [search.md](search.md) has the numbers, and what was tried and rejected
 (cross-encoder reranking, LLM query and document expansion). The
-limit is still the model's world knowledge: "the best margherita in Naples"
-puts a pizza reel 5th, because to a 300M-parameter model "best" plus a place
-reads as a restaurant review, and "margherita" only weakly means pizza.
+limit is still the model's world knowledge: asking for the best of a dish in
+its home city puts the first matching reel 5th, because to a 300M-parameter
+model "best" plus a place reads as a restaurant review, and a dish's name only
+weakly means the food when no reel says it.
 
 ## Finding places in captions
 
 Calibrated against the real library rather than guessed at. Of 420 captions, 59
 use a 📍 pin, 22 contain a street address, and 2 use a `Where:` label. The pin
 is the strongest signal and usually carries a venue name as well as an address —
-`📍Katz's Delicatessen — 205 E Houston St, New York, NY 10002` — which makes a
+`📍Corner Noodle Bar — 12 Example St, Portland, OR 97201` — which makes a
 far better Maps query than the street line alone, so the whole string is kept.
 
 The bar is deliberately high: a candidate must look like a place, not merely

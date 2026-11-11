@@ -88,24 +88,23 @@ Every accepted proposal is **demoted to a keyword** on the reels it tagged,
 whichever source had attached it. None became a category. They fell into four
 kinds, none of them a category:
 
-| kind     | tags (items) |
-|----------|--------------|
-| places   | texas (12), new zealand (9), usa (7), utah (6), new york (6) |
-| food     | soup (12), tacos (10), birria (8), chicken (8), sandwich (8), beef (7), pizza (6), healthyfood (5), cheese (5), one-pot (5), bread (5) |
-| cars     | corolla (6), initiald (5), lexus (5), driving (5) |
-| other    | bucket list (11), nature (8), websites (7), views (7), hotel (6), hacking (5), hidden gems (5), kids (4), trip (2) |
+| kind     | what they were |
+|----------|----------------|
+| places   | 5 countries, states and cities |
+| food     | 11 dishes and ingredients |
+| cars     | 4 models and kinds of driving |
+| other    | 9 travel and general words |
 
 All 29 still find every reel they tagged, as a search (keywords only, no
 vectors), checked on a copy of the library after migrating. The one that
-nearly did not was `bucket list`: the model had written the keyword as
-`bucketlist`, which is a single search token, so the migration adds the
-spaced form too.
+nearly did not was a two-word tag the model had written as one word
+(`bucketlist` for `bucket list`), which is a single search token, so the
+migration adds the spaced form too.
 
 Keywords are model output, and the next `tag --llm` rewrites them. For 186 of
 the 195 reels that does not matter, because the caption, transcript, summary
 or a hashtag also says the word. The other 9 are found only through the
-keyword: `hidden gems` (3), and one each for `bucket list`, `driving`,
-`hacking`, `nature`, `new york` and `one-pot`. Those stay findable only if the
+keyword: one two-word tag on 3 of them, and six other tags on one each. Those stay findable only if the
 model names them again, or semantic search places them close enough. Search
 for them again after the next model run.
 
