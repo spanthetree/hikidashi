@@ -17,6 +17,12 @@
     package), `frontend/package.json`, `frontend/package-lock.json` (both
     entries), the version badge at the top of `README.md`, and the three
     image tags in `deploy/truenas/hikidashi.yaml`.
+- **Merging is releasing.** Once a version bump lands on `master`,
+  `.github/workflows/release.yml` publishes the images to GHCR, then tags the
+  commit `vX.Y.Z` and makes a GitHub release from its changelog section.
+  Don't tag by hand. If the images fail, nothing is tagged: fix it, or run
+  the workflow again from the Actions tab. To try a branch's images first,
+  run the **images** workflow on it, which publishes `edge`.
 
 ## Keeping the docs and diagrams true
 

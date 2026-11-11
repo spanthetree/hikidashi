@@ -57,8 +57,8 @@ server itself never calls Ollama (#86).
 ## Containers and images
 
 Two images built from one `Dockerfile`, plus the upstream Ollama image (#86).
-Each release tag publishes them to `ghcr.io/spanthetree`
-(`.github/workflows/images.yml`, #77): the server and worker images for
+Each release publishes them to `ghcr.io/spanthetree`
+(`.github/workflows/release.yml`, #77): the server and worker images for
 amd64 and arm64, the cuda one for amd64. The compose files pull them, and
 build from the checkout only with `--build` or when there is nothing to
 pull.

@@ -8,7 +8,7 @@
 #
 # Ollama, which tag and recipe call, is the upstream ollama/ollama image.
 #
-# Published to GHCR on every release tag (#77, .github/workflows/images.yml):
+# Published to GHCR with every release (#77, .github/workflows/release.yml):
 # ghcr.io/spanthetree/hikidashi-server, -worker (amd64 and arm64) and
 # -worker-cuda (amd64).
 

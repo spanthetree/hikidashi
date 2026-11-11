@@ -6,15 +6,20 @@ name: images
 #   ghcr.io/spanthetree/hikidashi-worker        amd64, arm64
 #   ghcr.io/spanthetree/hikidashi-worker-cuda   amd64
 #
-# A release tag (v0.19.0) publishes 0.19.0, 0.19 and latest. Run by hand
-# (Actions → images → Run workflow), it publishes edge and sha-<commit>, for
-# trying a branch on a NAS before a release. A pull request that changes what
-# goes into an image builds the amd64 ones and starts them, and pushes
-# nothing.
+# A release (release.yml, on a version bump merged to master) calls this with
+# the version: 0.19.0 publishes 0.19.0, 0.19 and latest. Run by hand
+# (Actions → images → Run workflow, on any branch), it publishes edge and
+# sha-<commit>, for trying a branch on a NAS before a release. A pull request
+# that changes what goes into an image builds the amd64 ones and starts them,
+# and pushes nothing.
 
 on:
-  push:
-    tags: ["v*.*.*"]
+  workflow_call:
+    inputs:
+      version:
+        description: The release, as 0.19.0; the version in pyproject.toml
+        type: string
+        required: true
   workflow_dispatch:
   pull_request:
     paths:
@@ -30,9 +35,11 @@ permissions:
   contents: read
   packages: write
 
+# A newer push to a pull request replaces its build; a release is never cut
+# short. Called by release.yml, the group is the caller's ref plus the version.
 concurrency:
-  group: images-${{ github.ref }}
-  cancel-in-progress: true
+  group: images-${{ github.ref }}-${{ inputs.version || github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   image:
@@ -56,6 +63,8 @@ jobs:
             platforms: linux/amd64
     env:
       IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+      # Set only for a release.
+      RELEASE: ${{ inputs.version }}
       PUSH: ${{ github.event_name != 'pull_request' }}
       # The cuda image is the worker image plus wheels: not worth a PR's time.
       SKIP: ${{ github.event_name == 'pull_request' && matrix.image == 'hikidashi-worker-cuda' }}
@@ -63,14 +72,13 @@ jobs:
       - uses: actions/checkout@v4
         if: env.SKIP != 'true'
 
-      # The tag is the version the changelog commit set (CONTRIBUTING.md):
-      # an image never says one version and runs another.
-      - name: The tag matches pyproject.toml
-        if: env.SKIP != 'true' && github.ref_type == 'tag'
+      # An image never says one version and runs another.
+      - name: The release matches pyproject.toml
+        if: env.SKIP != 'true' && env.RELEASE != ''
         run: |
           want=$(sed -n 's/^version = "\(.*\)"$/\1/p' pyproject.toml)
-          [ "${GITHUB_REF_NAME#v}" = "$want" ] || {
-            echo "::error::tag $GITHUB_REF_NAME, but pyproject.toml says $want"; exit 1; }
+          [ "$RELEASE" = "$want" ] || {
+            echo "::error::releasing $RELEASE, but pyproject.toml says $want"; exit 1; }
 
       # The cuda wheels and two architectures' layers need the room.
       - name: Free disk space
@@ -87,13 +95,14 @@ jobs:
         id: meta
         with:
           images: ${{ env.IMAGE }}
-          # latest only on a release tag, never on edge or a pull request.
-          flavor: latest=auto
+          # latest only on a release, never on edge or a pull request.
+          flavor: latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=edge,enable=${{ github.event_name == 'workflow_dispatch' }}
-            type=sha,enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=semver,pattern={{version}},value=v${{ env.RELEASE }},enable=${{ env.RELEASE != '' }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ env.RELEASE }},enable=${{ env.RELEASE != '' }}
+            type=raw,value=latest,enable=${{ env.RELEASE != '' }}
+            type=raw,value=edge,enable=${{ env.RELEASE == '' && github.event_name == 'workflow_dispatch' }}
+            type=sha,enable=${{ env.RELEASE == '' && github.event_name == 'workflow_dispatch' }}
             type=ref,event=pr
           labels: |
             org.opencontainers.image.title=${{ matrix.image }}
