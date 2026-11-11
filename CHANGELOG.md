@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.18.1] — 2026-11-11
+
+### Fixed
+
+- **Copy buttons work over plain HTTP** (#107). A NAS is usually opened as
+  `http://<host>:8080`, where the browser has no clipboard API, and every
+  copy button (worker and API tokens, the worker command, invite links, the
+  shopping list, a reel's note) quietly did nothing. They now fall back to
+  the browser's older copy command, and if that fails too, say so, select the
+  text for Ctrl+C / ⌘C, and mention that HTTPS would make the button work.
+  "Copied" is announced to screen readers.
+
 ## [0.18.0] — 2026-11-11
 
 **ReelVault is now Hikidashi** (#121): 引き出し, a drawer you pull your saves

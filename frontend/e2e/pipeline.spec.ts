@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { PEOPLE } from "./env";
 
 /* The Pipeline page (#72): what each stage has to do, and whether a worker is
@@ -83,6 +83,76 @@ test.describe("worker tokens, as Alice (#35)", () => {
     await expect(row).toHaveCount(0);
     expect((await claim()).status()).toBe(404); // the last one gone: remote workers off
     await worker.dispose();
+  });
+});
+
+test.describe("copying a new token (#107)", () => {
+  test.use({ storageState: PEOPLE.alice.state });
+
+  /* The tests' server is http://127.0.0.1, a secure context. A NAS opened
+     over plain HTTP on the LAN isn't one: there the page has no
+     navigator.clipboard, which these stub away to stand in for it. */
+  const plainHttp = () => {
+    Object.defineProperty(window, "isSecureContext", { value: false, configurable: true });
+    Object.defineProperty(Navigator.prototype, "clipboard", { get: () => undefined, configurable: true });
+  };
+
+  async function makeToken(page: Page, name: string) {
+    await page.goto("/pipeline");
+    await page.getByLabel("What the token is for").fill(name);
+    await page.getByRole("button", { name: "Make a token" }).click();
+    return page.locator("#p-fresh-token").inputValue();
+  }
+
+  async function revoke(page: Page, name: string) {
+    await page.locator(".p-token", { hasText: name }).getByRole("button", { name: "Revoke" }).click();
+    await expect(page.locator(".p-token", { hasText: name })).toHaveCount(0);
+  }
+
+  const copyButton = (page: Page, field: string) =>
+    page.locator(".p-row", { has: page.locator(field) }).getByRole("button");
+
+  test("over HTTPS, Copy puts the token on the clipboard", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const token = await makeToken(page, "e2e copy secure");
+    await copyButton(page, "#p-fresh-token").click();
+    await expect(copyButton(page, "#p-fresh-token")).toHaveText("Copied");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(token);
+    await revoke(page, "e2e copy secure");
+  });
+
+  test("over plain HTTP, Copy still copies the command", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(plainHttp);
+    await makeToken(page, "e2e copy http");
+    expect(await page.evaluate(() => typeof navigator.clipboard)).toBe("undefined");
+    const command = await page.locator("#p-fresh-command").inputValue();
+    await copyButton(page, "#p-fresh-command").click();
+    await expect(copyButton(page, "#p-fresh-command")).toHaveText("Copied");
+    await expect(page.getByRole("alert")).toHaveCount(0);
+
+    // Read it back from a page that still has the clipboard API.
+    const reader = await context.newPage();
+    await reader.goto("/pipeline");
+    expect(await reader.evaluate(() => navigator.clipboard.readText())).toBe(command);
+    await reader.close();
+    await revoke(page, "e2e copy http");
+  });
+
+  test("when nothing can copy, it says so and selects the token", async ({ page }) => {
+    await page.addInitScript(plainHttp);
+    await page.addInitScript(() => { document.execCommand = () => false; });
+    const token = await makeToken(page, "e2e copy none");
+    await copyButton(page, "#p-fresh-token").click();
+    const alert = page.getByRole("alert");
+    await expect(alert).toContainText("the text is selected");
+    await expect(alert).toContainText("HTTPS");
+    await expect(copyButton(page, "#p-fresh-token")).toHaveText("Copy");
+    const selected = await page.locator("#p-fresh-token").evaluate(
+      (el: HTMLInputElement) => el.value.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0),
+    );
+    expect(selected).toBe(token);
+    await revoke(page, "e2e copy none");
   });
 });
 

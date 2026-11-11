@@ -91,7 +91,8 @@
                 {c.label}{#if c.hint}<small>{c.hint}</small>{/if}
               </a>
             {:else}
-              <button type="button" class="x-choice" onclick={() => choose(c)}>
+              <button type="button" class="x-choice" aria-live={c.keep ? "polite" : undefined}
+                      onclick={() => choose(c)}>
                 {c.label}{#if c.hint}<small>{c.hint}</small>{/if}
               </button>
             {/if}

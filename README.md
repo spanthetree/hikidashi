@@ -8,7 +8,7 @@
 
 Runs on your machine · local models · your data stays yours · one library each
 
-[![version](https://img.shields.io/badge/version-0.18.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.18.1-blue)](CHANGELOG.md)
 [![tests](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml)
 [![status: alpha](https://img.shields.io/badge/status-alpha-orange)](CHANGELOG.md)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776ab?logo=python&logoColor=white)](#quick-start)
@@ -268,6 +268,12 @@ your account is yours to state, and never checked.
 
 Put it behind HTTPS before it leaves your network: set `HIKIDASHI_ORIGIN` to
 the public address, which also marks the sign-in cookie Secure.
+
+On your own network, plain HTTP (`http://192.168.1.20:8080`) works, with two
+limits, because browsers keep some things to HTTPS pages: the map's **Near
+me** can't find you, and the copy buttons fall back to an older way of
+copying. If the browser refuses that too, the button says so and selects the
+text for you to copy.
 
 ### From a script: API tokens
 
