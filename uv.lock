@@ -1600,7 +1600,7 @@ wheels = [
 
 [[package]]
 name = "hikidashi"
-version = "0.18.2"
+version = "0.18.5"
 source = { editable = "." }
 
 [package.optional-dependencies]

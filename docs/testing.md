@@ -101,8 +101,16 @@ To check that a test can fail, break what it guards for a moment. With
 `isolation.spec.ts` fails on Bob's grid; with `library.mine` ignoring the user,
 it fails on Alice's thumbnail. Both were tried while writing it.
 
+**In CI** the `e2e` job runs inside Playwright's own image,
+`mcr.microsoft.com/playwright`, which already has Chromium and the system
+packages it needs, so nothing is installed from Ubuntu's mirrors (#131). Its
+tag names a Playwright release, and the browsers in it only work with that
+release of `@playwright/test`: when one moves in `frontend/package.json`, move
+the `container:` tag in `.github/workflows/tests.yml` with it.
+`tests/test_ci.py` fails while the two disagree.
+
 **Cost:** locally, about 40 s of tests after a 6 s build. In CI the `e2e` job
-takes about 1 min 40 s all told, browser install included, and runs alongside
+takes about 1 min 40 s all told, and runs alongside
 the others (`python` and `lint` about 30 s, `frontend` 40 s). It is the
 slowest, so a pull request now waits about a minute longer for its checks.
 

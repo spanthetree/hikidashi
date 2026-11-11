@@ -70,22 +70,33 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Playwright's own image, which already has Chromium and every system
+    # package it needs, so nothing comes from Ubuntu's mirrors: when they were
+    # unreachable, e2e failed before a test ran (#131). The tag moves with
+    # @playwright/test in frontend/package.json; tests/test_ci.py checks.
+    container: mcr.microsoft.com/playwright:v1.64.0-noble
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      # What the server needs to run, without the models: search falls back
-      # to keywords, and nothing is fetched or transcribed.
-      - run: pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" python-multipart==0.0.20 argon2-cffi==25.1.0
+      # Python 3.12 from uv (the Dockerfile's version), not apt or
+      # setup-python: the image's own Python has no venv or pip, and
+      # setup-python's builds are made for the runner's Ubuntu, not the
+      # image's. uv's standalone Python runs on either. Then what the server
+      # needs to run, without the models: search falls back to keywords, and
+      # nothing is fetched or transcribed.
+      - name: Python
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSL https://github.com/astral-sh/uv/releases/download/0.11.14/uv-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz --strip-components=1 -C "$RUNNER_TEMP/bin"
+          "$RUNNER_TEMP/bin/uv" venv --python 3.12 --managed-python "$RUNNER_TEMP/venv"
+          VIRTUAL_ENV="$RUNNER_TEMP/venv" "$RUNNER_TEMP/bin/uv" pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" python-multipart==0.0.20 argon2-cffi==25.1.0
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-        working-directory: frontend
-      - run: npx playwright install --with-deps chromium
         working-directory: frontend
       - run: npm run e2e
         working-directory: frontend
