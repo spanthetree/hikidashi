@@ -490,7 +490,7 @@ definition, because a bare name invites a literal reading ("Sim racing" took a
 flight simulator, "Design" took anything built). And the schema offers `Other`
 as a way out, which parsing then drops: without it, a constrained model nearly
 always picks *something*. A caption with fewer than three real words and
-nothing else to go on ("Find your @heaven 🌍") is not sent at all. Words read
+nothing else to go on ("Find your @happyplace 🌍") is not sent at all. Words read
 off the screen count toward the three.
 
 Re-running replaces only the `source = 'model'` row. The model's answer
@@ -638,7 +638,7 @@ without its suite, the address without its venue, and the venue alone. The
 first that finds anything wins.
 
 **How sure is it?** The score is the share of the candidates that lie near the
-top one. "Portland, Maine" names one place and scores 1. "Cedar Park" names a
+top one. "Bangor, Maine" names one place and scores 1. "Springfield" names a
 dozen across the US and scores 0.35: a pin there would be a guess, so it is
 kept but left off the map, under 0.6. A country is no place for a pin, and
 scores 0.2 at most.
@@ -655,5 +655,5 @@ left as it is.
 
 On the real library: 38 reels name 110 places. 83 are on the map, 11 were
 found but too unsurely to pin, and 16 were not found, most of them not places
-at all ("Where to stay", "Christchurch → Twizel (3 nights)"). The second look
+at all ("Where to stay", "Queenstown → Wanaka (2 nights)"). The second look
 moved 12.

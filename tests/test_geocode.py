@@ -42,26 +42,26 @@ def hit(lat, lon, importance=0.5, rank=30, name="somewhere", kind="restaurant"):
 
 class TestQueries(unittest.TestCase):
     def test_the_place_as_written_comes_first(self):
-        self.assertEqual(queries("Portland, Maine"), ["Portland, Maine"])
+        self.assertEqual(queries("Bangor, Maine"), ["Bangor, Maine"])
 
     def test_handles_and_asides_are_dropped(self):
         self.assertEqual(
-            queries("Mackinac Island, Michigan @puremichigan")[0], "Mackinac Island, Michigan"
+            queries("Mackinac Island, Michigan @example.travel")[0], "Mackinac Island, Michigan"
         )
-        self.assertEqual(queries("Big Sur (@bigsurcalifornia)"), ["Big Sur"])
-        self.assertEqual(queries("Christchurch → Twizel (3 nights)")[0], "Christchurch → Twizel")
+        self.assertEqual(queries("Big Sur (@example.coast)"), ["Big Sur"])
+        self.assertEqual(queries("Queenstown → Wanaka (2 nights)")[0], "Queenstown → Wanaka")
 
     def test_an_address_is_tried_without_its_venue_and_then_the_venue(self):
-        tries = queries("Katz's Delicatessen — 205 E Houston St, New York, NY 10002")
-        self.assertEqual(tries[1], "205 E Houston St, New York, NY 10002")
-        self.assertEqual(tries[-1], "Katz's Delicatessen")
+        tries = queries("Mabel's Deli — 118 Water St, New York, NY 10005")
+        self.assertEqual(tries[1], "118 Water St, New York, NY 10005")
+        self.assertEqual(tries[-1], "Mabel's Deli")
 
     def test_a_label_is_not_a_venue(self):
         self.assertEqual(
-            queries("Location: 100 West Laurel Street, Fort Bragg, CA"),
+            queries("Location: 200 North Pine Street, Mendocino, CA"),
             [
-                "Location: 100 West Laurel Street, Fort Bragg, CA",
-                "100 West Laurel Street, Fort Bragg, CA",
+                "Location: 200 North Pine Street, Mendocino, CA",
+                "200 North Pine Street, Mendocino, CA",
             ],
         )
 
@@ -70,15 +70,15 @@ class TestQueries(unittest.TestCase):
 
     def test_an_address_is_tried_without_its_suite(self):
         self.assertIn(
-            "1057 S Sherman St, Richardson, TX 75080",
-            queries("1057 S Sherman St, Ste 130, Richardson, TX 75080"),
+            "2200 N Oak St, Plano, TX 75074",
+            queries("2200 N Oak St, Ste 130, Plano, TX 75074"),
         )
-        self.assertIn("12725 W Indian School Rd", queries("12725 W Indian School Rd Unit A-102"))
+        self.assertIn("4400 W Camelback Rd", queries("4400 W Camelback Rd Unit A-102"))
 
     def test_a_venue_is_dropped_ahead_of_a_street_number(self):
         self.assertIn(
-            "4-21-13 Jingumae, Shibuya, Tokyo",
-            queries("Slice of Life BBQ, 4-21-13 Jingumae, Shibuya, Tokyo"),
+            "2-8-5 Ebisu, Shibuya, Tokyo",
+            queries("Hinoki Grill, 2-8-5 Ebisu, Shibuya, Tokyo"),
         )
 
 
@@ -91,8 +91,8 @@ class TestConfidence(unittest.TestCase):
         self.assertEqual(confidence([hit(29.3, -103.2), hit(29.33, -103.25)]), 1.0)
 
     def test_answers_far_apart_are_a_guess(self):
-        """ "Cedar Park": one in Texas, others across the country."""
-        spread = [hit(30.5, -97.8), hit(40.7, -74.0), hit(41.9, -87.6), hit(34.0, -118.2)]
+        """ "Springfield": one in Illinois, others across the country."""
+        spread = [hit(39.8, -89.6), hit(40.7, -74.0), hit(41.9, -87.6), hit(34.0, -118.2)]
         self.assertLess(confidence(spread), CONFIDENT)
 
     def test_a_famous_answer_outweighs_obscure_ones(self):
@@ -116,13 +116,13 @@ class TestLocate(unittest.TestCase):
 
         def search(q):
             asked.append(q)
-            return [hit(29.95, -96.25, name="504 East Main Street")] if q.startswith("504") else []
+            return [hit(30.27, -98.87, name="310 West Main Street")] if q.startswith("310") else []
 
         found = must(
-            locate("TICKET CHECK-IN LOCATION // 504 E Main St, Bellville, TX 77418", search)
+            locate("TICKET CHECK-IN LOCATION // 310 W Main St, Fredericksburg, TX 78624", search)
         )
-        self.assertEqual(found.query, "504 E Main St, Bellville, TX 77418")
-        self.assertEqual((found.lat, found.lng), (29.95, -96.25))
+        self.assertEqual(found.query, "310 W Main St, Fredericksburg, TX 78624")
+        self.assertEqual((found.lat, found.lng), (30.27, -98.87))
         self.assertEqual(len(asked), 2)
 
     def test_nothing_found(self):
@@ -224,17 +224,17 @@ class TestNominatim(unittest.TestCase):
 
 
 class WorkerCase(unittest.TestCase):
-    """Three reels: two name Katz's, one names nothing."""
+    """Three reels: two name Mabel's, one names nothing."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         root = Path(self.tmp.name)
         self.conn = open_db(root / "t.sqlite3")
-        katz = f"{PIN}Katz's Delicatessen — 205 E Houston St, New York, NY 10002"
+        deli = f"{PIN}Mabel's Deli — 118 Water St, New York, NY 10005"
         records = [
-            post_record(R + "A/", timestamp=3, caption=f"Pastrami {katz} {PIN}Portland, Maine"),
-            post_record(R + "B/", timestamp=2, caption=f"Again {katz}"),
+            post_record(R + "A/", timestamp=3, caption=f"Pastrami {deli} {PIN}Bangor, Maine"),
+            post_record(R + "B/", timestamp=2, caption=f"Again {deli}"),
             post_record(R + "C/", timestamp=1, caption="no place here"),
         ]
         import_export(self.conn, write_zip(root / "e.zip", saved_posts(records)), user_id=1)
@@ -253,7 +253,7 @@ class TestRead(WorkerCase):
         self.assertEqual(worker.read_all(self.conn), 3)
         self.assertEqual(
             self.places("A"),
-            ["Katz's Delicatessen — 205 E Houston St, New York, NY 10002", "Portland, Maine"],
+            ["Mabel's Deli — 118 Water St, New York, NY 10005", "Bangor, Maine"],
         )
         self.assertEqual(self.places("C"), [])
         self.assertEqual(self.conn.execute("SELECT MIN(place_v) FROM item").fetchone()[0], PLACE_V)
@@ -265,10 +265,10 @@ class TestRead(WorkerCase):
         self.assertEqual(worker.summary(self.conn)["unread"], 0)
         self.conn.execute(
             "UPDATE item SET caption = 'Fetched later. ' || ? WHERE shortcode = 'B'",
-            (f"{PIN}Portland, Maine",),
+            (f"{PIN}Bangor, Maine",),
         )
         self.assertEqual(worker.read_all(self.conn), 1, "enrich brought a caption: read it")
-        self.assertEqual(self.places("B"), ["Portland, Maine"])
+        self.assertEqual(self.places("B"), ["Bangor, Maine"])
 
     def test_force_reads_again_without_doubling(self):
         worker.read_all(self.conn)
@@ -284,15 +284,15 @@ class TestLocateAll(WorkerCase):
     def test_a_place_two_reels_name_is_looked_up_once(self):
         pending = worker.pending(self.conn)
         self.assertEqual(len(pending), 2)
-        self.assertTrue(pending[0].startswith("Katz"), "the most-named goes first")
+        self.assertTrue(pending[0].startswith("Mabel"), "the most-named goes first")
 
     def test_stores_what_it_finds_and_what_it_does_not(self):
         def search(q):
-            return [hit(43.66, -70.26)] if q == "Portland, Maine" else []
+            return [hit(43.66, -70.26)] if q == "Bangor, Maine" else []
 
         result = worker.locate_all(self.conn, search)
         self.assertEqual((result.located, result.missing), (1, 1))
-        row = self.conn.execute("SELECT * FROM geocode WHERE text = 'Portland, Maine'").fetchone()
+        row = self.conn.execute("SELECT * FROM geocode WHERE text = 'Bangor, Maine'").fetchone()
         self.assertEqual((row["lat"], row["lng"], row["geo_v"]), (43.66, -70.26, GEO_V))
         self.assertEqual(worker.pending(self.conn), [], "a miss is not asked again")
 
@@ -302,7 +302,7 @@ class TestLocateAll(WorkerCase):
         )
 
     def test_an_unsure_answer_is_kept_but_counted_apart(self):
-        spread = [hit(30.5, -97.8), hit(40.7, -74.0), hit(41.9, -87.6), hit(34.0, -118.2)]
+        spread = [hit(39.8, -89.6), hit(40.7, -74.0), hit(41.9, -87.6), hit(34.0, -118.2)]
         result = worker.locate_all(self.conn, lambda q: spread)
         self.assertEqual(result.approximate, 2)
         self.assertEqual(worker.summary(self.conn)["approximate"], 2)
@@ -319,7 +319,7 @@ class TestLocateAll(WorkerCase):
         with self.assertRaises(GeocodeError):
             worker.locate_all(self.conn, search)
         self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM geocode").fetchone()[0], 1)
-        self.assertEqual(worker.pending(self.conn), ["Portland, Maine"])
+        self.assertEqual(worker.pending(self.conn), ["Bangor, Maine"])
 
     def test_a_removed_reel_takes_its_places_with_it(self):
         from app import library
@@ -422,7 +422,7 @@ class TestLocator(WorkerCase):
 
     def search(self, q, box=None):
         self.asked.append(q)
-        return [hit(43.66, -70.26)] if q == "Portland, Maine" else []
+        return [hit(43.66, -70.26)] if q == "Bangor, Maine" else []
 
     def locator(self, search=None, **kw):
         return Locator(
@@ -457,7 +457,7 @@ class TestLocator(WorkerCase):
             self.assertTrue(locating(self.run_dir))
             self.assertEqual(self.locator().run_once(), 0)
             self.assertEqual(self.asked, [])
-            self.assertEqual(self.places("A")[1], "Portland, Maine", "reading needs no lock")
+            self.assertEqual(self.places("A")[1], "Bangor, Maine", "reading needs no lock")
         self.assertFalse(locating(self.run_dir))
         self.assertEqual(self.locator().run_once(), 2)
 

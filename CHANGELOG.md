@@ -20,6 +20,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   package no longer has a version, the README badge reads the latest GitHub
   release, and the TrueNAS file follows `:latest` like the Unraid templates.
   To stay on one release on TrueNAS, replace `latest` in all three images.
+- **Code comments and tests use made-up examples** (#123). The places, geocoder,
+  search, tagging and recipe tests, and the comments beside the code, quoted
+  real captions: venue addresses, creators' and tourist boards' handles, and
+  real search queries. Each is now a made-up one of the same shape, so every
+  test checks what it did before.
 
 ## [0.18.6] — 2026-11-12
 
@@ -765,7 +770,8 @@ Ready for an always-on server with no Ollama of its own (#76).
   (paraphrase 0.86 to 0.84, place 0.88 to 0.86).
 - **Queries with no good answer stay quiet again**: 5 of 8 return three reels
   or fewer, as before #20, against 3 of 8 in 0.2.0. A sentence matched any one
-  of its words, so "grooming a long haired cat" found 24 reels for "long". A
+  of its words, so a query about grooming a pet found 24 reels for one
+  common adjective in it. A
   reel must now have every word that says what you are after; before
   `./hikidashi embed` has run, any two of them will do.
 - **Half-remembered voiceovers come first**: every one in the eval set now
@@ -1438,8 +1444,8 @@ works from a local checkout but not yet inside the container — which is the
 actual deployment target. Tracked as an issue.
 
 Search remains **keyword, not semantic**. FTS5 over captions is effective
-because Instagram captions are long and hashtag-stuffed, but matching "pizza" to
-a caption that only says "the best margherita in Naples" needs embeddings.
+because Instagram captions are long and hashtag-stuffed, but matching a food to
+a caption that only names a dish and its city needs embeddings.
 
 ## [0.1.0] — 2026-10-21
 

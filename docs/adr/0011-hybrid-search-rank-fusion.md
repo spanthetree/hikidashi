@@ -6,8 +6,8 @@
 
 ## Context
 
-FTS5 keyword search is exact and explainable, but it can't find "warm broth for a
-cold night" in a reel captioned *Loaded Potato Soup*. Embeddings can, and are
+FTS5 keyword search is exact and explainable, but it can't find "a vegetarian
+sandwich" in a reel captioned *Portobello banh mi*. Embeddings can, and are
 vague about exact wording. Their scores (bm25, cosine) are on scales that
 don't compare.
 

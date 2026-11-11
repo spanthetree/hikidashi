@@ -368,10 +368,10 @@ class TestMedia(ApiCase):
 
 
 class TestPlaces(ApiCase):
-    """SHARED names Katz's and Portland; BOBBY1, Bob's, names a ramen shop.
-    Katz's is on the map; Portland was found, but too unsurely to show."""
+    """SHARED names Mabel's and Bangor; BOBBY1, Bob's, names a ramen shop.
+    Mabel's is on the map; Bangor was found, but too unsurely to show."""
 
-    KATZ = "Katz's Delicatessen — 205 E Houston St, New York, NY 10002"
+    DELI = "Mabel's Deli — 118 Water St, New York, NY 10005"
 
     def setUp(self):
         super().setUp()
@@ -381,15 +381,15 @@ class TestPlaces(ApiCase):
         conn = open_db(self.settings.db_path)
         conn.execute(
             "UPDATE item SET caption = ? WHERE shortcode = 'SHARED'",
-            (f"pasta night \U0001f4cd{self.KATZ} \U0001f4cdPortland, Maine",),
+            (f"pasta night \U0001f4cd{self.DELI} \U0001f4cdBangor, Maine",),
         )
         conn.execute(
             "UPDATE item SET caption = ? WHERE shortcode = 'BOBBY1'",
             ("\U0001f4cdRamen Ichiraku, Konoha",),
         )
         worker.read_all(conn)
-        worker.store(conn, self.KATZ, Located(40.72, -73.99, "Katz's", "restaurant", 1.0, "q"))
-        worker.store(conn, "Portland, Maine", Located(43.6, -70.2, "Portland", "city", 0.3, "q"))
+        worker.store(conn, self.DELI, Located(40.72, -73.99, "Mabel's", "restaurant", 1.0, "q"))
+        worker.store(conn, "Bangor, Maine", Located(43.6, -70.2, "Bangor", "city", 0.3, "q"))
         worker.store(conn, "Ramen Ichiraku, Konoha", Located(35, 139, "Ichiraku", "food", 1, "q"))
         conn.close()
 
@@ -417,7 +417,7 @@ class TestPlaces(ApiCase):
         [item] = body["items"]
         self.assertEqual(item["shortcode"], "SHARED")
         self.assertEqual(
-            [(p["text"], p["lat"], p["lng"]) for p in item["places"]], [(self.KATZ, 40.72, -73.99)]
+            [(p["text"], p["lat"], p["lng"]) for p in item["places"]], [(self.DELI, 40.72, -73.99)]
         )
 
     def test_the_map_counts_what_it_leaves_out(self):
@@ -434,12 +434,12 @@ class TestPlaces(ApiCase):
     def test_the_detail_has_coordinates_where_sure(self):
         places = self.client.get("/api/items/SHARED").json()["places"]
         self.assertEqual(
-            [(p["text"], p["lat"]) for p in places], [(self.KATZ, 40.72), ("Portland, Maine", None)]
+            [(p["text"], p["lat"]) for p in places], [(self.DELI, 40.72), ("Bangor, Maine", None)]
         )
 
     def test_a_typed_place_comes_from_the_cache_then_the_geocoder(self):
         self.assertEqual(
-            self.client.get("/api/geocode", params={"q": self.KATZ}).json()["lat"], 40.72
+            self.client.get("/api/geocode", params={"q": self.DELI}).json()["lat"], 40.72
         )
         r = self.client.get("/api/geocode", params={"q": "Osaka"})
         self.assertEqual(r.status_code, 503, "no geocoder is set up")

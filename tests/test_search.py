@@ -17,9 +17,9 @@ R = "https://www.instagram.com/reel/"
 HAS_VEC = importlib.util.find_spec("sqlite_vec") is not None
 
 # A three-topic toy space. A word votes for its topic; anything else is noise.
-# Enough to tell "margherita" is about pizza without a 100 MB model.
+# Enough to tell "marinara" is about pizza without a 100 MB model.
 TOPICS = (
-    {"pizza", "margherita", "naples", "dough", "oven", "neapolitan"},
+    {"pizza", "marinara", "rome", "dough", "oven", "neapolitan"},
     {"car", "ae86", "drift", "track", "corolla", "initial"},
 )
 
@@ -78,7 +78,7 @@ class LibraryCase(unittest.TestCase):
                     post_record(
                         R + "PHRASE/",
                         timestamp=300,
-                        caption="the best margherita in naples, says everyone",
+                        caption="the best marinara in rome, says everyone",
                     ),
                     post_record(
                         R + "AE8600/",
@@ -225,7 +225,7 @@ class TestEmbedAll(LibraryCase):
 class TestKeywordSearch(LibraryCase):
     def test_without_a_vector_it_is_keyword_search(self):
         self.assertEqual(search.rank(self.conn, "dough"), ["DOUGH1"])
-        self.assertEqual(search.rank(self.conn, "margherita"), ["PHRASE"])
+        self.assertEqual(search.rank(self.conn, "marinara"), ["PHRASE"])
         self.assertEqual(search.rank(self.conn, "drifter"), ["AE8600"])
 
     def test_operators_in_the_query_are_data(self):
@@ -236,7 +236,7 @@ class TestKeywordSearch(LibraryCase):
         self.assertEqual(search.rank(self.conn, "DOUGH"), ["DOUGH1"])
 
     def test_phrase_query(self):
-        self.assertEqual(search.phrase_query("the best, margherita!"), '"the best margherita"')
+        self.assertEqual(search.phrase_query("the best, marinara!"), '"the best marinara"')
         self.assertIsNone(search.phrase_query("pizza"))
 
     def test_a_sentence_falls_back_to_any_of_its_words(self):
@@ -313,17 +313,17 @@ class TestKeywordSearch(LibraryCase):
                         R + "SUPER1/",
                         timestamp=50,
                         caption="Fuji Speedway",
-                        username="tokyosupercars_example",
+                        username="tokyocarspots_example",
                     ),
                 ]
             ),
         )
         import_export(self.conn, zp)
-        self.assertEqual(search.rank(self.conn, "tokyo supercars"), ["SUPER1"])
+        self.assertEqual(search.rank(self.conn, "tokyo carspots"), ["SUPER1"])
 
     def test_explain(self):
         why: dict[str, dict[str, Any]] = {}
-        hits = search.rank(self.conn, "the best margherita in naples", explain=why)
+        hits = search.rank(self.conn, "the best marinara in rome", explain=why)
         self.assertEqual(hits, ["PHRASE"])
         self.assertEqual(why["PHRASE"]["match"], ["phrase", "keyword"])
         self.assertIsNone(why["PHRASE"]["similarity"])
@@ -343,13 +343,13 @@ class TestSemanticSearch(LibraryCase):
         return search.rank(self.conn, q, toy_vector(q))
 
     def test_finds_a_reel_that_never_uses_the_words(self):
-        hits = self.rank("a margherita from a hot oven")
+        hits = self.rank("a marinara from a hot oven")
         self.assertIn("DOUGH1", hits)
         self.assertIn("OVEN01", hits)
         self.assertNotIn("AE8600", hits)
 
     def test_the_exact_phrase_still_comes_first(self):
-        hits = self.rank("the best margherita in naples")
+        hits = self.rank("the best marinara in rome")
         self.assertEqual(hits[0], "PHRASE")
         self.assertIn("DOUGH1", hits)
 

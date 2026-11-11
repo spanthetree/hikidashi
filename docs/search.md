@@ -106,7 +106,7 @@ no longer reproduced two days later: re-summarised reels move the numbers
 2. **Unspaced scripts match inside a run.** FTS5's unicode61 tokenizer makes a
    whole run of Japanese one token, so 紅葉 never matched 紅葉スポット. Words in
    CJK and kana are matched as substrings of caption, transcript and OCR text.
-3. **Creators typed with spaces.** "tokyo supercars" matches @tokyosupercars_example.
+3. **Creators typed with spaces.** "tokyo carspots" matches @tokyocarspots_example.
    Before, the LIKE over handles took the whole query, spaces included.
 4. **Transcripts are embedded a stretch at a time** (`item_chunk_vec`): 60
    words, overlapping by 20, from the transcript and the OCR text. 1,007 chunks

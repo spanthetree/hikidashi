@@ -72,8 +72,8 @@ index once those stages run.
 ## Search is keywords and meaning, blended
 
 FTS5 alone goes a long way, because Instagram captions are long and full of
-hashtags. But it cannot find "warm broth for a cold night" in a reel captioned
-*Loaded Potato Soup*. Embeddings can, and are vague about exact wording, so
+hashtags. But it cannot find "a vegetarian sandwich" in a reel captioned
+*Portobello banh mi*. Embeddings can, and are vague about exact wording, so
 both run (`app/search/`):
 
 1. Items containing the query as an exact phrase come first.

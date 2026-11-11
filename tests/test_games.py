@@ -147,7 +147,7 @@ class TestDecide(unittest.TestCase):
 
     def test_a_guess_when_the_text_does_not_name_it(self):
         fake = Fake(said(title="Cyberpunk 2077"), {"Cyberpunk 2077": "Cyberpunk 2077"})
-        d = ask(fake, "What crazy details have you found?", ["cyberpunk", "gaming"])
+        d = ask(fake, "What little details did you spot?", ["cyberpunk", "gaming"])
         self.assertEqual((d.title, d.sure, d.guess), ("Cyberpunk 2077", False, "Cyberpunk 2077"))
 
     def test_a_guess_when_the_check_cannot_place_it(self):

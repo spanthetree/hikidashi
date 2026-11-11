@@ -35,7 +35,7 @@ WORDS = re.compile(
 STEPS = re.compile(r"(?m)^\s*(?:step\s*)?(?:[1-9]|1\d)[.)]\s+\S|\bstep\s*[1-9]\b", re.I)
 
 # The recipe is somewhere else. Decided here and not by the model: asked, a 7B
-# model flagged a complete cheesecake, and read "comment and make me go viral"
+# model flagged a complete cheesecake, and read "comment below and tag a friend"
 # as a pointer. These are the phrasings the library actually uses.
 ELSEWHERE = re.compile(
     r"link(?:ed)? in (?:my |the |our )?(?:@\w+ )?(?:bio|profile)"

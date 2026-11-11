@@ -9,7 +9,7 @@ tagger has not reached, so a fresh import is not missing from semantic search.
 
 The summary keeps what a reel is about and drops what was said in it, so the
 transcript and on-screen text are embedded too, a stretch at a time (`chunks`):
-that is what finds "the one where he says he's been a butcher for 20 years".
+that is what finds "the one where he says he's been baking for ten years".
 
 `document`, `chunks`, `digest` and `pack` are stdlib only. fastembed (ONNX Runtime, no
 torch) is imported when an `Embedder` is built, so the worker and its tests load
@@ -30,7 +30,7 @@ from pathlib import Path
 EMBED_V = 2
 
 # Chosen by measurement, not by size. Over paraphrased queries on the library
-# ("warm broth for a cold night", "the Initial D car", "cheap eats in Tokyo")
+# (a dish described rather than named, a car by its nickname, food in a city)
 # it found 0.76 of the relevant reels in its top 10, against 0.53 for
 # bge-small-en-v1.5 and 0.54-0.58 for bge-large and mxbai-embed-large, both a
 # little larger than it. It is 1.2 GB on disk and embeds a query in ~13 ms on CPU.
@@ -38,7 +38,7 @@ MODEL = "google/embeddinggemma-300m"
 DIM = 768
 QUERY_PREFIX = "task: search result | query: "
 # The model card suggests "title: none | text: " for documents. Measured, it
-# was no better, and for the margherita query it was worse.
+# was no better, and for a query naming a dish it was worse.
 DOC_PREFIX = ""
 
 CAPTION_CHARS = 1000  # of a caption standing in for a missing summary

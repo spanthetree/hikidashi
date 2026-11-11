@@ -60,11 +60,11 @@ class TestPrompt(unittest.TestCase):
 
     def test_a_caption_too_thin_to_tag_is_none(self):
         """Without this, the model invented "a beautiful car" for both."""
-        self.assertIsNone(build_prompt("Find your @heaven 🌍", [], None))
+        self.assertIsNone(build_prompt("Find your @happyplace 🌍", [], None))
         self.assertIsNone(build_prompt("@a @b https://x.co/y 2026 🔥", [], None))
-        self.assertIsNotNone(build_prompt("THE BEST FLIGHT SIM UPGRADES", [], None))
-        self.assertIsNotNone(build_prompt("Find your @heaven", ["drift"], None))
-        self.assertIsNotNone(build_prompt("Find your @heaven", [], "so we drove"))
+        self.assertIsNotNone(build_prompt("THE BEST SIM RIG UPGRADES", [], None))
+        self.assertIsNotNone(build_prompt("Find your @happyplace", ["drift"], None))
+        self.assertIsNotNone(build_prompt("Find your @happyplace", [], "so we drove"))
 
     def test_schema_asks_for_one_category_from_the_taxonomy(self):
         props = llm.schema()["properties"]
@@ -74,8 +74,8 @@ class TestPrompt(unittest.TestCase):
 
 class TestParse(unittest.TestCase):
     def test_a_good_reply(self):
-        r = parse(reply("A margherita stretched by hand.", "Food", ["pizza"], "medium"))
-        self.assertEqual(r.summary, "A margherita stretched by hand.")
+        r = parse(reply("A marinara stretched by hand.", "Food", ["pizza"], "medium"))
+        self.assertEqual(r.summary, "A marinara stretched by hand.")
         self.assertEqual((r.category, r.confidence), ("Food", 0.6))
         self.assertEqual(r.keywords, ["pizza"])
 
