@@ -16,6 +16,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   demo library or are described generically. The measured numbers are
   unchanged.
 
+## [0.18.6] — 2026-11-12
+
+### Added
+
+- **A license** (#122). Hikidashi is source-available under the
+  [PolyForm Noncommercial License 1.0.0](LICENSE): free to use, copy, change
+  and share for any noncommercial purpose, but not to sell or build into
+  something sold. The SPDX id is in `pyproject.toml` and
+  `frontend/package.json`, and the README has a badge and a License section.
+  Why this license: [decision record 0016](docs/adr/0016-polyform-noncommercial.md).
+- **Contributions come in under Apache-2.0** to the maintainer, as well as
+  under the project license to everyone, so a hosted version can include
+  them. [CONTRIBUTING](CONTRIBUTING.md#licensing-your-contribution) says so.
+- **`THIRD_PARTY.md`**: the terms of each model, program, library and
+  service Hikidashi uses, and that model weights are downloaded on first use,
+  never shipped. `qwen2.5:3b`, the CPU profile's tagger, is under a
+  noncommercial license of its own.
+- **About Hikidashi**, at the foot of the account page: the license, a link
+  to it and the third-party terms, and that Hikidashi isn't affiliated with
+  Instagram or Meta. The README says the same.
+- The images carry `LICENSE` and `THIRD_PARTY.md` in `/srv`, and the OCI
+  `org.opencontainers.image.licenses` label.
+
 ## [0.18.5] — 2026-11-11
 
 ### Changed

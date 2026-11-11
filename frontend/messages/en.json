@@ -685,5 +685,9 @@
   "side_worker_problem": "Worker has a problem",
   "side_worker_lost": "Worker not responding",
   "side_worker_stopped": "Worker stopped",
-  "side_worker_none": "No worker running"
+  "side_worker_none": "No worker running",
+  "about_title": "About Hikidashi",
+  "about_license": "Free for any noncommercial use, under the PolyForm Noncommercial License 1.0.0.",
+  "about_terms": "License and third-party terms",
+  "about_not_affiliated": "Not affiliated with, endorsed by or sponsored by Instagram or Meta."
 }

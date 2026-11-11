@@ -1,5 +1,26 @@
 # Contributing to Hikidashi
 
+## Licensing your contribution
+
+Hikidashi is source-available under the
+[PolyForm Noncommercial License 1.0.0](LICENSE): anyone may use, copy, change
+and share it for any noncommercial purpose. Patches, issues and pull requests
+are welcome on the same footing as in an open-source project.
+
+So that the maintainer can keep every version of Hikidashi under one license,
+and offer it under other terms later (a hosted version, say), contributions
+come in under a wider grant than the one they go out under. By opening a pull
+request or otherwise submitting a contribution, you agree that:
+
+- you wrote it, or otherwise have the right to submit it;
+- you license it to the maintainer, David Woodruff, under the
+  [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), as well as
+  to everyone under the project's license; and
+- you keep the copyright in it.
+
+If you can't agree to that, for example because an employer owns your work,
+say so in the pull request before it is merged.
+
 ## Branches and pull requests
 
 - Make every change on a new branch. Pull `master` first, then branch off it
