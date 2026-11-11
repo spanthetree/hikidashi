@@ -2,7 +2,8 @@
 
 - **Status:** Accepted. Its note on `HIKIDASHI_WORKER_TOKEN` is
   **Superseded by** [0013](0013-standard-api-and-worker-tokens.md): the
-  server no longer takes it.
+  server no longer takes it. Its pinned TrueNAS release is **Superseded by**
+  [0017](0017-version-written-once.md): the file follows `:latest`.
 - **Date:** 2026-10-28
 - **Issue:** #87; [install-unraid.md](../install-unraid.md), [install-truenas.md](../install-truenas.md)
 

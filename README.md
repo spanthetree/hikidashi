@@ -8,7 +8,7 @@
 
 Runs on your machine · local models · your data stays yours · one library each
 
-[![version](https://img.shields.io/badge/version-0.18.7-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/github/v/release/spanthetree/hikidashi?label=version)](CHANGELOG.md)
 [![tests](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml)
 [![status: alpha](https://img.shields.io/badge/status-alpha-orange)](CHANGELOG.md)
 [![license: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-lightgrey)](LICENSE)

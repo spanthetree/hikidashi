@@ -8,12 +8,13 @@
 #
 # Before pasting, change the dataset path, /mnt/tank/apps/hikidashi, in all
 # three services if yours differs. All three share it: they meet in its
-# SQLite file, and nowhere else. The images are pinned to one release, which
-# the server and the worker must share. To update, change all three tags.
+# SQLite file, and nowhere else. The images follow :latest, which TrueNAS
+# pulls for all three at once, so the server and the worker stay on the same
+# release. To stay on one, replace latest with it, such as 0.19.0, in all three.
 
 services:
   app:
-    image: ghcr.io/spanthetree/hikidashi-server:0.18.7
+    image: ghcr.io/spanthetree/hikidashi-server:latest
     # TrueNAS's apps user, which the dataset's Apps preset lets write.
     user: "568:568"
     restart: unless-stopped
@@ -43,7 +44,7 @@ services:
 
   # Fetches and embeds each new reel. Every install needs it.
   server-worker:
-    image: ghcr.io/spanthetree/hikidashi-server:0.18.7
+    image: ghcr.io/spanthetree/hikidashi-server:latest
     user: "568:568"
     restart: unless-stopped
     command: ["hikidashi", "worker", "--log", "server-worker.log"]
@@ -60,7 +61,7 @@ services:
   # tagging and recipes to the desktop, or when there is no Ollama.
   worker:
     # hikidashi-worker-cuda for an NVIDIA card; then uncomment deploy below.
-    image: ghcr.io/spanthetree/hikidashi-worker:0.18.7
+    image: ghcr.io/spanthetree/hikidashi-worker:latest
     user: "568:568"
     restart: unless-stopped
     hostname: hikidashi-worker

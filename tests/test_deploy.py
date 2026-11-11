@@ -4,6 +4,7 @@ Stdlib only, so the YAML is read as text: it is one flat file whose lines
 these tests can find.
 """
 
+import json
 import re
 import tomllib
 import unittest
@@ -129,18 +130,40 @@ class TestTrueNAS(unittest.TestCase):
         # Install via YAML has no checkout to build from.
         self.assertFalse([ln for ln in self.lines if ln.strip().startswith("build:")])
 
-    def test_images_pinned_to_this_release(self):
-        """Bump the tags in deploy/truenas/hikidashi.yaml with the version."""
+    def test_images_follow_latest(self):
+        """The server and the worker must share a release, so all three images
+        name the same tag, and it is never a version to bump."""
         images = re.findall(r"image: ghcr\.io/spanthetree/([\w-]+):(\S+)", "\n".join(self.lines))
         self.assertEqual(len(images), 3)
         for image, tag in images:
             self.assertIn(image, IMAGES)
-            self.assertEqual(tag, VERSION)
+            self.assertEqual(tag, "latest")
 
     def test_every_service_shares_the_dataset_as_apps(self):
         body = "\n".join(self.lines)
         self.assertEqual(body.count("- /mnt/tank/apps/hikidashi:/data"), 3)
         self.assertEqual(body.count('user: "568:568"'), 3)
+
+
+class TestVersion(unittest.TestCase):
+    """The version is written once, in pyproject.toml. The release workflow
+    reads it there; nothing else carries a copy to bump."""
+
+    def test_uv_lock_agrees(self):
+        # Stale after a bump until `uv lock` runs.
+        lock = tomllib.loads((ROOT / "uv.lock").read_text())
+        ours = [p for p in lock["package"] if p["name"] == "hikidashi"]
+        self.assertEqual([p.get("version") for p in ours], [VERSION], "run `uv lock`")
+
+    def test_no_other_copy(self):
+        for name in ("frontend/package.json", "frontend/package-lock.json"):
+            with self.subTest(name):
+                data = json.loads((ROOT / name).read_text())
+                self.assertNotIn("version", data)
+                self.assertNotIn("version", data.get("packages", {}).get("", {}))
+        for name in ("README.md", "deploy/truenas/hikidashi.yaml"):
+            with self.subTest(name):
+                self.assertNotIn(VERSION, (ROOT / name).read_text())
 
 
 class TestCompose(unittest.TestCase):

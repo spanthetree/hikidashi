@@ -15,6 +15,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   search queries, captions and tag counts. Their examples now come from the
   demo library or are described generically. The measured numbers are
   unchanged.
+- **The version is written once, in `pyproject.toml`** (ADR 0017). `uv lock`
+  brings `uv.lock` along, and a test fails if they disagree. The frontend
+  package no longer has a version, the README badge reads the latest GitHub
+  release, and the TrueNAS file follows `:latest` like the Unraid templates.
+  To stay on one release on TrueNAS, replace `latest` in all three images.
 
 ## [0.18.6] — 2026-11-12
 

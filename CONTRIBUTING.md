@@ -34,10 +34,10 @@ say so in the pull request before it is merged.
     [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - **Update `README.md`** wherever features, setup or configuration changed.
   - **Bump the version** under [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-    Set the same version in `pyproject.toml`, `uv.lock` (the `hikidashi`
-    package), `frontend/package.json`, `frontend/package-lock.json` (both
-    entries), the version badge at the top of `README.md`, and the three
-    image tags in `deploy/truenas/hikidashi.yaml`.
+    It is written once, in `pyproject.toml`; then run `uv lock` so `uv.lock`
+    agrees ([ADR 0017](docs/adr/0017-version-written-once.md)).
+    `tests/test_deploy.py` fails if they disagree, or if a copy turns up
+    anywhere else.
 - **Merging is releasing.** Once a version bump lands on `master`,
   `.github/workflows/release.yml` publishes the images to GHCR, then tags the
   commit `vX.Y.Z` and makes a GitHub release from its changelog section.
