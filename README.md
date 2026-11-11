@@ -8,7 +8,7 @@
 
 Runs on your machine · local models · your data stays yours · one library each
 
-[![version](https://img.shields.io/badge/version-0.18.4-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.18.7-blue)](CHANGELOG.md)
 [![tests](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml)
 [![status: alpha](https://img.shields.io/badge/status-alpha-orange)](CHANGELOG.md)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776ab?logo=python&logoColor=white)](#quick-start)

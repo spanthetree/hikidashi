@@ -6,7 +6,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.18.4] — 2026-11-11
+## [0.18.7] — 2026-11-12
 
 ### Changed
 
@@ -15,6 +15,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   search queries, captions and tag counts. Their examples now come from the
   demo library or are described generically. The measured numbers are
   unchanged.
+
+## [0.18.5] — 2026-11-11
+
+### Changed
+
+- **The browser tests run in Playwright's own image** (#131),
+  `mcr.microsoft.com/playwright`, which already has Chromium and its system
+  packages. CI no longer installs them from Ubuntu's mirrors, so e2e can't
+  fail when those are unreachable before a test has run. Python 3.12 for the
+  test server comes from uv, the same release the Dockerfile uses.
+  `tests/test_ci.py` checks that the image's tag matches `@playwright/test`.
 
 ## [0.18.2] — 2026-11-11
 

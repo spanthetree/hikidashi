@@ -13,7 +13,7 @@
 
 services:
   app:
-    image: ghcr.io/spanthetree/hikidashi-server:0.18.4
+    image: ghcr.io/spanthetree/hikidashi-server:0.18.7
     # TrueNAS's apps user, which the dataset's Apps preset lets write.
     user: "568:568"
     restart: unless-stopped
@@ -43,7 +43,7 @@ services:
 
   # Fetches and embeds each new reel. Every install needs it.
   server-worker:
-    image: ghcr.io/spanthetree/hikidashi-server:0.18.4
+    image: ghcr.io/spanthetree/hikidashi-server:0.18.7
     user: "568:568"
     restart: unless-stopped
     command: ["hikidashi", "worker", "--log", "server-worker.log"]
@@ -60,7 +60,7 @@ services:
   # tagging and recipes to the desktop, or when there is no Ollama.
   worker:
     # hikidashi-worker-cuda for an NVIDIA card; then uncomment deploy below.
-    image: ghcr.io/spanthetree/hikidashi-worker:0.18.4
+    image: ghcr.io/spanthetree/hikidashi-worker:0.18.7
     user: "568:568"
     restart: unless-stopped
     hostname: hikidashi-worker
