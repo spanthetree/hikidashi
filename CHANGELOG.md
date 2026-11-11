@@ -10,12 +10,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- **Published images** (#77). Each release tag publishes
+- **Published images** (#77). Each release publishes
   `ghcr.io/spanthetree/hikidashi-server` and `hikidashi-worker` (amd64 and
   arm64) and `hikidashi-worker-cuda` (amd64), tagged with the version, its
   minor series and `latest`. Each image is started in CI before it's pushed.
   The Unraid templates and the TrueNAS file, which already named these
   images, now work as written.
+- **Merging a version bump releases it.** `.github/workflows/release.yml`
+  publishes the images when a new version lands on `master`, then tags the
+  commit and makes a GitHub release from the changelog.
 - `HIKIDASHI_VERSION` picks the release of the images (unset: `latest`), and
   `HIKIDASHI_WORKER_IMAGE` picks `hikidashi-worker` or `hikidashi-worker-cuda`.
 
