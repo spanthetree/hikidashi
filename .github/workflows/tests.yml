@@ -39,9 +39,9 @@ jobs:
           python-version: "3.12"
       - run: pip install ruff==0.17.0 mypy==2.4.0
       # What the type checker reads the app against: the web layer, argon2,
-      # numpy and hypothesis are typed. The models' own packages are not
-      # installed and are ignored (pyproject.toml).
-      - run: pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" httpx==0.28.1 python-multipart==0.0.20 argon2-cffi==25.1.0 numpy==2.5.3 hypothesis==6.170.9
+      # cryptography, numpy and hypothesis are typed. The models' own packages
+      # are not installed and are ignored (pyproject.toml).
+      - run: pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" httpx==0.28.1 python-multipart==0.0.20 argon2-cffi==25.1.0 cryptography==50.0.2 numpy==2.5.3 hypothesis==6.170.9
       - run: ruff check --output-format github
       - run: ruff format --check
       - run: mypy
