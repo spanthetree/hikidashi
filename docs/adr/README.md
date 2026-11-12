@@ -30,6 +30,7 @@ new: a later decision gets its own record and marks the old one
 | [0015](0015-filters-intersect.md) | Filters intersect | Accepted | #117 |
 | [0016](0016-polyform-noncommercial.md) | Source-available under PolyForm Noncommercial | Accepted | #122 |
 | [0017](0017-version-written-once.md) | The version is written once, in pyproject.toml | Accepted; supersedes 0012's TrueNAS pin | #123 |
+| [0018](0018-categories-from-hand-labels.md) | Categories come from hand labels | Accepted | #145 |
 
 ## Adding one
 

@@ -134,6 +134,32 @@ on many reels where the two agreed, because the old schema allowed only one
 row per tag per item and the hashtag pass usually wrote it first. The next
 model run fills those in.
 
+## Four more categories
+
+November 2026, [#145](https://github.com/spanthetree/hikidashi/issues/145),
+[ADR 0018](adr/0018-categories-from-hand-labels.md). Hand-labelling 50 reels
+for [#6](https://github.com/spanthetree/hikidashi/issues/6) found 7 that fitted
+none of the ten, 5 of them films, series or anime. The library's untagged
+reels fell into the same groups, so four categories were added:
+
+| tag | what it covers | for the model, not |
+|---|---|---|
+| Movies & TV | films, series and anime: recommendations, reviews, scenes, how they were made | |
+| Nature & science | wildlife, the night sky, weather, science explainers | gardening (Home & DIY), a trip somewhere (Travel) |
+| Family & wellbeing | parenting, relationships, mental health, mindfulness, encouragement | |
+| Style & beauty | fashion, outfits, hair, makeup, skincare, grooming | |
+
+Their hashtag stems were checked not to take reels from the others. Plain
+`#nature` is left out, because travel reels use it as much as wildlife ones;
+`#film` matches only whole, so `#filmphotography` stays Design;
+`#fitnessmotivation` stays Fitness. On the library they moved one reel (a film
+list, from Design to Movies & TV) and tagged twelve that had none. A pet video
+still fits nothing: Pets was removed in [#21](https://github.com/spanthetree/hikidashi/issues/21)
+and the labels did not argue for it.
+
+`TAG_V` 4 and `HASHTAG_V` 3 re-tag every library with the new list. Measure the
+model after that re-tag against your labels: `python -m app.tagging --eval`.
+
 ## Games
 
 The one category stays one ([#21](https://github.com/spanthetree/hikidashi/issues/21)), but a gaming reel is mostly about one game,
