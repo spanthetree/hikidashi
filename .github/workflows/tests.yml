@@ -9,8 +9,8 @@ jobs:
   python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       # The suite is stdlib only by design. A few exceptions are worth
@@ -30,8 +30,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install ruff==0.17.0 mypy==2.4.0
@@ -49,8 +49,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -58,7 +58,7 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run coverage
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: frontend-coverage
@@ -76,7 +76,7 @@ jobs:
     # @playwright/test in frontend/package.json; tests/test_ci.py checks.
     container: mcr.microsoft.com/playwright:v1.64.0-noble
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Python 3.12 from uv (the Dockerfile's version), not apt or
       # setup-python: the image's own Python has no venv or pip, and
       # setup-python's builds are made for the runner's Ubuntu, not the
@@ -91,7 +91,7 @@ jobs:
           "$RUNNER_TEMP/bin/uv" venv --python 3.12 --managed-python "$RUNNER_TEMP/venv"
           VIRTUAL_ENV="$RUNNER_TEMP/venv" "$RUNNER_TEMP/bin/uv" pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" python-multipart==0.0.20 argon2-cffi==25.1.0
           echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -102,7 +102,7 @@ jobs:
         working-directory: frontend
         env:
           HIKIDASHI_PYTHON: python
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright

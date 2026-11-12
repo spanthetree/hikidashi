@@ -69,7 +69,7 @@ jobs:
       # The cuda image is the worker image plus wheels: not worth a PR's time.
       SKIP: ${{ github.event_name == 'pull_request' && matrix.image == 'hikidashi-worker-cuda' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: env.SKIP != 'true'
 
       # An image never says one version and runs another.
@@ -86,12 +86,12 @@ jobs:
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
 
       # arm64 is only built to push, so a pull request needs no emulator.
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v4
         if: env.SKIP != 'true' && env.PUSH == 'true' && contains(matrix.platforms, 'arm64')
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         if: env.SKIP != 'true'
 
-      - uses: docker/metadata-action@v5
+      - uses: docker/metadata-action@v6
         if: env.SKIP != 'true'
         id: meta
         with:
@@ -114,7 +114,7 @@ jobs:
       # pushed. The push below reuses its layers from the cache.
       - name: Build (amd64)
         if: env.SKIP != 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: ${{ matrix.target }}
@@ -147,7 +147,7 @@ jobs:
             tesseract --version >/dev/null &&
             ffmpeg -version >/dev/null && echo ok'
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         if: env.SKIP != 'true' && env.PUSH == 'true'
         with:
           registry: ghcr.io
@@ -156,7 +156,7 @@ jobs:
 
       - name: Build and push
         if: env.SKIP != 'true' && env.PUSH == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: ${{ matrix.target }}
