@@ -408,6 +408,10 @@ def rank(
     # Only when no reel has every word: if one does, it is the better answer.
     content = [] if keywords else content_word_hits(conn, q, user_id, loose=query_vec is None)
     semantic, sims, spoken = semantic_hits(conn, query_vec, user_id) if query_vec else ([], {}, {})
+    if query_vec is not None and not (keywords or content or semantic):
+        # Nothing at all: rather than an empty page, what keyword-only search
+        # would show, any two of the words (#57's demo voiceover queries).
+        content = content_word_hits(conn, q, user_id, loose=True)
     fused = fuse(keywords, semantic, content, weights=(1.0, 1.0, CONTENT_WEIGHT))
     exact = phrase_hits(conn, q, user_id)
     # sorted() is stable, so each tier keeps its fused order.

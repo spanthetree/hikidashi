@@ -266,6 +266,10 @@ flowchart TD
   embedq --> sem["semantic_hits<br/>summary vector ≥ 0.27, top 24<br/>transcript chunk ≥ 0.5, top 12, less 0.1"]
   kw --> none{"no reel has<br/>every word?"}
   none -- yes --> cw["content_word_hits<br/>distinctive words only"]
+  cw --> empty{"nothing in<br/>any list?"}
+  sem --> empty
+  empty -- yes --> loose["content_word_hits, loose<br/>any two distinctive words"]
+  loose --> fuse
   kw --> fuse["reciprocal rank fusion<br/>Σ weight / (60 + rank)<br/>keyword 1 · semantic 1 · content words 0.5"]
   sem --> fuse
   cw --> fuse
@@ -296,7 +300,11 @@ than indexed. The filters (`tag`, `game`, `hashtag`, each repeatable, and
 Every list is filtered to your library inside its query, not after, so the
 caps on the vector lists are spent on reels you can see. Without the embedder,
 or while it cannot load, search is keywords only, and the content-word list
-settles for any two of the distinctive words when no reel has them all. There is no reranking step:
+settles for any two of the distinctive words when no reel has them all. With
+the embedder, it settles for two only when the keyword, content-word and
+vector lists all come back empty, so a search that keyword-only search would
+answer never shows an empty page; a negative stays as quiet as it is without
+vectors ([#57](https://github.com/spanthetree/hikidashi/issues/57)). There is no reranking step:
 cross-encoders were measured at +0.02 nDCG for 10–250× the latency, and
 rejected ([ADR 0011](adr/0011-hybrid-search-rank-fusion.md)).
 
