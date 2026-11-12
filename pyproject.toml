@@ -9,12 +9,6 @@ license = "PolyForm-Noncommercial-1.0.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
 
-[project.urls]
-Homepage = "https://github.com/spanthetree/hikidashi"
-Documentation = "https://github.com/spanthetree/hikidashi/tree/master/docs"
-Changelog = "https://github.com/spanthetree/hikidashi/blob/master/CHANGELOG.md"
-Issues = "https://github.com/spanthetree/hikidashi/issues"
-
 # Nothing by default: app/db.py and app/importer/ are stdlib-only by design, so
 # the core stays testable on a bare checkout with nothing installed, and a bare
 # `uv sync` already runs the CLI, import, exports, and a worker for tag and
@@ -22,6 +16,12 @@ Issues = "https://github.com/spanthetree/hikidashi/issues"
 # third-party package, so each is an extra, and the Docker images take one each
 # (#86). One host with uv: `uv sync --extra server --extra worker`.
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/spanthetree/hikidashi"
+Documentation = "https://github.com/spanthetree/hikidashi/tree/master/docs"
+Changelog = "https://github.com/spanthetree/hikidashi/blob/master/CHANGELOG.md"
+Issues = "https://github.com/spanthetree/hikidashi/issues"
 
 [project.optional-dependencies]
 # The web UI and API, and the stages that run beside them: enrich and embed.
