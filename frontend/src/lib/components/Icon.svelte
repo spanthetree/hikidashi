@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { ICONS, type IconName } from "$lib/icons";
-  import { look } from "$lib/theme.svelte";
+  import { ICONS, type IconName } from "#lib/icons.js";
+  import { look } from "#lib/theme.svelte.js";
 
   /* An icon in the current style: a line drawing, or with pixel art on, its
      8x8 pixel version at a whole multiple of 8px so every pixel stays

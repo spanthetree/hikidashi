@@ -24,7 +24,7 @@ Everyone taking part is expected to follow the
 
 ## Setting up
 
-You need Python 3.12 with [uv](https://docs.astral.sh/uv/), Node 20 or later,
+You need Python 3.12 with [uv](https://docs.astral.sh/uv/), Node 22.17 or later,
 and FFmpeg. Docker is only needed to work on the images.
 
 ```bash

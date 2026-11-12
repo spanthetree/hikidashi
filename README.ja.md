@@ -84,7 +84,7 @@ COMPOSE_FILE=docker-compose.yml:docker-compose.server-only.yml
 
 ### 動作環境
 
-Docker と Compose、またはソースから動かす場合は Python 3.12・uv・FFmpeg・Node 20。CPU だけでも動きますが、NVIDIA の GPU があると文字起こしとタグ付けがずっと速くなります（[ハードウェアプロファイル](docs/pipeline.md#hardware-profiles)）。
+Docker と Compose、またはソースから動かす場合は Python 3.12・uv・FFmpeg・Node 22.17 以降。CPU だけでも動きますが、NVIDIA の GPU があると文字起こしとタグ付けがずっと速くなります（[ハードウェアプロファイル](docs/pipeline.md#hardware-profiles)）。
 
 **文字起こしは今のところ英語のモデルのみです。** 日本語の音声はうまく文字にならないことがありますが、日本語のキャプションと画面上の文字は検索できます。日本語で検索すると、同じ話題の英語のリールも見つかります。
 

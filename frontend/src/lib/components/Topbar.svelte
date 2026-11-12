@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount, type Snippet } from "svelte";
-  import { m } from "$lib/paraglide/messages";
-  import { session } from "$lib/session.svelte";
+  import { m } from "#lib/paraglide/messages.js";
+  import { session } from "#lib/session.svelte.js";
   import Icon from "./Icon.svelte";
   import Logo from "./Logo.svelte";
-  import { look, MODES, THEMES, type Mode, type Theme } from "$lib/theme.svelte";
+  import { look, MODES, THEMES, type Mode, type Theme } from "#lib/theme.svelte.js";
 
   let { children, onmenu, menuOpen = false, account = true }: {
     children?: Snippet;

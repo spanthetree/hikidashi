@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.20.0] — 2026-11-12
+
+### Changed
+
+- **Node 22.17 or later** is needed to build the web UI from source (with
+  uv, `./hikidashi start` checks it). The image builds on Node 24, the
+  current LTS. Docker installs need nothing new.
+- The web UI is on SvelteKit 3, Vite 8, TypeScript 6 and paraglide 3. It
+  looks and behaves as before.
+
 ## [0.19.0] — 2026-11-12
 
 The first public release. Hikidashi turns your Instagram data export into a

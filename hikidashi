@@ -164,10 +164,10 @@ uv_web() {
 			frontend/project.inlang frontend/package-lock.json -newer "$built" 2>/dev/null | head -n 1)" ]; then
 		return 0
 	fi
-	have npm || die "the web UI needs building and npm is not installed (Node 20 or later)"
-	# Older Node fails deep in the translation compiler with "LixError: unreachable".
-	node -e 'process.exit(+(process.versions.node.split(".")[0] < 20))' ||
-		die "the web UI needs Node 20 or later to build; this is Node $(node --version)"
+	have npm || die "the web UI needs building and npm is not installed (Node 22.17 or later)"
+	# SvelteKit 3 needs 22.17; older Node fails deep in the build, not here.
+	node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(+(a < 22 || (a === 22 && b < 17)))' ||
+		die "the web UI needs Node 22.17 or later to build; this is Node $(node --version)"
 	echo "building the web UI..."
 	if [ ! -d frontend/node_modules ] || [ frontend/package-lock.json -nt frontend/node_modules ]; then
 		npm ci --prefix frontend --no-audit --no-fund >/dev/null || die "npm ci failed in frontend/"

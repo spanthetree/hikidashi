@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { fileSize, nf } from "$lib/format";
-  import { active, draggingNonZip, hasFiles, imports, type Upload } from "$lib/imports.svelte";
-  import { motion } from "$lib/motion.svelte";
-  import { m } from "$lib/paraglide/messages";
+  import { fileSize, nf } from "#lib/format.js";
+  import { active, draggingNonZip, hasFiles, imports, type Upload } from "#lib/imports.svelte.js";
+  import { motion } from "#lib/motion.svelte.js";
+  import { m } from "#lib/paraglide/messages.js";
   import Icon from "./Icon.svelte";
   import Rich from "./Rich.svelte";
 

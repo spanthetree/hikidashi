@@ -1,13 +1,13 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { page } from "$app/state";
-  import { getLogs, type LogName } from "$lib/api";
-  import Notice from "$lib/components/Notice.svelte";
-  import Rich from "$lib/components/Rich.svelte";
-  import Topbar from "$lib/components/Topbar.svelte";
-  import { locale } from "$lib/i18n";
-  import { m } from "$lib/paraglide/messages";
-  import type { NoticeState } from "$lib/types";
+  import { getLogs, type LogName } from "#lib/api.js";
+  import Notice from "#lib/components/Notice.svelte";
+  import Rich from "#lib/components/Rich.svelte";
+  import Topbar from "#lib/components/Topbar.svelte";
+  import { locale } from "#lib/i18n.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import type { NoticeState } from "#lib/types.js";
 
   const POLL_MS = 3000;
   const LINES = 1000;

@@ -38,7 +38,8 @@ export const MEDIA: Exclude<Media, "">[] = ["video", "image"];
 const VIEWS: View[] = ["library", "recipes", "places"];
 const AT = /^-?\d{1,2}(\.\d+)?,-?\d{1,3}(\.\d+)?,\d{1,2}$/;
 
-export function readFilters(params: URLSearchParams): Filters {
+// Read-only: page.url is a read-only URL since SvelteKit 3.
+export function readFilters(params: Pick<URLSearchParams, "get" | "getAll">): Filters {
   const sort = params.get("sort") as Sort | null;
   const asked = params.get("view") as View | null;
   const view: View = asked && VIEWS.includes(asked) ? asked : "library";

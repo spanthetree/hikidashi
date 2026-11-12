@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { page } from "$app/state";
-  import { getAuth, login } from "$lib/api";
-  import Credentials from "$lib/components/Credentials.svelte";
-  import Rich from "$lib/components/Rich.svelte";
-  import { m } from "$lib/paraglide/messages";
-  import type { AuthState } from "$lib/types";
+  import { getAuth, login } from "#lib/api.js";
+  import Credentials from "#lib/components/Credentials.svelte";
+  import Rich from "#lib/components/Rich.svelte";
+  import { m } from "#lib/paraglide/messages.js";
+  import type { AuthState } from "#lib/types.js";
 
   let auth = $state<AuthState | null>(null);
 

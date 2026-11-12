@@ -1,11 +1,11 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
-  import { filterUrl, isOn, type Filters } from "$lib/filters";
-  import { duration, nf, profileUrl, savedDate, tint } from "$lib/format";
-  import { tagLabel } from "$lib/i18n";
-  import { motion, receive, send } from "$lib/motion.svelte";
-  import { m } from "$lib/paraglide/messages";
-  import type { FilterKind, Item } from "$lib/types";
+  import { filterUrl, isOn, type Filters } from "#lib/filters.js";
+  import { duration, nf, profileUrl, savedDate, tint } from "#lib/format.js";
+  import { tagLabel } from "#lib/i18n.js";
+  import { motion, receive, send } from "#lib/motion.svelte.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import type { FilterKind, Item } from "#lib/types.js";
 
   let { item, href, filters, active = false }: {
     item: Item;

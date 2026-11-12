@@ -3,16 +3,16 @@
   import {
     changeAccount, changePassword, exportUrl, getAccounts, getExportOptions, getInvites, getMyTokens,
     logout, makeInvite, makeMyToken, revokeInvite, revokeMyToken, signOutEverywhere, updateMe,
-  } from "$lib/api";
-  import Notice from "$lib/components/Notice.svelte";
-  import Rich from "$lib/components/Rich.svelte";
-  import Topbar from "$lib/components/Topbar.svelte";
-  import { copyFailure, copyText, type Copied } from "$lib/clipboard";
-  import { ago, nf, savedDate } from "$lib/format";
-  import { tagLabel } from "$lib/i18n";
-  import { m } from "$lib/paraglide/messages";
-  import { session } from "$lib/session.svelte";
-  import type { Account, ApiToken, ExportOptions, Invite, MyTokens, NoticeState } from "$lib/types";
+  } from "#lib/api.js";
+  import Notice from "#lib/components/Notice.svelte";
+  import Rich from "#lib/components/Rich.svelte";
+  import Topbar from "#lib/components/Topbar.svelte";
+  import { copyFailure, copyText, type Copied } from "#lib/clipboard.js";
+  import { ago, nf, savedDate } from "#lib/format.js";
+  import { tagLabel } from "#lib/i18n.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import { session } from "#lib/session.svelte.js";
+  import type { Account, ApiToken, ExportOptions, Invite, MyTokens, NoticeState } from "#lib/types.js";
 
   const me = $derived(session.me);
   const local = $derived(me?.auth === "local");

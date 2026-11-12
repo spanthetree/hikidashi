@@ -29,7 +29,7 @@ uv sync --extra server --extra worker --group test --group lint
 
 `unittest` is the runner; nothing needs pytest. The frontend's test tools
 (vitest, Playwright, fast-check) are ordinary `devDependencies`. Frontend
-commands need Node 20 or later.
+commands need Node 22.17 or later.
 
 ## The seeded library
 

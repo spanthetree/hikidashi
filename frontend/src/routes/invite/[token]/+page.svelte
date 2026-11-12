@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { page } from "$app/state";
-  import { acceptInvite, inviteState } from "$lib/api";
-  import Credentials from "$lib/components/Credentials.svelte";
-  import { m } from "$lib/paraglide/messages";
+  import { acceptInvite, inviteState } from "#lib/api.js";
+  import Credentials from "#lib/components/Credentials.svelte";
+  import { m } from "#lib/paraglide/messages.js";
 
   const token = $derived(page.params.token ?? "");
   let open = $state(true);

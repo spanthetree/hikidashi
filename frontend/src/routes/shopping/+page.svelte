@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { clearList, dropFromList, getShopping, tickLine } from "$lib/api";
-  import Icon from "$lib/components/Icon.svelte";
-  import Notice from "$lib/components/Notice.svelte";
-  import Topbar from "$lib/components/Topbar.svelte";
-  import { copyFailure, copyText } from "$lib/clipboard";
-  import { list, nf, tint } from "$lib/format";
-  import { m } from "$lib/paraglide/messages";
-  import { asText, byAisle } from "$lib/shopping";
-  import type { Aisle, NoticeState, ShoppingLine, ShoppingList } from "$lib/types";
+  import { clearList, dropFromList, getShopping, tickLine } from "#lib/api.js";
+  import Icon from "#lib/components/Icon.svelte";
+  import Notice from "#lib/components/Notice.svelte";
+  import Topbar from "#lib/components/Topbar.svelte";
+  import { copyFailure, copyText } from "#lib/clipboard.js";
+  import { list, nf, tint } from "#lib/format.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import { asText, byAisle } from "#lib/shopping.js";
+  import type { Aisle, NoticeState, ShoppingLine, ShoppingList } from "#lib/types.js";
 
   /* Several recipes' ingredients as one list, by aisle, to tick off in the
      shop. Ticks are saved as you go, so the list on your phone in the shop is

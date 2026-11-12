@@ -16,13 +16,13 @@
 # server image has no Node in it, and the worker image no front end at all.
 # Static files are the same on every architecture, so it is built once, on
 # the builder's own (an arm64 image is otherwise built under emulation).
-FROM --platform=$BUILDPLATFORM node:22-slim AS web
+FROM --platform=$BUILDPLATFORM node:24-slim AS web
 
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
-# svelte.config.js writes the build to ../app/web, i.e. /src/app/web.
+# vite.config.ts writes the build to ../app/web, i.e. /src/app/web.
 RUN npm run build
 
 

@@ -1,8 +1,8 @@
 <script lang="ts">
   import "../app.css";
   import "../themes/index.css";
-  import "$lib/theme.svelte";
-  import { locale } from "$lib/i18n";
+  import "#lib/theme.svelte.js";
+  import { locale } from "#lib/i18n.js";
 
   let { children } = $props();
 

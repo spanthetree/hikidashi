@@ -1,10 +1,10 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
-  import { addToList, dropFromList, revertRecipe, saveRecipe } from "$lib/api";
-  import { list, nf } from "$lib/format";
-  import { motion } from "$lib/motion.svelte";
-  import { m } from "$lib/paraglide/messages";
-  import type { Ingredient, Recipe, RecipeIn } from "$lib/types";
+  import { addToList, dropFromList, revertRecipe, saveRecipe } from "#lib/api.js";
+  import { list, nf } from "#lib/format.js";
+  import { motion } from "#lib/motion.svelte.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import type { Ingredient, Recipe, RecipeIn } from "#lib/types.js";
   import Icon from "./Icon.svelte";
 
   let { shortcode, recipe, listed, ticked = $bindable(), onsaved, onlisted }: {

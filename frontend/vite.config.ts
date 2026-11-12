@@ -1,6 +1,8 @@
 /// <reference types="vitest/config" />
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
+import adapter from "@sveltejs/adapter-static";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "vite";
 
 // `npm run dev` beside `uvicorn app.api.main:app --port 8080`: the API and the
@@ -18,7 +20,18 @@ export default defineConfig({
       outdir: "./src/lib/paraglide",
       strategy: ["custom-saved", "preferredLanguage", "baseLocale"],
     }),
-    sveltekit(),
+    // SvelteKit's own options, here since SvelteKit 3 (no svelte.config.js).
+    sveltekit({
+      preprocess: vitePreprocess(),
+      // Plain static files that FastAPI serves from app/web. Every route is
+      // rendered in the browser, so one index.html answers them all.
+      adapter: adapter({
+        pages: "../app/web",
+        assets: "../app/web",
+        fallback: "index.html",
+        strict: false,
+      }),
+    }),
   ],
   test: {
     // Only the unit tests: e2e/ is Playwright's (npm run e2e).
