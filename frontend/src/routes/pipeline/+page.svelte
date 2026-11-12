@@ -210,12 +210,6 @@
       </section>
     {/if}
 
-    <section class="p-sec" id="ai-default" aria-labelledby="p-ai-default">
-      <h2 id="p-ai-default">{m.ai_default_title()}</h2>
-      <p class="p-lede">{m.ai_default_lede()}</p>
-      <AiProviders whose="server" bind:notice />
-    </section>
-
     <section class="p-sec" aria-labelledby="p-tokens">
       <h2 id="p-tokens">{m.pl_tokens_title()}</h2>
       <p class="p-lede"><Rich parts={m.pl_tokens_lede.parts()} /></p>
@@ -350,6 +344,12 @@
                   onclick={() => retry(s.stage)}>{m.pl_retry()}</button>
         </div>
       {/each}
+    </section>
+
+    <section class="p-sec" id="ai-default" aria-labelledby="p-ai-default">
+      <h2 id="p-ai-default">{m.ai_default_title()}</h2>
+      <p class="p-lede">{m.ai_default_lede()}</p>
+      <AiProviders whose="server" bind:notice />
     </section>
 
     <p class="p-links">
