@@ -26,6 +26,7 @@ import sys
 import time
 from pathlib import Path
 from types import FrameType
+from typing import TYPE_CHECKING
 
 from app import logs
 from app.config import settings
@@ -37,6 +38,9 @@ from .protocol import REMOTE
 from .queue import LocalJobs, retry
 from .remote import HttpJobs, Refused, RemoteRunners, wait_for
 from .worker import Runners, Stop, Worker
+
+if TYPE_CHECKING:
+    from app.ai.runner import Host
 
 
 def _stop(signum: int, frame: FrameType | None) -> None:
@@ -154,14 +158,19 @@ def main(argv: list[str] | None = None) -> int:
             for stage, why in worker.problems.items():
                 print(f"  {stage} could not run: {why}", file=sys.stderr)
             return 1 if worker.problems else 0
-        worker.run()  # until stopped
+        hosts = _hosted_apis(stages)  # the switched-on APIs, on the server's own worker
+        try:
+            worker.run()  # until stopped
+        finally:
+            if hosts:
+                hosts.stop()
         return 0
     except Refused as exc:  # a server upgraded under it, say: retrying cannot help
         worker.stop()
         print(f"  the server refused this worker: {exc}", file=sys.stderr)
         return 1
     except (KeyboardInterrupt, Stop):
-        worker.stop()
+        worker.stop()  # the hosted APIs' reels go back in the finally above
         logging.getLogger("hikidashi.worker").info("stopped; reels in hand given back")
         logging.shutdown()
         # Do not wait for a transcription still in flight: every finished reel
@@ -179,6 +188,19 @@ def _ask_token(server: str) -> str | None:
     except (EOFError, KeyboardInterrupt):
         print(file=sys.stderr)
         return None
+
+
+def _hosted_apis(stages: tuple[str, ...]) -> Host | None:
+    """The hosted APIs (#125) run in the worker that runs enrich: the
+    server's own, on the database's host. Started whether or not any switch
+    is on, since a switch goes on from the UI while it runs."""
+    if "enrich" not in stages:
+        return None
+    from app.ai.runner import Host
+
+    host = Host(lambda: connect(settings.db_path), settings.db_path.parent, settings.media_dir)
+    host.start()
+    return host
 
 
 def _local(

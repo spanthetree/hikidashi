@@ -314,6 +314,43 @@ def parse(stage: str, results: Any) -> list[tuple[str, Any, str | None]]:
     return out
 
 
+def record_one(
+    conn: sqlite3.Connection,
+    stage: str,
+    code: str,
+    produced: Any,
+    why: str | None,
+    *,
+    profile: str,
+    lock: threading.Lock | None = None,
+    language: str | None = None,
+) -> None:
+    """Record one reel's result for one stage with the stage's own function:
+    what it produced, or (with `why`) that it failed. `language`: what a
+    hosted ASR model heard (#116)."""
+    lock = lock or threading.Lock()
+    if stage == "asr":
+        if why is None:
+            asr.record(conn, lock, code, produced, profile, language)
+        else:
+            asr.record_failure(conn, lock, code, why)
+    elif stage == "ocr":
+        if why is None:
+            # A hosted model's provider:model; tesseract's profile is the hardware's.
+            ocr.record(conn, lock, code, produced, profile if ":" in profile else None)
+        else:
+            ocr.record_failure(conn, lock, code, why)
+    elif stage == "tag":
+        if why is None:
+            tag.record(conn, code, produced, profile)
+        else:
+            tag.record_failure(conn, code, why)
+    elif why is None:
+        recipe.record(conn, code, produced, profile)
+    else:
+        recipe.record_failure(conn, code, why)
+
+
 def record(
     conn: sqlite3.Connection,
     stage: str,
@@ -321,6 +358,7 @@ def record(
     *,
     profile: str,
     held: set[str],
+    languages: dict[str, str | None] | None = None,
 ) -> list[str]:
     """Record the results for the reels this worker holds, with the stage's
     own functions. A result for a reel it no longer holds (its lease ran out
@@ -332,24 +370,15 @@ def record(
     for code, produced, why in parsed:
         if code not in held:
             continue
-        if stage == "asr":
-            if why is None:
-                asr.record(conn, lock, code, produced, profile)
-            else:
-                asr.record_failure(conn, lock, code, why)
-        elif stage == "ocr":
-            if why is None:
-                ocr.record(conn, lock, code, produced)
-            else:
-                ocr.record_failure(conn, lock, code, why)
-        elif stage == "tag":
-            if why is None:
-                tag.record(conn, code, produced, profile)
-            else:
-                tag.record_failure(conn, code, why)
-        elif why is None:
-            recipe.record(conn, code, produced, profile)
-        else:
-            recipe.record_failure(conn, code, why)
+        record_one(
+            conn,
+            stage,
+            code,
+            produced,
+            why,
+            profile=profile,
+            lock=lock,
+            language=(languages or {}).get(code),
+        )
         done.append(code)
     return done

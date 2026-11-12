@@ -197,11 +197,14 @@ def verbose(text: str, no_speech_prob: float, language: str = "english") -> dict
 
 
 def stage_reply(req: dict[str, Any]) -> Any:
-    """A reply that fits whichever stage asked, for the browser tests."""
+    """A reply that fits whichever stage asked, for the browser tests: the
+    schema read from response_format, or from the prompt in JSON mode."""
     fmt = req.get("response_format") or {}
-    schema = (fmt.get("json_schema") or {}).get("schema") or {}
-    props = set(schema.get("properties", {}))
     system = req["messages"][0]["content"]
+    schema = (fmt.get("json_schema") or {}).get("schema")
+    if schema is None and "JSON schema:\n" in system:
+        schema = json.loads(system.rsplit("JSON schema:\n", 1)[1])
+    props = set((schema or {}).get("properties", {}))
     if "category" in props:
         return {
             "summary": "Pizza dough stretched and baked.",
@@ -223,9 +226,11 @@ def stage_reply(req: dict[str, Any]) -> Any:
         }
     if "kind" in props:
         return {"kind": "none", "title": "", "confidence": "low", "others": []}
-    if "text on screen" in system.lower():
-        return "Pizza night"
-    return {}
+    if "known" in props:
+        return {"known": False, "title": ""}
+    if "lines" in props:
+        return {"lines": ["Pizza night"]}
+    return "OK"
 
 
 def main() -> None:
