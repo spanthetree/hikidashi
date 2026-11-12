@@ -1,0 +1,41 @@
+# Dependency updates, grouped so each ecosystem is one pull request a month.
+# Security updates come as soon as they are published, outside the schedule.
+#
+# Each update is a normal pull request, so it needs the changelog and version
+# commit before merging (CONTRIBUTING.md). @playwright/test in
+# frontend/package.json and the Playwright image tag in tests.yml move
+# together, and tests/test_ci.py fails when they don't. The pip pins in
+# tests.yml are not updated here: bring them along with pyproject.toml.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      python:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: monthly
+    groups:
+      frontend:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      images:
+        patterns: ["*"]
