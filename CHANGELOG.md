@@ -6,6 +6,51 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.23.0] — 2026-11-12
+
+### Added
+
+- **Hosted AI, behind an on/off switch** (#116, #125;
+  [ADR 0019](docs/adr/0019-hosted-ai-behind-a-switch.md)). A provider's API
+  can do transcription, on-screen text, tags and recipes instead of a worker,
+  with no GPU and no Ollama. Off by default: nothing is sent anywhere until
+  someone turns a switch on.
+  - **Per user and for the server.** Each user can use their own provider and
+    key. The admin's can be on for just them or for all users, and users
+    choose: server default, their own API, the server's, or workers only.
+  - **All or nothing per reel:** the API that takes a reel does every stage it
+    still needs. Providers can be mixed per stage.
+  - **Providers:** OpenAI, Groq (free Whisper large), Mistral, Gemini,
+    OpenRouter, Cerebras, GitHub Models, Cloudflare Workers AI, Hugging Face,
+    or any OpenAI-compatible server of your own. Free tiers and data terms
+    are checked and dated in [operation](docs/operation.md#providers).
+  - **Multilingual transcripts:** a hosted Whisper detects the language, kept
+    with the transcript.
+  - **Budgets and usage:** a monthly budget is required, and estimated spend is
+    recorded per request. Turning a switch on shows the reels waiting and what
+    they might cost. It turns itself off, saying why, on a rejected key, a
+    used-up quota or the budget reached.
+  - **Account → AI providers** in the web UI, and `hikidashi ai` on the command
+    line, on the host or with `--server` and an API token. New token scopes
+    `read:ai` and `write:ai`.
+  - **`hikidashi worker --backend hosted`:** the server's API run on another
+    machine, with that machine's own key.
+- **A view of your own reels' progress** (`/api/me/pipeline`), for everyone,
+  not only admins.
+
+### Changed
+
+- **Remote worker protocol 2.** Run the same release on the server and on
+  every remote worker.
+- API keys saved on the settings page are encrypted with `data/secret.key` (or
+  `HIKIDASHI_SECRET_KEY`). Back it up with the database; lose it, and the keys
+  are simply entered again.
+
+### Fixed
+
+- Signing out no longer sometimes lands on the sign-in page with
+  `?next=/account`.
+
 ## [0.22.0] — 2026-11-12
 
 ### Added
