@@ -53,6 +53,11 @@ your own machine, with local models.
   background. The heavy stages can run on a separate machine with a GPU.
 - **English and Japanese**, light and dark themes.
 
+| | | |
+|---|---|---|
+| <img src="docs/demo/recipe.webp" alt="A recipe: the ingredient checklist and steps beside the video."> | <img src="docs/demo/themes.webp" alt="The library in four themes, one in pixel art."> | <img src="docs/demo/japanese.webp" alt="The recipes view in Japanese."> |
+| A recipe read from the voiceover | Four themes, and pixel art | The interface in Japanese |
+
 ## Privacy
 
 Your library stays on your machine. Hikidashi contacts Instagram only to

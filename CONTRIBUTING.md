@@ -139,7 +139,7 @@ that makes the change or one right after it.
 | changes how search ranks: a list, a weight, a threshold, a tier | the table in [operation.md](docs/operation.md#a-search-request), the `search()` SVG if what it shows changes, and [search.md](docs/search.md) with the eval numbers |
 | changes import, sign-in, sessions, CSRF, proxy trust, worker tokens or per-user scoping | the matching sequence in [operation.md](docs/operation.md) and [architecture.md](docs/architecture.md#security-boundaries) |
 | adds a call to anything outside the machine, or a new place data is kept | the context table in [architecture.md](docs/architecture.md#context), or its storage layout |
-| changes what the library looks like or how it is used, enough that the README animation no longer shows the app | re-record it on the demo library: `node scripts/record-demo.mjs hero` (and `tour`) in `frontend/`, as in [development.md](docs/development.md#recording-the-demo) |
+| changes what the library looks like or how it is used, enough that the README animation no longer shows the app | re-record it on the demo library: `node scripts/record-demo.mjs hero` (and `tour`), and retake the stills with `node scripts/screenshots.mjs`, in `frontend/`, as in [development.md](docs/development.md#recording-the-demo) |
 | changes what a worker logs | re-record the terminal: `uv run python scripts/demo_library.py cast`, then run `make_diagrams.py` |
 | makes or reverses a decision argued out in an issue | a new record in [docs/adr/](docs/adr/README.md). Don't rewrite an accepted record: add one that supersedes it, and mark the old one **Superseded by** |
 

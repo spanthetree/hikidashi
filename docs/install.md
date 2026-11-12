@@ -84,6 +84,8 @@ Open <http://localhost:8080>. A new library opens on the import box: drop the
 ZIP on it, or click to choose it. Later, **Import** in the toolbar opens the
 same box, and a ZIP dropped anywhere on the library is imported too.
 
+<img src="demo/import.webp" alt="The import box over the demo library: a button that opens Instagram's export page, the choices to make there, then a dashed zone to drop the ZIP on or click to choose it." width="640">
+
 From the command line:
 
 ```bash

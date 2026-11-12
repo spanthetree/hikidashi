@@ -29,7 +29,11 @@ A tour of the web app. [Back to the README](../README.md)
 ## A reel
 
 Open a reel to watch it (muted and looped) beside its caption, transcript and
-on-screen text. From its sheet you can:
+on-screen text.
+
+<img src="demo/sheet.webp" alt="A woodturning reel open on the demo library, in dark mode: the video beside its length, likes and size, its caption, the model's summary and keywords, its tag Home and DIY, its collection and hashtags." width="640">
+
+From its sheet you can:
 
 - change its tag. Your choice always wins over the model's, and is never
   overwritten;
@@ -47,6 +51,8 @@ dish and how long it takes. Filter by time, by ingredient, or by what a recipe
 leaves out: "with chicken, without dairy". Open one for an ingredient
 checklist and numbered steps next to the video, with **Add to shopping list**,
 **Edit**, **Use the model's version** and **Not a recipe**.
+
+<img src="demo/recipe.webp" alt="A pork roast recipe open in light mode: the video beside serves 4, 20 minutes, a checklist of five ingredients and six numbered steps read from the voiceover, with Add to shopping list, Edit and Not a recipe." width="640">
 
 **Select** picks several recipes at once; with a filter on, **Add all** adds
 every recipe it shows. **Shopping list**, in the sidebar, merges their
@@ -103,12 +109,16 @@ tokens for [workers on other machines](remote-workers.md). **Logs**, from
 there, shows the server's and the workers' logs live, filterable to warnings
 and errors. With accounts on, both are for admins only.
 
+<img src="demo/pipeline.webp" alt="The Pipeline page in dark mode: the worker nas running fetch and embed, checked in seconds ago; a form to make a token for a worker on another machine; and the API tokens." width="640">
+
 ## Settings
 
 The menu at the top right picks the theme: Hikidashi by default (paper, ink
 and vermilion, after the logo), or cyberpunk, retrowave or retrofuture; light,
 dark or the system's choice; and pixel art, which redraws any theme, its icons
 and the logo in pixels. These are remembered in the browser.
+
+<img src="demo/themes.webp" alt="The library in four looks: Hikidashi in light, cyberpunk in dark, retrowave in dark with pixel art on, and retrofuture in light." width="640">
 
 It also leads to **Your account**: your Instagram @handle, your password, API
 tokens, the export form and, for admins, invitations and accounts
@@ -118,3 +128,5 @@ The interface is in English and Japanese. It follows the browser's language,
 or the switcher at the foot of the sidebar. Japanese searches find Japanese
 captions and, through the multilingual embeddings, English reels on the same
 subject.
+
+<img src="demo/japanese.webp" alt="The recipes view in Japanese: 18 recipes, each with its time and ingredient count, and the toolbar's sort, export and import in Japanese." width="640">
