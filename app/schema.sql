@@ -55,10 +55,16 @@ CREATE TABLE IF NOT EXISTS item (
   place_v       INTEGER NOT NULL DEFAULT 0,  -- places read from the caption, any or none
 
   -- Which hardware profile produced them. asr_v alone cannot tell you whether a
-  -- transcript came from the small model or the large one.
+  -- transcript came from the small model or the large one. A hosted API's
+  -- output is stamped provider:model instead, as groq:whisper-large-v3-turbo
+  -- (#116), so reels made by an older model can be queued again.
   asr_profile   TEXT,
   tag_profile   TEXT,
-  recipe_profile TEXT
+  recipe_profile TEXT,
+  ocr_profile   TEXT,                  -- NULL: tesseract; else provider:model
+  -- The language a multilingual model heard, as an ISO 639-1 code. NULL for the
+  -- local models, which are English-only and are told so.
+  asr_language  TEXT
 );
 
 CREATE INDEX IF NOT EXISTS item_state_idx    ON item(state);
