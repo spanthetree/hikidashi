@@ -4,6 +4,7 @@ How an Instagram export becomes a searchable library, stage by stage.
 [Back to the README](../README.md)
 
 - [How an item flows](#how-an-item-flows)
+- [The stages](#the-stages) · [Measured on a real library](#measured-on-a-real-library)
 - [What the export contains](#what-the-export-contains)
 - [The worker](#the-worker)
 - [Running the stages by hand](#running-the-stages-by-hand)
@@ -26,6 +27,40 @@ Only **fetch** is expensive to redo: it is network-bound, rate-limited and
 depends on posts that may be gone next year. Everything downstream is a pure
 function of bytes already on disk, so a change to a cheap stage never
 invalidates an expensive one.
+
+## The stages
+
+| | Stage | Command | What it does |
+|---|-------|---------|--------------|
+| 1 | Import | `import` | Reads the export: captions, creators, hashtags, collections |
+| 2 | Enrich | `enrich --media` | Downloads metadata, thumbnails and mp4s with yt-dlp |
+| 3 | Transcribe | `transcribe` | Speech to text with faster-whisper, skipping music-only reels and the stock phrases Whisper writes over them |
+| 4 | OCR | `ocr` | Reads on-screen text from photos and reels with no speech |
+| 5 | Tag | `tag --llm` | Hashtag mapping, then a local LLM for summaries and categories |
+| 6 | Recipes | `recipe` | Finds recipes and extracts ingredients and steps |
+| 7 | Embed | `embed` | Vectors for semantic search (embeddinggemma-300m) |
+| 8 | Places | `places` | Reads places from captions, and puts them on the map |
+
+The workers run stages 2 to 7 as reels arrive, and the server finds places
+itself. Under Docker, `server-worker` runs 2 and 7 from the server image and
+`worker` runs 3 to 6 from the worker image. Each stage can also be run on its
+own with `./hikidashi <command>`, and `./hikidashi pipeline` runs them all in
+order.
+
+## Measured on a real library
+
+Measured against **420 saves (335 reels and 85 photo posts) across 7
+collections**:
+
+| | |
+|---|---|
+| Captions | 420 / 420, straight from the export |
+| Videos | 322 of 335 reels, 3.5 GB, ~8 minutes |
+| Transcripts | 224 videos, 4.4 hours of audio in 5 minutes on an RTX 3080 |
+| On-screen text | 115 of the 187 items with no speech, in 30 seconds on CPU |
+| Model tagging | 411 reels in 5.6 minutes on an RTX 3080 (`qwen2.5:7b`), 0 failures |
+| Untagged items | 171 from hashtags alone → 25 after the model and OCR |
+| Unfetchable | 9, restricted or login-only posts |
 
 ## What the export contains
 

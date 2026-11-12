@@ -70,7 +70,7 @@ Open `http://<truenas>:8080`.
   password. The link changes each time the container starts, and stops
   working once someone has claimed the library.
 - **Import:** drop the Instagram export ZIP onto the page (the
-  [README](../README.md#quick-start) says how to get it). Search works on
+  [Installing](install.md#getting-your-instagram-export) says how to get it). Search works on
   captions straight away. The workers then fetch, transcribe and tag in the
   background. The **Pipeline** page shows how far they've got.
 
