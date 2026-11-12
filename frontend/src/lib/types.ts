@@ -288,6 +288,8 @@ export interface PipelineState {
   fetch: FetchFailures;
   stages: StageQueue[];
   workers: WorkerInfo[];
+  /** The hosted APIs (#125): each one's switch, why it went off, in flight, spend. */
+  apis: ApiStatus[];
   overall: WorkerOverall;
   attempts: number;
   /** Seconds of silence before a running worker counts as lost. */
@@ -438,4 +440,118 @@ export interface ExportOptions {
   recipes: number;
   collections: Named[];
   tags: Tag[];
+}
+
+/* ---------- Hosted AI (#116, #125) ---------- */
+
+export type AiStage = "asr" | "ocr" | "tag" | "recipe";
+export const AI_STAGES: AiStage[] = ["asr", "ocr", "tag", "recipe"];
+
+/** A setting's value and where it comes from: env:NAME, saved, default or unset. */
+export interface AiValue<T> {
+  value: T | null;
+  source: string;
+}
+
+export interface AiStageSetting {
+  provider: AiValue<string>;
+  model: AiValue<string>;
+  base_url: AiValue<string>;
+  default_model: string | null;
+}
+
+export interface AiKey {
+  set: boolean;
+  masked: string | null;
+  source: string;
+  problem: string | null;
+}
+
+export interface AiSwitch {
+  on: boolean;
+  scope: "me" | "all" | null;
+  since: number | null;
+  reason: string | null;
+  at: number | null;
+  by: number | null;
+}
+
+export interface AiPreset {
+  name: string;
+  label: string;
+  stages: AiStage[];
+  models: Partial<Record<AiStage, string | null>>;
+  segments: string[];
+  free: string;
+  terms: string;
+  checked: string;
+  needs_base_url: boolean;
+  key_env: string;
+}
+
+export type AiUse = "mine" | "server" | "workers" | "default";
+
+export interface AiPage {
+  owner: number | null;
+  stages: Record<AiStage, AiStageSetting>;
+  keys: Record<string, AiKey>;
+  budget: AiValue<number>;
+  language: AiValue<string>;
+  switch: AiSwitch;
+  problems: string[];
+  presets: AiPreset[];
+  spent: number;
+  history: { at: number; action: string; detail: string | null; actor: string | null }[];
+  // A user's own page only.
+  use?: AiUse;
+  applies?: "mine" | "server" | "workers";
+  server?: { available: boolean; providers: string[] };
+}
+
+export interface AiBacklog {
+  reels: number;
+  usd_low: number;
+  usd_high: number;
+  unpriced: string[];
+}
+
+export interface AiTest {
+  ok: boolean;
+  said: string;
+  detail: string;
+  model?: string;
+}
+
+export interface AiUserRow {
+  id: number;
+  username: string;
+  use: AiUse;
+  keys: string[];
+  on: boolean;
+  reason: string | null;
+  spent: number;
+}
+
+export interface ApiStatus {
+  name: string;
+  owner: number | null;
+  /** null for a hosted worker on another machine, which only reports spend. */
+  on: boolean | null;
+  scope?: "me" | "all" | null;
+  reason?: string | null;
+  waiting?: number;
+  in_flight?: number;
+  left_to_workers?: number;
+  spent: number;
+  budget?: number | null;
+  providers?: string[];
+  last?: number;
+}
+
+export interface MyPipeline {
+  stages: { stage: string; waiting: number }[];
+  worker_seen_at: number | null;
+  applies: "mine" | "server" | "workers";
+  api: { on: boolean; reason: string | null; in_flight: number; spent: number; budget: number | null; waiting: number };
+  now: number;
 }

@@ -680,5 +680,109 @@
   "about_title": "Hikidashiについて",
   "about_license": "PolyForm Noncommercial License 1.0.0 のもと、非営利目的なら自由に使えます。",
   "about_terms": "ライセンスとサードパーティの規約",
-  "about_not_affiliated": "Instagram および Meta とは提携しておらず、承認や後援も受けていません。"
+  "about_not_affiliated": "Instagram および Meta とは提携しておらず、承認や後援も受けていません。",
+  "ai_title": "AIプロバイダー",
+  "ai_server_title": "サーバーのAIプロバイダー",
+  "ai_lede": "文字起こし、画面の文字、タグ、レシピをワーカーを待たずにホスト型AIサービスに任せます。初期状態はオフで、スイッチを入れるまで何も送信されません。",
+  "ai_server_lede": "サーバー自身のAPIキーです。自分のリールだけ、またはそれを使う全ユーザーのリールに使えます。環境変数の設定がこのページより優先され、環境変数でオンになることはありません。",
+  "ai_applies_mine": "あなたのリールは自分のAPIで処理されます。",
+  "ai_applies_server": "あなたのリールはサーバーのAPI（{providers}）で処理されます。",
+  "ai_applies_workers": "あなたのリールはワーカーで処理されます。",
+  "ai_use_title": "リールの処理方法",
+  "ai_use_default": "サーバーの既定",
+  "ai_use_mine": "自分のAPI",
+  "ai_use_server": "サーバーのAPI",
+  "ai_use_workers": "ワーカーのみ",
+  "ai_use_hint": "ワーカーのみ：あなたのものは何も送信されず、課金もされません。他の人も保存したリールは、その人のAPIで処理されることがあります。リクエストにはあなたが保存したことは含まれません。",
+  "ai_on": "オン",
+  "ai_off": "オフ",
+  "ai_on_me": "オン（自分のリール）",
+  "ai_on_all": "オン（全ユーザー）",
+  "ai_off_because": "オフになりました：{reason}",
+  "ai_spent": "今月 {usd} / {budget} USD",
+  "ai_scope_label": "サーバーのAPIの対象",
+  "ai_scope_me": "自分だけ",
+  "ai_scope_all": "全ユーザー",
+  "ai_turn_on": "オンにする",
+  "ai_turn_off": "オフにする",
+  "ai_change_scope": "対象を変更",
+  "ai_on_done": "オンにしました。新しいリールは準備でき次第APIに送られます。",
+  "ai_off_done": "オフにしました。処理中のリクエストは完了し、残りはワーカーに戻ります。",
+  "ai_switch_hint": "オンの間、APIは新しいリールを準備でき次第処理するため、後から接続したワーカーには回りません。キーが拒否された、クォータを使い切った、月の予算に達したときは自動でオフになります。",
+  "ai_backlog_title": "待機中のリール",
+  "ai_backlog": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local n = count: number"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "待機中のリール {n} 件、{cost}。",
+        "countPlural=other": "待機中のリール {n} 件、{cost}。"
+      }
+    }
+  ],
+  "ai_cost_about": "約 {usd} USD",
+  "ai_cost_range": "約 {low}〜{high} USD",
+  "ai_unpriced": "{models} の価格は不明のため、0として計算しています。",
+  "ai_process_these": "これらも処理する",
+  "ai_only_new": "今後の新しいリールだけ",
+  "ai_stage": "段階",
+  "ai_provider": "プロバイダー",
+  "ai_model": "モデル",
+  "ai_stage_asr": "文字起こし",
+  "ai_stage_ocr": "画面の文字",
+  "ai_stage_tag": "タグ",
+  "ai_stage_recipe": "レシピ",
+  "ai_provider_for": "{stage}のプロバイダー",
+  "ai_model_for": "{stage}のモデル",
+  "ai_base_url": "ベースURL",
+  "ai_env": "環境変数で設定（{name}）",
+  "ai_no_music_guard": "このモデルは区間ごとの情報を返さないため、音楽だけのリールに架空の歌詞が付くことがあります。",
+  "ai_test": "接続をテスト",
+  "ai_testing": "テスト中…",
+  "ai_key_for": "{provider} のキー",
+  "ai_key_paste": "キーを貼り付け",
+  "ai_key_replace": "キーを置き換える",
+  "ai_key_remove": "削除",
+  "ai_key_saved": "キーを保存しました。今後表示されることはありません。",
+  "ai_key_removed": "キーを削除しました。",
+  "ai_terms": "無料枠：{free}。データ：{terms}。{checked} 確認。",
+  "ai_budget": "月の予算",
+  "ai_language": "文字起こしの言語",
+  "ai_language_hint": "en や ja などのISOコード。空欄ならモデルが判定します。",
+  "ai_privacy": "送信されるもの：文字起こしにはリールの音声、画面の文字にはフレーム、タグとレシピにはキャプション、ハッシュタグ、文字起こし、画面の文字。",
+  "ai_privacy_shared": "リールは保存した全員のために一度だけ、最初に引き受けたAPIで処理されます。",
+  "ai_your_reels": "段階ごとの待機中のリール",
+  "ai_worker_seen": "ワーカーの最終接続：{ago}",
+  "ai_no_worker": "稼働中のワーカーはありません",
+  "ai_in_flight": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local n = count: number"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "処理中 {n} 件",
+        "countPlural=other": "処理中 {n} 件"
+      }
+    }
+  ],
+  "ai_user": "ユーザー",
+  "ai_their_choice": "選択",
+  "ai_their_keys": "自分のキー",
+  "ai_this_month": "今月（USD）",
+  "pipeline_apis": "ホスト型API",
+  "pipeline_api_line": "待機 {waiting} · 処理中 {in_flight} · 今月 {spent} USD",
+  "pipeline_api_hosted": "ホスト型ワーカー：今月 {spent} USD",
+  "tokens_read_ai": "AIプロバイダーの設定と使用量を見る",
+  "tokens_write_ai": "それを変更し、APIのオン・オフを切り替える（費用が発生します）"
 }

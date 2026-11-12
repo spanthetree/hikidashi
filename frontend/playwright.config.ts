@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { FIRST_RUN, SEEDED, SETUP_TOKEN, UPLOAD } from "./e2e/env";
+import { FAKE_AI, FIRST_RUN, SEEDED, SETUP_TOKEN, UPLOAD } from "./e2e/env";
 
 /* Browser tests against the real server: FastAPI serving the built front end
    (app/web), on a throwaway library that tests/seed.py builds. `npm run e2e`
@@ -35,7 +35,7 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   webServer: [
-    server(SEEDED, `--upload frontend/${UPLOAD}`),
+    server(SEEDED, `--upload frontend/${UPLOAD} --fake-ai ${FAKE_AI}`),
     server(FIRST_RUN, `--empty --setup-token frontend/${SETUP_TOKEN}`),
   ],
   projects: [

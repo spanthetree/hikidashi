@@ -186,6 +186,29 @@
       {/each}
     </section>
 
+    {#if data.apis.some((a) => a.on || a.reason || a.spent)}
+      <section class="p-sec" aria-labelledby="p-apis">
+        <h2 id="p-apis">{m.pipeline_apis()}</h2>
+        {#each data.apis.filter((a) => a.on || a.reason || a.spent) as a (a.name)}
+          <article class="p-worker" class:is-running={a.on} class:has-problem={!a.on && !!a.reason}>
+            <div class="p-head">
+              <span class="p-dot" aria-hidden="true"></span>
+              <b class="p-name">{a.name}</b>
+              {#if a.on !== null}
+                <span class="p-state">{a.on ? (a.scope === "all" ? m.ai_on_all() : a.scope === "me" ? m.ai_on_me() : m.ai_on()) : m.ai_off()}</span>
+              {/if}
+            </div>
+            {#if a.on === null}
+              <p class="p-line">{m.pipeline_api_hosted({ spent: a.spent.toFixed(2) })}</p>
+            {:else}
+              <p class="p-line">{m.pipeline_api_line({ waiting: a.waiting ?? 0, in_flight: a.in_flight ?? 0, spent: a.spent.toFixed(2) })}</p>
+              {#if !a.on && a.reason}<p class="p-problem">{m.ai_off_because({ reason: a.reason })}</p>{/if}
+            {/if}
+          </article>
+        {/each}
+      </section>
+    {/if}
+
     <section class="p-sec" aria-labelledby="p-tokens">
       <h2 id="p-tokens">{m.pl_tokens_title()}</h2>
       <p class="p-lede"><Rich parts={m.pl_tokens_lede.parts()} /></p>

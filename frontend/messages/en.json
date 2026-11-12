@@ -695,5 +695,109 @@
   "about_title": "About Hikidashi",
   "about_license": "Free for any noncommercial use, under the PolyForm Noncommercial License 1.0.0.",
   "about_terms": "License and third-party terms",
-  "about_not_affiliated": "Not affiliated with, endorsed by or sponsored by Instagram or Meta."
+  "about_not_affiliated": "Not affiliated with, endorsed by or sponsored by Instagram or Meta.",
+  "ai_title": "AI providers",
+  "ai_server_title": "The server's AI provider",
+  "ai_lede": "Hand transcription, on-screen text, tags and recipes to a hosted AI service instead of waiting for a worker. Off by default: nothing is sent anywhere until a switch is turned on.",
+  "ai_server_lede": "The server's own API key, for your reels only or for every user who relies on it. Environment variables set here win over this page, and never turn it on.",
+  "ai_applies_mine": "Your reels are processed by your own API.",
+  "ai_applies_server": "Your reels are processed by the server's API ({providers}).",
+  "ai_applies_workers": "Your reels are processed by workers.",
+  "ai_use_title": "How your reels are processed",
+  "ai_use_default": "Server default",
+  "ai_use_mine": "My API",
+  "ai_use_server": "The server's API",
+  "ai_use_workers": "Workers only",
+  "ai_use_hint": "Workers only: nothing of yours is sent, and nothing is billed to you. A reel someone else also saved may still be processed by their API; nothing in the request says you saved it.",
+  "ai_on": "On",
+  "ai_off": "Off",
+  "ai_on_me": "On, for my reels",
+  "ai_on_all": "On, for all users",
+  "ai_off_because": "Turned off: {reason}",
+  "ai_spent": "{usd} of {budget} USD this month",
+  "ai_scope_label": "Who the server's API is for",
+  "ai_scope_me": "Just me",
+  "ai_scope_all": "All users",
+  "ai_turn_on": "Turn on",
+  "ai_turn_off": "Turn off",
+  "ai_change_scope": "Change who it is for",
+  "ai_on_done": "Turned on. New reels go to the API as they are ready.",
+  "ai_off_done": "Turned off. Requests in flight finish; everything else goes back to workers.",
+  "ai_switch_hint": "While it is on, the API takes new reels as soon as they are ready, so a worker that checks in later finds none of them. It turns itself off if the key is rejected, the quota is used up or the monthly budget is reached.",
+  "ai_backlog_title": "Reels waiting",
+  "ai_backlog": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local n = count: number"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{n} reel waiting, {cost}.",
+        "countPlural=other": "{n} reels waiting, {cost}."
+      }
+    }
+  ],
+  "ai_cost_about": "about {usd} USD",
+  "ai_cost_range": "about {low}–{high} USD",
+  "ai_unpriced": "No price known for {models}: counted as nothing.",
+  "ai_process_these": "Process these too",
+  "ai_only_new": "Only new reels from now",
+  "ai_stage": "Stage",
+  "ai_provider": "Provider",
+  "ai_model": "Model",
+  "ai_stage_asr": "Transcription",
+  "ai_stage_ocr": "On-screen text",
+  "ai_stage_tag": "Tags",
+  "ai_stage_recipe": "Recipes",
+  "ai_provider_for": "Provider for {stage}",
+  "ai_model_for": "Model for {stage}",
+  "ai_base_url": "Base URL",
+  "ai_env": "set by environment ({name})",
+  "ai_no_music_guard": "This model gives no segment timings, so music-only reels may get invented lyrics.",
+  "ai_test": "Test connection",
+  "ai_testing": "Testing…",
+  "ai_key_for": "{provider} key",
+  "ai_key_paste": "Paste a key",
+  "ai_key_replace": "Replace the key",
+  "ai_key_remove": "Remove",
+  "ai_key_saved": "Key saved. It is never shown again.",
+  "ai_key_removed": "Key removed.",
+  "ai_terms": "Free tier: {free}. Data: {terms}. Checked {checked}.",
+  "ai_budget": "Monthly budget",
+  "ai_language": "Transcription language",
+  "ai_language_hint": "An ISO code, as en or ja; empty to let the model detect it.",
+  "ai_privacy": "What is sent: the reel's audio for transcription, frames for on-screen text, and its caption, hashtags, transcript and on-screen text for tags and recipes.",
+  "ai_privacy_shared": "A reel is processed once for everyone who saved it, by whichever API takes it first.",
+  "ai_your_reels": "Your reels waiting, per stage",
+  "ai_worker_seen": "a worker last checked in {ago}",
+  "ai_no_worker": "no worker is running",
+  "ai_in_flight": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local n = count: number"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{n} in flight",
+        "countPlural=other": "{n} in flight"
+      }
+    }
+  ],
+  "ai_user": "User",
+  "ai_their_choice": "Choice",
+  "ai_their_keys": "Own keys",
+  "ai_this_month": "This month (USD)",
+  "pipeline_apis": "Hosted APIs",
+  "pipeline_api_line": "{waiting} waiting · {in_flight} in flight · {spent} USD this month",
+  "pipeline_api_hosted": "a hosted worker: {spent} USD this month",
+  "tokens_read_ai": "see your AI provider settings and usage",
+  "tokens_write_ai": "change them, and turn your API on or off, which spends money"
 }

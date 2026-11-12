@@ -30,6 +30,13 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--empty", action="store_true", help="a library nobody has claimed")
     ap.add_argument("--upload", type=Path, help="copy the upload export here")
     ap.add_argument("--setup-token", type=Path, help="write the setup token here")
+    ap.add_argument(
+        "--fake-ai",
+        type=int,
+        metavar="PORT",
+        help="a fake OpenAI-compatible API on this port, and the hosted APIs (#125) "
+        "running against it, as the server's worker runs them",
+    )
     args = ap.parse_args(argv)
 
     with tempfile.TemporaryDirectory(prefix="hikidashi-e2e-") as tmp:
@@ -60,11 +67,47 @@ def main(argv: list[str]) -> int:
 
         from app.api import main as server
 
+        if args.fake_ai:
+            _fake_ai(args.fake_ai, root)
+
         if args.setup_token:
             args.setup_token.parent.mkdir(parents=True, exist_ok=True)
             args.setup_token.write_text(server.SETUP_TOKEN)
         uvicorn.run(server.app, host="127.0.0.1", port=args.port, log_level="warning")
     return 0
+
+
+def _fake_ai(port: int, root: Path) -> None:
+    """The fake provider, and the hosted APIs' host polling every second.
+    Without ffmpeg (the browser tests' image has none), audio and frames are
+    the media files' bytes: the fake reads neither."""
+    import shutil as sh
+    from unittest import mock
+
+    from app.ai import runner
+    from app.db import connect
+    from tests.fake_openai import Fake, stage_reply
+
+    Fake(chat_reply=stage_reply, key=None).start(port)
+    if not sh.which("ffmpeg"):
+        mock.patch("app.asr.hosted.encode", lambda path, **kw: b"fLaC" + path.read_bytes()).start()
+        mock.patch(
+            "app.ocr.hosted.frames", lambda row, media: [(media / row["thumb_path"]).read_bytes()]
+        ).start()
+    db = root / "hikidashi.sqlite3"
+    # The seed leaves reels unfetched, so no API would take any. Bob's, as
+    # the fetch would leave them: ready for his API in the browser test.
+    from app.enrich.fetcher import FETCH_V
+
+    conn = connect(db)
+    conn.execute(
+        """UPDATE item SET fetch_v = ? WHERE state != 'failed' AND media_path IS NOT NULL
+             AND shortcode IN (SELECT shortcode FROM user_item JOIN user ON user.id = user_id
+                               WHERE username = 'bob')""",
+        (FETCH_V,),
+    )
+    conn.close()
+    runner.Host(lambda: connect(db), root, root / "media", idle=1.0).start()
 
 
 if __name__ == "__main__":

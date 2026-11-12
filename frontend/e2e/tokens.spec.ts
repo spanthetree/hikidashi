@@ -12,8 +12,8 @@ test.describe("API tokens", () => {
     const bob = await browser.newPage({ storageState: PEOPLE.bob.state });
     await bob.goto("/account");
     await expect(bob.getByRole("heading", { name: "API tokens" })).toBeVisible();
-    // Not an admin: the admin scopes are not his to give.
-    await expect(bob.locator(".t-scopes input")).toHaveCount(2);
+    // Not an admin: the admin scopes are not his to give; library and ai are.
+    await expect(bob.locator(".t-scopes input")).toHaveCount(4);
     await expect(bob.getByText("No tokens.")).toBeVisible();
 
     await bob.getByLabel("Name", { exact: true }).fill("e2e monitor");
@@ -69,7 +69,7 @@ test.describe("API tokens", () => {
   test("an admin may give an admin scope", async ({ browser }) => {
     const alice = await browser.newPage({ storageState: PEOPLE.alice.state });
     await alice.goto("/account");
-    await expect(alice.locator(".t-scopes input")).toHaveCount(4);
+    await expect(alice.locator(".t-scopes input")).toHaveCount(6);
     await expect(alice.locator(".t-scopes")).toContainText("write:admin");
     await alice.close();
   });
