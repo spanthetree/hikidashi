@@ -6,12 +6,18 @@
     uv run python scripts/demo_library.py serve     # the server, on 127.0.0.1:8090
     uv run python scripts/demo_library.py worker    # the worker beside it
     uv run python scripts/demo_library.py remote    # a remote worker for it
+    uv run python scripts/demo_library.py fixture   # tests/eval/, for CI's evals
 
 `worker` runs enrich and embed next to the server, and `remote` runs the rest
 over HTTP, as a GPU desktop would for a NAS. `cast` is `remote --once`
 recorded, line by line with its timing, to docs/demo/remote-worker.cast (an
 asciicast, so `asciinema play` replays it); make_diagrams.py draws it as the
 terminal in docs/remote-workers.md. `credits` rewrites docs/demo/CREDITS.md.
+
+`fixture` copies the built library into tests/eval/ for scripts/evals.py
+(#57): the database without its sign-ins, and a vector for every query in
+tests/search_eval.json. CI then scores search and tagging on it with no
+model. Make it again after a build, or when the query set changes.
 
 Every picture and clip is from Wikimedia Commons under CC0, public domain or
 CC BY, never share-alike: the recordings are made from them, and share-alike
@@ -57,6 +63,7 @@ SOURCES = DEMO / "sources"  # downloads and cuts, kept between builds
 LIB = DEMO / "library"  # the library, made again by each build
 CREDITS = ROOT / "docs" / "demo" / "CREDITS.md"
 CAST = ROOT / "docs" / "demo" / "remote-worker.cast"
+FIXTURE = ROOT / "tests" / "eval"
 
 PORT = 8090
 GEOCODER_PORT = 8091
@@ -852,10 +859,44 @@ def cast() -> int:
     return code
 
 
+def fixture() -> None:
+    """The built library as CI's eval fixture: tests/eval/demo.sqlite3, with
+    no sessions, tokens, password or job history, and the query vectors."""
+    import sqlite3
+
+    from app.embed.embedder import Embedder
+    from app.search.eval import write_vectors
+
+    env = environment()
+    FIXTURE.mkdir(parents=True, exist_ok=True)
+    db = FIXTURE / "demo.sqlite3"
+    db.unlink(missing_ok=True)
+    src = sqlite3.connect(f"file:{env['HIKIDASHI_DB']}?mode=ro", uri=True)
+    out = sqlite3.connect(db)
+    src.backup(out)
+    src.close()
+    for table in ("session", "invite", "api_token", "job_lease", "job_attempt", "job_worker"):
+        out.execute(f"DELETE FROM {table}")
+    out.execute("UPDATE user SET password_hash = NULL")
+    out.commit()
+    out.execute("PRAGMA journal_mode = DELETE")
+    out.execute("VACUUM")
+    out.close()
+    print(f"wrote {db.relative_to(ROOT)} ({db.stat().st_size / 1024:.0f} KB)")
+
+    queries = [
+        q["q"] for q in json.loads((ROOT / "tests" / "search_eval.json").read_text())["queries"]
+    ]
+    vectors = FIXTURE / "query_vectors.json"
+    write_vectors(vectors, queries, Embedder(Path(env["HIKIDASHI_MODELS"])).query)
+    print(f"wrote {vectors.relative_to(ROOT)} ({len(queries)} queries)")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument(
-        "command", choices=("sources", "build", "serve", "worker", "remote", "cast", "credits")
+        "command",
+        choices=("sources", "build", "serve", "worker", "remote", "cast", "credits", "fixture"),
     )
     ap.add_argument("--force", action="store_true", help="sources: cut every file again")
     args, extra = ap.parse_known_args(argv)
@@ -865,6 +906,8 @@ def main(argv: list[str] | None = None) -> int:
         write_credits(_meta())
     elif args.command == "build":
         build()
+    elif args.command == "fixture":
+        fixture()
     elif args.command == "serve":
         return serve()
     elif args.command == "cast":

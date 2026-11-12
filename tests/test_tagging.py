@@ -310,6 +310,33 @@ class TestEvaluate(TaggingCase):
         self.assertEqual(shown.misses, [("FOOD01", "Food", "Travel")])
         self.assertIn("3 reels tagged by hand", evaluate.report(scores))
 
+    def test_labels_from_a_file_and_none_fits(self):
+        """A null label says no category fits: answering it is wrong, and
+        leaving it blank is right (tests/tag_labels.json, #6)."""
+        service.apply_hashtags(self.conn)  # FOOD01 Food, CAR001 Automotive
+        path = self.dir / "labels.json"
+        labels = {"FOOD01": "Food", "CAR001": None, "NONE01": None}
+        path.write_text(json.dumps({"labels": labels}))
+        scores = evaluate.evaluate(self.conn, truth=evaluate.labels_from(path))
+        hashtag = scores["hashtag"]
+        self.assertEqual((hashtag.labelled, hashtag.unfit), (1, 2))
+        self.assertEqual((hashtag.answered, hashtag.exact, hashtag.abstained), (1, 1, 1))
+        self.assertEqual(hashtag.precision, 0.5)  # Food right, Automotive on a "none"
+        self.assertEqual(hashtag.misses, [("CAR001", "none", "Automotive")])
+        self.assertIn("2 where no category fits", evaluate.report(scores))
+        self.assertEqual(evaluate.summary(scores)["hashtag"]["abstained"], 1)
+
+    def test_pick_skips_your_labels_and_says_why(self):
+        service.apply_hashtags(self.conn)
+        service.set_user_tag(self.conn, "FOOD01", "Food")
+        chosen = evaluate.pick(self.conn, 10)
+        codes = [code for code, _, _ in chosen]
+        self.assertNotIn("FOOD01", codes)
+        self.assertCountEqual(codes, ["CAR001", "NONE01"])
+        why = {code: reason for code, _, reason in chosen}
+        self.assertEqual(why["NONE01"], "no hashtags")
+        self.assertEqual(evaluate.pick(self.conn, 1)[0][0], "NONE01")
+
 
 # The tables as they were before #21: any number of tags per item.
 OLD_TAGS = """

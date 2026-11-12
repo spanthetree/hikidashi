@@ -25,6 +25,9 @@ jobs:
       - run: pip install coverage==7.17.0 hypothesis==6.170.9
       - run: coverage run -m unittest discover -s tests -t .
       - run: coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+      # Search and tagging on the demo library, against the last release's
+      # scores: fails when one falls too far (docs/eval.md).
+      - run: python scripts/evals.py --check
 
   # ruff (lint and format) and mypy --strict, configured in pyproject.toml.
   lint:

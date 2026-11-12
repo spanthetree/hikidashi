@@ -1,4 +1,5 @@
-"""CLI: python -m app.search.eval [--set PATH] [--mode MODE ...] [--queries] [--against REF]
+"""CLI: python -m app.search.eval [--set PATH] [--db PATH] [--vectors PATH] [--mode MODE ...]
+                              [--queries] [--json PATH] [--against REF]
 
 Scores search against a graded query set (data/search_eval.json, your own
 and git-ignored, else tests/search_eval.json over the demo library):
@@ -14,11 +15,16 @@ A grade of 2 is the reel the query is after, 1 a reel that is fair to show.
 `--against REF` scores search as it was at a git ref too, on today's library
 and query set, and lists the queries whose score moved: a before and after
 that the library changing underneath cannot skew.
+
+`--vectors PATH` reads each query's vector from a file instead of the model,
+so blended search can be scored with no model installed: CI scores the demo
+library this way (tests/eval/, #57). `write_vectors` makes such a file.
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
 import inspect
 import json
 import math
@@ -51,6 +57,34 @@ AT = 10
 # or two weak matches are a fair answer to a query with no good one.
 QUIET = 3
 MODES = ("keyword", "blended")
+
+
+def read_vectors(path: Path) -> Callable[[str], bytes]:
+    """Query vectors from a file `write_vectors` made, looked up by query."""
+    from app.embed.embedder import EMBED_V, MODEL
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if (data["model"], data["embed_v"]) != (MODEL, EMBED_V):
+        raise SystemExit(
+            f"{path} was embedded with {data['model']} (embed_v {data['embed_v']}), "
+            f"search uses {MODEL} (embed_v {EMBED_V}): make it again"
+        )
+    vectors = {q: base64.b64decode(v) for q, v in data["vectors"].items()}
+
+    def embed(q: str) -> bytes:
+        if q not in vectors:
+            raise SystemExit(f"no vector for {q!r} in {path}: make it again")
+        return vectors[q]
+
+    return embed
+
+
+def write_vectors(path: Path, queries: Iterable[str], embed: Callable[[str], bytes]) -> None:
+    from app.embed.embedder import EMBED_V, MODEL
+
+    vectors = {q: base64.b64encode(embed(q)).decode("ascii") for q in sorted(set(queries))}
+    data = {"model": MODEL, "embed_v": EMBED_V, "vectors": vectors}
+    path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 @dataclass
@@ -258,6 +292,10 @@ def main(argv: list[str] | None = None) -> int:
         prog="python -m app.search.eval", description=__doc__.splitlines()[0]
     )
     ap.add_argument("--set", type=Path, default=DEFAULT_SET, help="the graded query set")
+    ap.add_argument("--db", type=Path, help="the library to search (default: HIKIDASHI_DB)")
+    ap.add_argument(
+        "--vectors", type=Path, help="read the query vectors from this file, not the model"
+    )
     ap.add_argument(
         "--mode",
         action="append",
@@ -274,7 +312,8 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     modes = args.mode or list(MODES)
 
-    conn = open_db(settings.db_path)
+    db = args.db or settings.db_path
+    conn = open_db(db)
     known = {r[0] for r in conn.execute("SELECT shortcode FROM item")}
     queries, missing = load(args.set, known)
     if missing:
@@ -287,6 +326,8 @@ def main(argv: list[str] | None = None) -> int:
         if not load_vec(conn):
             print("  sqlite-vec is not installed: keyword mode only")
             modes = ["keyword"]
+        elif args.vectors:
+            embed = read_vectors(args.vectors)
         else:
             from app.embed.embedder import Embedder
 
@@ -303,7 +344,7 @@ def main(argv: list[str] | None = None) -> int:
         detail[mode] = run(conn, queries, mode, embed)
         by_mode[mode] = summary(detail[mode])
 
-    print(f"\n  {len(queries)} queries, {settings.db_path.name}, {len(known)} items\n")
+    print(f"\n  {len(queries)} queries, {db.name}, {len(known)} items\n")
     print_table(by_mode)
     if args.queries:
         for mode in by_mode:

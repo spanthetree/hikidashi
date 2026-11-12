@@ -30,6 +30,8 @@
   hardware profiles
 - **[Search](search.md)**: how search ranks results, and how its quality is
   measured
+- **[Evals by release](eval.md)**: search and tagging scored on the demo
+  library at every release, and how CI guards them
 - **[Architecture](architecture.md)**: the components, images, data model,
   storage and security boundaries
 - **[Operation](operation.md)**: a reel's lifecycle, the worker loop, the

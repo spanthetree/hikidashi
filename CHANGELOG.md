@@ -6,6 +6,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.21.0] — 2026-11-12
+
+### Added
+
+- **Evals by release** ([docs/eval.md](docs/eval.md)): search and tagging
+  scored on the demo library at every release, charted across versions. CI
+  fails a pull request that makes them fall too far.
+- **Tag calibration** (#6): `python -m app.tagging --pick 50` lists reels
+  worth labelling by hand in your library, and `--eval --labels FILE` scores
+  against a file of labels, where a reel can be labelled "none fits". The
+  demo library's labels are in `tests/tag_labels.json`.
+
+### Changed
+
+- A search that finds nothing with vectors now falls back to any two of its
+  words, as keyword-only search does, rather than showing an empty page.
+
 ## [0.20.0] — 2026-11-12
 
 ### Changed

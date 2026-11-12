@@ -1,0 +1,133 @@
+{
+ "about": "One row a release: search and tagging scored on the demo library by scripts/evals.py (#57). The release commit adds its row with --record; make_diagrams.py draws them in docs/eval.md.",
+ "rows": [
+  {
+   "version": "0.21.0",
+   "date": "2026-11-12",
+   "commit": "9d74e24",
+   "note": "first row: 30 demo queries, 41 labelled reels",
+   "queries": 30,
+   "search": {
+    "blended": {
+     "recall": 1.0,
+     "mrr": 1.0,
+     "ndcg": 0.995,
+     "kinds": {
+      "keyword": {
+       "n": 3,
+       "recall": 1.0,
+       "mrr": 1.0,
+       "ndcg": 1.0
+      },
+      "non-english": {
+       "n": 3,
+       "recall": 1.0,
+       "mrr": 1.0,
+       "ndcg": 1.0
+      },
+      "paraphrase": {
+       "n": 7,
+       "recall": 1.0,
+       "mrr": 1.0,
+       "ndcg": 0.992
+      },
+      "phrase": {
+       "n": 3,
+       "recall": 1.0,
+       "mrr": 1.0,
+       "ndcg": 1.0
+      },
+      "place": {
+       "n": 4,
+       "recall": 1.0,
+       "mrr": 1.0,
+       "ndcg": 0.98
+      },
+      "voiceover": {
+       "n": 6,
+       "recall": 1.0,
+       "mrr": 1.0,
+       "ndcg": 1.0
+      }
+     },
+     "negatives": {
+      "n": 4,
+      "quiet": 4,
+      "mean_hits": 0.25
+     }
+    },
+    "keyword": {
+     "recall": 0.712,
+     "mrr": 0.769,
+     "ndcg": 0.749,
+     "kinds": {
+      "keyword": {
+       "n": 3,
+       "recall": 0.833,
+       "mrr": 1.0,
+       "ndcg": 0.942
+      },
+      "non-english": {
+       "n": 3,
+       "recall": 1.0,
+       "mrr": 1.0,
+       "ndcg": 1.0
+      },
+      "paraphrase": {
+       "n": 7,
+       "recall": 0.429,
+       "mrr": 0.571,
+       "ndcg": 0.522
+      },
+      "phrase": {
+       "n": 3,
+       "recall": 1.0,
+       "mrr": 1.0,
+       "ndcg": 1.0
+      },
+      "place": {
+       "n": 4,
+       "recall": 0.25,
+       "mrr": 0.25,
+       "ndcg": 0.25
+      },
+      "voiceover": {
+       "n": 6,
+       "recall": 1.0,
+       "mrr": 1.0,
+       "ndcg": 1.0
+      }
+     },
+     "negatives": {
+      "n": 4,
+      "quiet": 4,
+      "mean_hits": 0.0
+     }
+    }
+   },
+   "tagging": {
+    "model": {
+     "labelled": 36,
+     "unfit": 5,
+     "coverage": 1.0,
+     "precision": 0.921,
+     "abstained": 3
+    },
+    "hashtag": {
+     "labelled": 36,
+     "unfit": 5,
+     "coverage": 0.722,
+     "precision": 1.0,
+     "abstained": 5
+    },
+    "shown": {
+     "labelled": 36,
+     "unfit": 5,
+     "coverage": 1.0,
+     "precision": 0.921,
+     "abstained": 3
+    }
+   }
+  }
+ ]
+}

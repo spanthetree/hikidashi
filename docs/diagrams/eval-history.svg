@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" width="720" height="260" role="img" aria-label="Search and tagging scores on the demo library, one point a release">
+<title>Search and tagging scores on the demo library, one point a release</title>
+<style>
+text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);font-size:11px}
+.bg{fill:var(--bg)}.box{fill:var(--panel);stroke:var(--line)}
+.l{font-size:12px;font-weight:600}.s{font-size:9.5px;fill:var(--sub)}
+.c{font-size:10px;fill:var(--sub)}.m{text-anchor:middle}.e{text-anchor:end}
+.ln{stroke:var(--line);stroke-width:1.4;fill:none}.ah{fill:var(--line)}
+.tok{fill:var(--acc)}
+:root{--bg:#f6f8fa;--panel:#ffffff;--line:#d0d7de;--text:#1f2328;--sub:#59636e;--acc:#8250df;--accbg:#fbefff;--bad:#cf222e;--badbg:#ffebe9;--good:#1a7f37;--goodbg:#dafbe1;--blue:#0969da;--bluebg:#ddf4ff;--warn:#9a6700}
+@media (prefers-color-scheme:dark){:root{--bg:#101220;--panel:#191c2b;--line:#333852;--text:#e8e9f2;--sub:#8d92a8;--acc:#a59bff;--accbg:#242244;--bad:#f1877b;--badbg:#301b19;--good:#5fcc9f;--goodbg:#16302a;--blue:#6cb6ff;--bluebg:#172a45;--warn:#e3b341}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.grid{stroke:var(--line);stroke-width:1;fill:none;opacity:.6}.sl{fill:none;stroke-width:2}.blended{stroke:var(--acc);fill:var(--acc)}.blendedt{fill:var(--acc)}.keyword{stroke:var(--blue);fill:var(--blue)}.keywordt{fill:var(--blue)}.tagging{stroke:var(--good);fill:var(--good)}.taggingt{fill:var(--good)}.sl.blended,.sl.keyword,.sl.tagging{fill:none}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0L10,5L0,10z"/></marker></defs>
+<rect class="bg" width="720" height="260" rx="8"/>
+<text class="l" x="64" y="18">Evals on the demo library, by release (nDCG@10, precision)</text>
+<path class="grid" d="M64,214L560,214"/>
+<text class="c e" x="56" y="218">0.5</text>
+<path class="grid" d="M64,177.2L560,177.2"/>
+<text class="c e" x="56" y="181.2">0.6</text>
+<path class="grid" d="M64,140.4L560,140.4"/>
+<text class="c e" x="56" y="144.4">0.7</text>
+<path class="grid" d="M64,103.6L560,103.6"/>
+<text class="c e" x="56" y="107.6">0.8</text>
+<path class="grid" d="M64,66.8L560,66.8"/>
+<text class="c e" x="56" y="70.8">0.9</text>
+<path class="grid" d="M64,30L560,30"/>
+<text class="c e" x="56" y="34">1.0</text>
+<text class="c m" x="312" y="234">0.21.0</text>
+<circle class="blended dot" cx="312.0" cy="31.8" r="3.5"/>
+<text class="s" x="574" y="60">search, blended</text>
+<text class="l blendedt" x="574" y="76">0.995</text>
+<circle class="keyword dot" cx="312.0" cy="122.4" r="3.5"/>
+<text class="s" x="574" y="100">search, keywords only</text>
+<text class="l keywordt" x="574" y="116">0.749</text>
+<circle class="tagging dot" cx="312.0" cy="59.1" r="3.5"/>
+<text class="s" x="574" y="140">tag precision</text>
+<text class="l taggingt" x="574" y="156">0.921</text>
+</svg>

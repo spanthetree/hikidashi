@@ -112,6 +112,12 @@ say so in the pull request before it is merged.
     agrees ([ADR 0017](docs/adr/0017-version-written-once.md)).
     `tests/test_deploy.py` fails if they disagree, or if a copy turns up
     anywhere else.
+  - **Record the evals** for the new version:
+    `uv run python scripts/evals.py --record --note "what moved them"` (leave
+    the note empty when nothing did), then
+    `uv run python scripts/make_diagrams.py`. `tests/test_evals.py` fails if
+    the last row is not this version, or not what the code scores
+    ([docs/eval.md](docs/eval.md)).
 
   Not sure which version a change should be? A fix is a patch, a feature a
   minor; ask in the PR, and the maintainer will settle it before merging.
@@ -136,7 +142,7 @@ that makes the change or one right after it.
 | changes the remote protocol: a route, a check, what is sent, `protocol.REMOTE` | [operation.md](docs/operation.md#the-remote-worker-protocol), the security section of [architecture.md](docs/architecture.md#security-boundaries), the `remote()` SVG, and [remote-workers.md](docs/remote-workers.md) |
 | changes which image or container runs what, or a `HIKIDASHI_LOCAL_STAGES` default (`Dockerfile`, compose files) | [architecture.md](docs/architecture.md#containers-and-images) and its deployment topologies |
 | changes a container's command, environment, user, ports or volumes in the compose files | the same in the NAS install files, `deploy/unraid/*.xml` and `deploy/truenas/hikidashi.yaml`, and [install-unraid.md](docs/install-unraid.md) or [install-truenas.md](docs/install-truenas.md) if what a user sets changes |
-| changes how search ranks: a list, a weight, a threshold, a tier | the table in [operation.md](docs/operation.md#a-search-request), the `search()` SVG if what it shows changes, and [search.md](docs/search.md) with the eval numbers |
+| changes how search ranks: a list, a weight, a threshold, a tier | the table in [operation.md](docs/operation.md#a-search-request), the `search()` SVG if what it shows changes, and [search.md](docs/search.md) with the eval numbers; `scripts/evals.py --check` must pass, or the PR says why the demo scores fell |
 | changes import, sign-in, sessions, CSRF, proxy trust, worker tokens or per-user scoping | the matching sequence in [operation.md](docs/operation.md) and [architecture.md](docs/architecture.md#security-boundaries) |
 | adds a call to anything outside the machine, or a new place data is kept | the context table in [architecture.md](docs/architecture.md#context), or its storage layout |
 | changes what the library looks like or how it is used, enough that the README animation no longer shows the app | re-record it on the demo library: `node scripts/record-demo.mjs hero` (and `tour`), and retake the stills with `node scripts/screenshots.mjs`, in `frontend/`, as in [development.md](docs/development.md#recording-the-demo) |

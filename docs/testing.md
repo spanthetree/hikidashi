@@ -118,6 +118,13 @@ When a test fails, Playwright keeps a trace, a screenshot and a video under
 `frontend/test-results/`; CI uploads them, with the HTML report, as the
 `playwright` artifact.
 
+## Evals
+
+`scripts/evals.py --check` scores search and tagging on the demo library
+(`tests/eval/`) in the python job and fails when a score falls too far below
+the last release's. [Evals by release](eval.md) has the thresholds, the
+history and how to record a release.
+
 ## Coverage
 
 Report only: no threshold fails a build. It shows where tests are thin.

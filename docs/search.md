@@ -9,8 +9,9 @@ The numbers below come from 73 graded queries over a real library, each with
 the reels it should return, graded 2 (the reel the query is after) or 1 (fair
 to show). That set lists what someone saved, so it stays out of the repo: put
 your own at `data/search_eval.json` (git-ignored), and the eval reads it in
-place of `tests/search_eval.json`, 22 queries over the demo library
-(`scripts/demo_library.py`) in the same format. The real set covers eight
+place of `tests/search_eval.json`, 30 queries over the demo library
+(`scripts/demo_library.py`) in the same format, which CI scores at every
+release ([Evals by release](eval.md)). The real set covers eight
 kinds of query. The examples below are of the same kind, but they are not the
 real queries, which would say what is in the library:
 
@@ -28,13 +29,16 @@ real queries, which would say what is in the library:
 ```bash
 uv run python -m app.search.eval             # keyword-only and blended
 uv run python -m app.search.eval --queries   # plus where every expected reel ranked
-uv run python -m app.search.eval --against 83c01ae   # and search as it was before #20
+uv run python -m app.search.eval --against v0.19.0   # and search as it was at a release
 ```
 
 `--against REF` loads `rank()` from a git ref and scores it beside today's
 code on the same library and query set, then lists each query whose score
 moved. The library changes as reels are added and re-summarised, so a number
-recorded weeks ago is not a baseline: rerun the old code instead.
+recorded weeks ago is not a baseline: rerun the old code instead. The ref has
+to be in this repository's history, which starts at 0.18.0; the pre-#20 code
+compared below (83c01ae) is from before that, so the comparison stands as
+recorded.
 
 It prints recall@10, MRR and nDCG@10 (gain 2^grade − 1) overall and per kind,
 how many results the negatives return, and search latency including the query
@@ -89,6 +93,20 @@ What did not improve:
   [Japanese](#japanese-33)).
 - **"cheap eats in Tokyo" is weak before and after** (0.28): two of its six
   reels are not in the top 30.
+
+Re-measured on 2026-11-12, on the same library (420 reels, 73 queries):
+blended nDCG@10 0.92 and MRR 0.96, every kind as in the table above, 5/8
+negatives quiet, and p95 29 ms. That closes
+[#20](https://github.com/spanthetree/hikidashi/issues/20): overall above 0.90,
+no kind below its pre-#20 score, the negatives as quiet as before, and well
+inside 150 ms. The dish query waits on a GPU
+([#64](https://github.com/spanthetree/hikidashi/issues/64)).
+
+Since 0.21.0, a search with vectors that finds nothing in any list falls back
+to any two of its distinctive words, as keyword-only search does. A demo
+voiceover query found its reel with keywords only and nothing at all with
+vectors ([#57](https://github.com/spanthetree/hikidashi/issues/57)). On the
+real set no query comes back empty, so nothing moved.
 
 An earlier version of this page had a baseline recorded on 2026-10-22, which
 no longer reproduced two days later: re-summarised reels move the numbers
