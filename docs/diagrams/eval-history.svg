@@ -27,14 +27,21 @@ text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);fo
 <text class="c e" x="56" y="70.8">0.9</text>
 <path class="grid" d="M64,30L560,30"/>
 <text class="c e" x="56" y="34">1.0</text>
-<text class="c m" x="312" y="234">0.21.0</text>
-<circle class="blended dot" cx="312.0" cy="31.8" r="3.5"/>
+<text class="c m" x="64" y="234">0.21.0</text>
+<text class="c m" x="560" y="234">0.22.0</text>
+<polyline class="blended sl" points="64.0,31.8 560.0,31.8"/>
+<circle class="blended dot" cx="64.0" cy="31.8" r="3.5"/>
+<circle class="blended dot" cx="560.0" cy="31.8" r="3.5"/>
 <text class="s" x="574" y="60">search, blended</text>
 <text class="l blendedt" x="574" y="76">0.995</text>
-<circle class="keyword dot" cx="312.0" cy="122.4" r="3.5"/>
+<polyline class="keyword sl" points="64.0,122.4 560.0,122.4"/>
+<circle class="keyword dot" cx="64.0" cy="122.4" r="3.5"/>
+<circle class="keyword dot" cx="560.0" cy="122.4" r="3.5"/>
 <text class="s" x="574" y="100">search, keywords only</text>
 <text class="l keywordt" x="574" y="116">0.749</text>
-<circle class="tagging dot" cx="312.0" cy="59.1" r="3.5"/>
+<polyline class="tagging sl" points="64.0,59.1 560.0,58.3"/>
+<circle class="tagging dot" cx="64.0" cy="59.1" r="3.5"/>
+<circle class="tagging dot" cx="560.0" cy="58.3" r="3.5"/>
 <text class="s" x="574" y="140">tag precision</text>
-<text class="l taggingt" x="574" y="156">0.921</text>
+<text class="l taggingt" x="574" y="156">0.923</text>
 </svg>
