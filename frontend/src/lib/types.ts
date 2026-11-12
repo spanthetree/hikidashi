@@ -502,6 +502,9 @@ export interface AiPage {
   presets: AiPreset[];
   spent: number;
   history: { at: number; action: string; detail: string | null; actor: string | null }[];
+  /** The one choice: a user's default / mine / workers; the admin's mine / workers. */
+  choice: AiUse;
+  choices: AiUse[];
   // A user's own page only.
   use?: AiUse;
   applies?: "mine" | "server" | "workers";

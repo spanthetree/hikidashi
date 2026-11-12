@@ -15,9 +15,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   can do transcription, on-screen text, tags and recipes instead of a worker,
   with no GPU and no Ollama. Off by default: nothing is sent anywhere until
   someone turns a switch on.
-  - **Per user and for the server.** Each user can use their own provider and
-    key. The admin's can be on for just them or for all users, and users
-    choose: server default, their own API, the server's, or workers only.
+  - **One choice each:** System default (whatever the admin chose), Hosted
+    AI (your own provider and key), or Workers only. The admin's choice is
+    the system default.
   - **All or nothing per reel:** the API that takes a reel does every stage it
     still needs. Providers can be mixed per stage.
   - **Providers:** OpenAI, Groq (free Whisper large), Mistral, Gemini,

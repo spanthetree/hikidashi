@@ -211,7 +211,7 @@ uv_start() {
 		echo "already running (pid $pid) at http://$HOST:$PORT"
 	else
 		# A bare `uv sync` leaves the web stack out (#86).
-		uv run python -c 'import fastapi, uvicorn' 2>/dev/null ||
+		uv run python -c 'import fastapi, uvicorn, cryptography' 2>/dev/null ||
 			die "the server needs its extra: uv sync --extra server --extra worker"
 		uv_web
 		uv_spawn "$OUTFILE" "$PIDFILE" uv run uvicorn app.api.main:app --host "$HOST" \

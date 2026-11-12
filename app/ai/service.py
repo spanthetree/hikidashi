@@ -119,6 +119,8 @@ def page(conn: sqlite3.Connection, owner: int | None, data_dir: Path) -> dict[st
     if owner is not None:
         out["applies"] = applies(conn, owner, data_dir)
     out["history"] = history(conn, owner, 20)
+    out["choice"] = choice(conn, owner)
+    out["choices"] = ["mine", "workers"] if owner is None else list(config.USES)
     return out
 
 
@@ -141,10 +143,10 @@ def presets() -> list[dict[str, Any]]:
 
 
 def server_offer(conn: sqlite3.Connection, data_dir: Path) -> dict[str, Any]:
-    """What a user sees of the server's API: whether it is on for all users,
-    and with what providers. Never a key, never the admin's settings beyond."""
+    """What a user sees of the system default: whether it is hosted AI, and
+    with what providers. Never a key, never the admin's settings beyond."""
     api = load(conn, None, data_dir)
-    on_for_all = api.switch.on and api.switch.scope == "all"
+    on_for_all = api.switch.on and api.switch.scope != "me"
     providers = sorted({s.preset.label for s in api.stages.values() if s.preset})
     return {"available": on_for_all, "providers": providers if on_for_all else []}
 
@@ -154,9 +156,35 @@ def applies(conn: sqlite3.Connection, user_id: int, data_dir: Path) -> str:
     choice = config.use(conn, user_id)
     if choice == "mine":
         return "mine" if load(conn, user_id, data_dir).switch.on else "workers"
-    if choice in ("server", "default"):
+    if choice == "default":
         return "server" if server_offer(conn, data_dir)["available"] else "workers"
     return "workers"
+
+
+def choice(conn: sqlite3.Connection, owner: int | None) -> str:
+    """The one choice the page shows: a user's (default, mine, workers), or
+    for the server's API, the admin's system default (mine, workers)."""
+    return config.server_choice(conn) if owner is None else config.use(conn, owner)
+
+
+def set_choice(
+    conn: sqlite3.Connection, actor: User, owner: int | None, value: str, data_dir: Path
+) -> str:
+    """Set the one choice. For the server's API (an admin): mine is hosted AI
+    as the system default, set up and then started; workers turns it off."""
+    if owner is not None:
+        return set_use(conn, actor, owner, value, data_dir)
+    may(actor, None)
+    if value not in ("mine", "workers"):
+        raise Invalid("the system default is mine (hosted AI) or workers")
+    _put(conn, None, "use", value, actor.id)
+    audit(conn, actor.id, None, f"use {value}")
+    # The admin's own reels follow the system default they just chose.
+    if config.use(conn, actor.id) != "default":
+        set_use(conn, actor, actor.id, "default", data_dir)
+    if value == "workers" and load(conn, None, data_dir).switch.on:
+        turn_off(conn, actor.id, None, data_dir)
+    return value
 
 
 def users(conn: sqlite3.Connection, data_dir: Path) -> list[dict[str, Any]]:
@@ -283,7 +311,13 @@ def set_key(
         raise Invalid("an empty key") from exc
     if len(key) > 1000 or any(c.isspace() for c in value.reveal()):
         raise Invalid("that does not look like an API key")
-    _put(conn, owner, f"key.{provider}", secrets.seal(value, data_dir), actor.id)
+    try:
+        sealed = secrets.seal(value, data_dir)
+    except secrets.NoCipher as exc:
+        err = AiError(str(exc))
+        err.status, err.exit = 503, 1
+        raise err from None
+    _put(conn, owner, f"key.{provider}", sealed, actor.id)
     audit(conn, actor.id, owner, f"key set {provider}", value.masked)
     return load(conn, owner, data_dir)
 
@@ -337,10 +371,10 @@ def set_use(
 ) -> str:
     """How a user's reels are processed: mine, server, workers or default."""
     may(actor, user_id)
+    if choice == "server":
+        choice = "default"  # the system default, by its earlier name
     if choice not in config.USES:
         raise Invalid(f"use one of {', '.join(config.USES)}")
-    if choice == "server" and not server_offer(conn, data_dir)["available"]:
-        raise NotAllowed("the server's API is not on for all users")
     _put(conn, user_id, "use", None if choice == "default" else choice, actor.id)
     audit(conn, actor.id, user_id, f"use {choice}")
     api = load(conn, user_id, data_dir)
@@ -364,7 +398,7 @@ def _as_on(
     if owner is None:
         if scope is not None or api.switch.scope is None:
             api.switch.by = actor
-        api.switch.scope = scope or api.switch.scope or "me"
+        api.switch.scope = scope or api.switch.scope or "all"
     api.switch.on = True
     return api
 
@@ -417,6 +451,8 @@ def turn_on(
     may(actor, owner)
     api = load(conn, owner, data_dir)
     if owner is None:
+        # The system default: for everyone who keeps it, unless asked otherwise.
+        scope = scope or "all"
         if scope not in config.SCOPES:
             raise Invalid("say who the server's API is for: me or all")
     elif scope is not None:
@@ -427,6 +463,8 @@ def turn_on(
     if owner is not None and config.use(conn, owner) != "mine":
         _put(conn, owner, "use", "mine", actor.id)
         audit(conn, actor.id, owner, "use mine")
+    if owner is None and config.server_choice(conn) != "mine":
+        _put(conn, None, "use", "mine", actor.id)
     if not backlog:
         target = _as_on(conn, owner, data_dir, actor.id, scope)
         codes = _waiting_as(conn, target)

@@ -89,9 +89,7 @@ class Local:
                     service.set_language(c, a, o, kw["code"], d)
                     return service.page(c, o, d)
                 case "use":
-                    if o is None:
-                        raise Failed("--server-api has no choice to make; use --user", USAGE)
-                    service.set_use(c, a, o, kw["use"], d)
+                    service.set_choice(c, a, o, kw["use"], d)
                     return service.page(c, o, d)
                 case "models":
                     return service.models(c, o, kw["provider"], d)
@@ -176,10 +174,7 @@ class Remote:
             case "language":
                 return self._send("PUT", f"{b}/language", {"code": kw["code"]})
             case "use":
-                if self.server_api:
-                    raise Failed("--server-api has no choice to make", USAGE)
-                self._send("PUT", f"{b}/use", {"use": kw["use"]})
-                return self._send("GET", b)
+                return self._send("PUT", f"{b}/use", {"use": kw["use"]})
             case "models":
                 return self._send("GET", f"{b}/models?{q({'provider': kw['provider']})}")
             case "test":
@@ -351,8 +346,6 @@ def _budget(args: argparse.Namespace, call: Any) -> Any:
 
 
 def _switch_on(args: argparse.Namespace, call: Any) -> Any:
-    if args.server_api and not args.for_:
-        raise Failed("--server-api needs --for me or --for all", USAGE)
     return _on(call, args)
 
 
@@ -440,9 +433,12 @@ def parser() -> argparse.ArgumentParser:
     sub.add_parser(
         "language", parents=[who], help="force a transcription language (en, ja, …), or detect"
     ).add_argument("code")
-    sub.add_parser("use", parents=[who], help="how a user's reels are processed").add_argument(
-        "choice", choices=["mine", "server", "workers", "default"]
-    )
+    sub.add_parser(
+        "use",
+        parents=[who],
+        help="the one choice: default (follow the system default), mine (hosted AI) or "
+        "workers; with --server-api, the system default itself: mine or workers",
+    ).add_argument("choice", choices=["default", "mine", "workers"])
     sub.add_parser(
         "models", parents=[who], help="the models a provider offers this key"
     ).add_argument("provider", choices=list(PRESETS))
@@ -453,7 +449,10 @@ def parser() -> argparse.ArgumentParser:
         "on", parents=[who], help="switch on: shows the reels waiting and the estimate, then asks"
     )
     on.add_argument(
-        "--for", dest="for_", choices=["me", "all"], help="with --server-api: just me, or all users"
+        "--for",
+        dest="for_",
+        choices=["me", "all"],
+        help="with --server-api: who it is for (default all: the system default)",
     )
     b = on.add_mutually_exclusive_group()
     b.add_argument("--backlog", action="store_true", help="process the reels waiting too")
