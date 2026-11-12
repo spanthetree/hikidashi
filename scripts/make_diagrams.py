@@ -10,6 +10,8 @@ Two kinds of output:
   and `<!-- /make_diagrams -->`. The ER diagrams are read from app/schema.sql,
   the stage graph from the stage registry in app/jobs. Edit the code, not the
   block: the next run puts the block back.
+- The eval history (#57), from docs/eval/history.json, which scripts/evals.py
+  writes: a chart (docs/diagrams/eval-history.svg) and a table block.
 - The animated SVGs in docs/ (docs/diagrams/ and docs/pipeline.svg). Each is a
   function below with its timeline written out, sharing one palette, the
   light and dark themes, and the reduced-motion rule, so they can be changed
@@ -35,6 +37,7 @@ import sys
 import textwrap
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -45,6 +48,7 @@ from app.jobs.queue import REGISTRY  # noqa: E402
 
 DOCS = ROOT / "docs"
 SCHEMA = ROOT / "app" / "schema.sql"
+EVAL_HISTORY = DOCS / "eval" / "history.json"
 
 # --- Mermaid: the ER diagrams, from app/schema.sql ----------------------------
 
@@ -258,7 +262,99 @@ def blocks() -> dict[str, str]:
     check_groups(tables)
     out = {name: er(name, tables) for name in GROUPS}
     out["stage-graph"] = stage_graph()
+    out["eval-history"] = eval_table()
     return out
+
+
+# --- the eval history (#57), from docs/eval/history.json ----------------------
+
+
+def _eval_rows() -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = json.loads(EVAL_HISTORY.read_text())["rows"]
+    return rows
+
+
+def _num(x: object) -> str:
+    return f"{x:.3f}" if isinstance(x, float) else "—"
+
+
+def eval_table() -> str:
+    """One line a release, newest first."""
+    lines = [
+        "| version | date | blended nDCG@10 | keyword nDCG@10 | negatives quiet | "
+        "tag precision | what moved it |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for r in reversed(_eval_rows()):
+        b, k = r["search"]["blended"], r["search"]["keyword"]
+        shown = r["tagging"]["shown"]
+        neg = b["negatives"]
+        lines.append(
+            f"| {r['version']} | {r['date']} | {_num(b['ndcg'])} | {_num(k['ndcg'])} | "
+            f"{neg['quiet']}/{neg['n']} | {_num(shown['precision'])} | {r['note'] or ''} |"
+        )
+    return "\n".join(lines)
+
+
+def eval_chart() -> str:
+    """The table's three scores across releases, on one axis from 0.5 to 1."""
+    rows = _eval_rows()
+    W, H = 720, 260
+    x0, x1, y0, y1 = 64, 600, 214, 30  # plot area: y0 is 0.5, y1 is 1.0
+    lo = 0.5
+
+    def y(v: float) -> float:
+        return y0 - (max(v, lo) - lo) / (1 - lo) * (y0 - y1)
+
+    def x(i: int) -> float:
+        return (x0 + x1) / 2 if len(rows) < 2 else x0 + i * (x1 - x0) / (len(rows) - 1)
+
+    def blended(r: dict[str, Any]) -> float | None:
+        v: float | None = r["search"]["blended"]["ndcg"]
+        return v
+
+    def keyword(r: dict[str, Any]) -> float | None:
+        v: float | None = r["search"]["keyword"]["ndcg"]
+        return v
+
+    def tagging(r: dict[str, Any]) -> float | None:
+        v: float | None = r["tagging"]["shown"]["precision"]
+        return v
+
+    series: tuple[tuple[str, str, Callable[[dict[str, Any]], float | None]], ...] = (
+        ("blended", "search, blended", blended),
+        ("keyword", "search, keywords only", keyword),
+        ("tagging", "tag precision", tagging),
+    )
+    body = [text(x0, 18, "Evals on the demo library, by release (nDCG@10, precision)", "l")]
+    for v in (0.5, 0.6, 0.7, 0.8, 0.9, 1.0):
+        body.append(line(x0, y(v), x1, y(v), "grid", head=False))
+        body.append(text(x0 - 8, y(v) + 4, f"{v:.1f}", "c e"))
+    for i, r in enumerate(rows):
+        body.append(text(x(i), y0 + 20, str(r["version"]), "c m"))
+    for n, (cls, label, get) in enumerate(series):
+        vals = [(i, get(r)) for i, r in enumerate(rows)]
+        pts = [(x(i), y(v)) for i, v in vals if v is not None]
+        if len(pts) > 1:
+            d = " ".join(f"{px:.1f},{py:.1f}" for px, py in pts)
+            body.append(f'<polyline class="{cls} sl" points="{d}"/>')
+        body += [
+            f'<circle class="{cls} dot" cx="{px:.1f}" cy="{py:.1f}" r="3.5"/>' for px, py in pts
+        ]
+        last = get(rows[-1]) if rows else None
+        if last is not None:
+            body.append(text(x1 + 14, 60 + n * 40, label, "s"))
+            body.append(text(x1 + 14, 76 + n * 40, f"{last:.3f}", f"l {cls}t"))
+    css = [
+        ".grid{stroke:var(--line);stroke-width:1;fill:none;opacity:.6}",
+        ".sl{fill:none;stroke-width:2}",
+        ".blended{stroke:var(--acc);fill:var(--acc)}.blendedt{fill:var(--acc)}",
+        ".keyword{stroke:var(--blue);fill:var(--blue)}.keywordt{fill:var(--blue)}",
+        ".tagging{stroke:var(--good);fill:var(--good)}.taggingt{fill:var(--good)}",
+        ".sl.blended,.sl.keyword,.sl.tagging{fill:none}",
+    ]
+    alt = "Search and tagging scores on the demo library, one point a release"
+    return svg(W, H, alt, "".join(css), "\n".join(body))
 
 
 MARK = re.compile(
@@ -1086,6 +1182,7 @@ SVGS: dict[str, Callable[[], str]] = {
     "diagrams/search-fusion.svg": search,
     "diagrams/shared-cache.svg": shared,
     "diagrams/remote-worker-terminal.svg": terminal,
+    "diagrams/eval-history.svg": eval_chart,
 }
 
 

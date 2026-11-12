@@ -1,0 +1,4 @@
+{
+ "about": "One row a release: search and tagging scored on the demo library by scripts/evals.py (#57). The release commit adds its row with --record; make_diagrams.py draws them in docs/eval.md.",
+ "rows": []
+}
