@@ -127,6 +127,11 @@ warn_unreachable = true
 module = ["ctranslate2", "faster_whisper", "fastembed", "nvidia", "nvidia.*", "sqlite_vec"]
 ignore_missing_imports = true
 
+# scripts/make_brand.py's drawing tools, installed only to run it.
+[[tool.mypy.overrides]]
+module = ["fontTools.*", "resvg_py", "PIL", "PIL.*"]
+ignore_missing_imports = true
+
 # Tests are checked, bodies and all, but a test method needs no annotations.
 [[tool.mypy.overrides]]
 module = ["tests.*"]

@@ -1,8 +1,9 @@
 <div align="center">
 
-<img src="frontend/static/icon.svg" alt="" width="112">
-
-# Hikidashi（引き出し）
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/wordmark-dark.svg">
+  <img src="docs/brand/wordmark.svg" alt="Hikidashi" width="440">
+</picture>
 
 **Instagram の保存済み投稿を、検索できる自分だけのライブラリに。セルフホスト型。**
 
