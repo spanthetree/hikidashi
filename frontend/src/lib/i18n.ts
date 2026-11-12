@@ -57,6 +57,10 @@ const TAGS: Record<string, () => string> = {
   "Fitness": m.tag_fitness,
   "Design": m.tag_design,
   "Finance": m.tag_finance,
+  "Movies & TV": m.tag_movies_tv,
+  "Nature & science": m.tag_nature_science,
+  "Family & wellbeing": m.tag_family_wellbeing,
+  "Style & beauty": m.tag_style_beauty,
 };
 
 const GROUPS: Record<string, () => string> = {

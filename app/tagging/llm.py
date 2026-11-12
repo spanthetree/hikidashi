@@ -39,7 +39,7 @@ from .taxonomy import names
 
 # Bumping this schedules every item for re-tagging by the model. Change it with
 # the prompt, the schema or the parsing below.
-TAG_V = 3  # 3: the game a gaming reel shows (#117)
+TAG_V = 4  # 3: the game a gaming reel shows (#117); 4: four more categories (#145)
 
 # Self-reported, so a ranking more than a probability: words, because a 7B
 # model asked for a number answers 0.9 to nearly everything.
@@ -70,6 +70,12 @@ CATEGORY_NOTES: dict[str, str] = {
     "games played on them; not flight simulators",
     "Technology": "computing and software: programming, AI, gadgets, self-hosting",
     "Travel": "places to go: trips, destinations, hotels, sights",
+    "Movies & TV": "films, series and anime: recommendations, reviews, scenes, how they were made",
+    "Nature & science": "the natural world and how things work: wildlife, the night sky, "
+    "weather, science explainers; not gardening, and not a trip somewhere",
+    "Family & wellbeing": "people and the inner life: parenting, relationships, "
+    "mental health, mindfulness, encouragement",
+    "Style & beauty": "how people look: fashion, outfits, hair, makeup, skincare, grooming",
 }
 
 SYSTEM = """\

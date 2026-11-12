@@ -304,6 +304,101 @@ TAXONOMY: dict[str, tuple[frozenset[str], tuple[str, ...]]] = {
             "stockmarket",
         ),
     ),
+    # The four below came from hand labels (#6, #145): reels that fitted none
+    # of the ten. Plain #nature is left out, since travel reels use it as much
+    # as wildlife ones; #film matches only whole, so #filmphotography stays
+    # Design.
+    "Movies & TV": (
+        frozenset(
+            {
+                "movie",
+                "movies",
+                "film",
+                "films",
+                "cinema",
+                "tv",
+                "tvshow",
+                "tvshows",
+                "tvseries",
+                "series",
+                "netflix",
+                "anime",
+                "manga",
+                "cinephile",
+            }
+        ),
+        ("movie", "cinema", "cinephile", "tvshow", "tvseries", "netflix", "anime", "filmmak"),
+    ),
+    "Nature & science": (
+        frozenset(
+            {
+                "wildlife",
+                "animals",
+                "science",
+                "astronomy",
+                "astrophotography",
+                "space",
+                "physics",
+                "biology",
+                "chemistry",
+                "stargazing",
+                "eclipse",
+                "nasa",
+            }
+        ),
+        (
+            "wildlife",
+            "naturephoto",
+            "astronom",
+            "astrophoto",
+            "stargaz",
+            "science",
+            "physics",
+            "biology",
+            "marinelife",
+            "birdwatch",
+        ),
+    ),
+    "Family & wellbeing": (
+        frozenset(
+            {
+                "family",
+                "parenting",
+                "motherhood",
+                "fatherhood",
+                "momlife",
+                "dadlife",
+                "mentalhealth",
+                "selfcare",
+                "mindfulness",
+                "wellbeing",
+                "relationships",
+                "selflove",
+                "motivation",
+            }
+        ),
+        ("parenting", "motherhood", "fatherhood", "mentalhealth", "selfcare", "mindful", "wellbeing"),
+    ),
+    "Style & beauty": (
+        frozenset(
+            {
+                "fashion",
+                "style",
+                "ootd",
+                "outfit",
+                "makeup",
+                "beauty",
+                "skincare",
+                "hair",
+                "hairstyle",
+                "haircut",
+                "grooming",
+                "menswear",
+                "streetwear",
+            }
+        ),
+        ("fashion", "outfit", "makeup", "skincare", "hairstyl", "haircut", "menswear", "streetwear", "beauty"),
+    ),
 }
 
 # Hashtags that carry no topic at all: reach-farming, not description. Dropped

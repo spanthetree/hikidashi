@@ -32,7 +32,7 @@ from .taxonomy import clean, names, primary
 
 # Bumping this schedules every item for re-tagging by the hashtag pass. The LLM
 # tagger has its own, TAG_V in app/tagging/llm.py, on the tag_v column.
-HASHTAG_V = 2
+HASHTAG_V = 3  # 3: four more categories (#145)
 
 HASHTAG = "hashtag"
 MODEL = "model"
