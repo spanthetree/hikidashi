@@ -6,6 +6,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.24.0] — 2026-11-13
+
+### Changed
+
+- **One AI choice each,** on Account → AI providers (#125), admins
+  included: System default, Hosted AI (your own provider and key) or Workers
+  only, with the settings under Hosted AI. The **system default** that
+  System default follows (workers, or hosted AI with the server's own key) is
+  set by an admin on the Pipeline page. No "just me / all users".
+  `hikidashi ai use` takes the same choices; `--server-api` sets the system
+  default.
+
+### Fixed
+
+- Choosing how your reels are processed on Account → AI providers crashed
+  the page ("500 Internal Error").
+- Saving an API key on a server missing the `cryptography` package was a
+  server error; it now says to sync the server extra, and `./hikidashi start`
+  checks for it.
+
 ## [0.23.0] — 2026-11-12
 
 ### Added

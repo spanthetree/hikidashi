@@ -261,16 +261,15 @@ export const ai = {
   setBudget: (w: AiWhose, usd: number | null) => api<AiPage>(`${aiBase(w)}/budget`, send("PUT", { usd })),
   setLanguage: (w: AiWhose, code: string | null) =>
     api<AiPage>(`${aiBase(w)}/language`, send("PUT", { code })),
-  backlog: (w: AiWhose, scope?: "me" | "all") =>
-    api<AiBacklog>(`${aiBase(w)}/backlog${scope ? `?scope=${scope}` : ""}`),
-  switchOn: (w: AiWhose, backlog: boolean, scope?: "me" | "all") =>
-    api<AiPage>(`${aiBase(w)}/switch`, send("POST", { on: true, backlog, scope: scope ?? null })),
+  backlog: (w: AiWhose) => api<AiBacklog>(`${aiBase(w)}/backlog`),
+  switchOn: (w: AiWhose, backlog: boolean) =>
+    api<AiPage>(`${aiBase(w)}/switch`, send("POST", { on: true, backlog })),
   switchOff: (w: AiWhose) => api<AiPage>(`${aiBase(w)}/switch`, send("POST", { on: false })),
   test: (w: AiWhose, stage?: AiStage) =>
     api<Record<AiStage, AiTest>>(`${aiBase(w)}/test`, send("POST", { stage: stage ?? null })),
   models: (w: AiWhose, provider: string) =>
     api<string[]>(`${aiBase(w)}/models?provider=${encodeURIComponent(provider)}`),
-  setUse: (use: AiUse) => api<AiPage>("/api/me/providers/use", send("PUT", { use })),
+  setUse: (w: AiWhose, use: AiUse) => api<AiPage>(`${aiBase(w)}/use`, send("PUT", { use })),
   users: () => api<AiUserRow[]>("/api/admin/ai/users"),
   removeUserKey: (id: number, provider: string) =>
     api<AiUserRow[]>(`/api/admin/ai/users/${id}/keys/${encodeURIComponent(provider)}`, send("DELETE")),

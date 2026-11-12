@@ -15,9 +15,11 @@ test.describe("hosted AI", () => {
     await bob.goto("/account");
     const mine = bob.locator("#ai");
     await expect(mine.getByRole("heading", { name: "AI providers" })).toBeVisible();
-    await expect(mine.getByText("Your reels are processed by workers.")).toBeVisible();
-    // Not an admin: no server section.
-    await expect(bob.locator("#ai-server")).toHaveCount(0);
+    // One choice each. Nothing is set up yet, so the default is workers.
+    await expect(mine.getByText("Your reels follow the system default: workers.")).toBeVisible();
+    await expect(mine.getByRole("radio")).toHaveCount(3);
+    await mine.getByRole("radio", { name: "Hosted AI" }).check();
+    await expect(mine.getByText(/Hosted AI is chosen, and not started yet/)).toBeVisible();
 
     for (const stage of STAGES) {
       await mine.getByLabel(`Provider for ${stage}`).selectOption("compatible");
@@ -46,7 +48,7 @@ test.describe("hosted AI", () => {
     const ask = mine.getByRole("dialog", { name: "Reels waiting" });
     await expect(ask.getByText(/reels? waiting, about/)).toBeVisible();
     await ask.getByRole("button", { name: "Process these too" }).click();
-    await expect(mine.getByText("Your reels are processed by your own API.")).toBeVisible();
+    await expect(mine.getByText("Your reels are processed by your hosted AI.")).toBeVisible();
 
     // The server's API host picks them up: every one of Bob's reels tagged.
     await expect
@@ -61,7 +63,29 @@ test.describe("hosted AI", () => {
     expect(JSON.stringify(detail)).not.toContain(key);
 
     await mine.getByRole("button", { name: "Turn off" }).click();
-    await expect(mine.getByText("Your reels are processed by workers.")).toBeVisible();
+    await expect(mine.getByText(/Hosted AI is chosen, and not started yet/)).toBeVisible();
+    await mine.getByRole("radio", { name: "System default" }).check();
+    await expect(mine.getByText("Your reels follow the system default: workers.")).toBeVisible();
     await bob.close();
+  });
+
+  test("an admin has their own choice, and sets the system default on the Pipeline page", async ({ browser }) => {
+    const alice = await browser.newPage({ storageState: PEOPLE.alice.state });
+    await alice.goto("/account");
+    // Her own library: the same three choices as anyone.
+    await expect(alice.getByRole("heading", { name: "AI providers" })).toHaveCount(1);
+    await expect(alice.locator("#ai").getByRole("radio")).toHaveCount(3);
+    await expect(alice.locator("#ai-default")).toHaveCount(0);
+
+    await alice.goto("/pipeline");
+    const ai = alice.locator("#ai-default");
+    await expect(ai.getByRole("heading", { name: "System default for AI" })).toBeVisible();
+    await expect(ai.getByRole("radio")).toHaveCount(2);
+    await expect(ai.getByText("Workers are the system default.")).toBeVisible();
+    await ai.getByRole("radio", { name: "Hosted AI" }).check();
+    await expect(ai.getByLabel("Provider for Transcription")).toBeVisible();
+    await ai.getByRole("radio", { name: "Workers only" }).check();
+    await expect(ai.getByText("Workers are the system default.")).toBeVisible();
+    await alice.close();
   });
 });

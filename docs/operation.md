@@ -277,13 +277,14 @@ stateDiagram-v2
 - **On**, the API claims new reels as soon as they are fetched. A worker that
   checks in later finds none of them. **Off**, workers get everything, as
   before.
-- **The server's API** is on for **just me** (the admin who turned it on) or
-  **all users**. On all users it takes a reel if at least one saver relies on
-  it: their choice is "the server's API" or "server default". A user's own API
-  is offered their reels first, and the server's waits a minute (`GRACE`)
-  after it first finds a reel ready.
-- **A user's choice**, on Account → AI providers: server default, my API, the
-  server's API (only while it is on for all users), or workers only.
+- **One choice each**, on Account → AI providers, for your own library:
+  **System default**, **Hosted AI** (your own provider and key), or
+  **Workers only**. Admins have the same choice for theirs.
+- **The system default**, on the Pipeline page (admins): workers, or hosted
+  AI with the server's own provider and key, run as the server's API.
+- The server's API takes a reel if at least one saver keeps the system
+  default. A user's own hosted AI is offered their reels first, and the
+  server's waits a minute (`GRACE`) after it first finds a reel ready.
 - Env (`HIKIDASHI_*_PROVIDER`, keys, `HIKIDASHI_HOSTED_BUDGET`) sets the
   server's API and locks those fields on the page, but never turns it on.
 

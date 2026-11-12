@@ -29,6 +29,25 @@ class Unreadable(Exception):
     """A saved key no longer decrypts: the secret key changed or was lost."""
 
 
+class NoCipher(Exception):
+    """`cryptography` is not installed: the server extra is incomplete, as
+    in a venv synced before it was added. Keys can be neither saved nor read."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "the server cannot encrypt API keys: the cryptography package is missing "
+            "(uv sync --extra server --extra worker)"
+        )
+
+
+def _fernet() -> Any:
+    try:
+        from cryptography import fernet
+    except ImportError:
+        raise NoCipher() from None
+    return fernet
+
+
 _lock = threading.Lock()
 _ciphers: dict[str, Any] = {}
 
@@ -58,13 +77,12 @@ def _cipher(data_dir: Path) -> Any:
     env = os.environ.get("HIKIDASHI_SECRET_KEY")
     if not env and (f := os.environ.get("HIKIDASHI_SECRET_KEY_FILE")):
         env = Path(f).read_text(encoding="utf-8")
-    from cryptography.fernet import Fernet
-
+    fernet = _fernet()
     material = _material(env, data_dir)
     with _lock:
         cache = material.decode()
         if cache not in _ciphers:
-            _ciphers[cache] = Fernet(material)
+            _ciphers[cache] = fernet.Fernet(material)
         return _ciphers[cache]
 
 
@@ -73,9 +91,8 @@ def seal(key: Key, data_dir: Path) -> str:
 
 
 def unseal(token: str, data_dir: Path) -> Key:
-    from cryptography.fernet import InvalidToken
-
+    cipher = _cipher(data_dir)
     try:
-        return Key(_cipher(data_dir).decrypt(token.encode()).decode())
-    except (InvalidToken, ValueError) as exc:
+        return Key(cipher.decrypt(token.encode()).decode())
+    except (_fernet().InvalidToken, ValueError) as exc:
         raise Unreadable("saved under another secret key") from exc

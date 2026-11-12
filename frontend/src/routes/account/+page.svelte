@@ -315,16 +315,10 @@
     <section class="a-sec" id="ai">
       <h2>{m.ai_title()}</h2>
       <p class="lede">{m.ai_lede()}</p>
+      <!-- One choice each, for your own library. An admin sets the system
+           default, which "System default" follows, on the Pipeline page. -->
       <AiProviders whose="mine" bind:notice />
     </section>
-
-    {#if me.is_admin}
-      <section class="a-sec" id="ai-server">
-        <h2>{m.ai_server_title()}</h2>
-        <p class="lede">{m.ai_server_lede()}</p>
-        <AiProviders whose="server" bind:notice />
-      </section>
-    {/if}
 
     {#if mine}
       <section class="a-sec">

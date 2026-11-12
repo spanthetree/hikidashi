@@ -19,7 +19,7 @@ test.describe("as Alice, an admin", () => {
     await page.goto("/pipeline");
     await expect(page.getByRole("heading", { name: "Pipeline", level: 1 })).toBeVisible();
     await expect(page.getByText("No worker has checked in")).toBeVisible();
-    const rows = page.locator("tbody tr");
+    const rows = page.locator('section[aria-labelledby="p-stages"] tbody tr');
     await expect(rows).toHaveCount(6);
     await expect(rows.first().locator("td").first()).toHaveText("Fetch");
     await expect(rows.last().locator("td").first()).toHaveText("Embed");

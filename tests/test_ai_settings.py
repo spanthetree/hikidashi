@@ -186,12 +186,13 @@ class TestSwitch(AiCase):
         self.assertTrue(service.turn_on(self.conn, BOB, 2, self.dir).switch.on)
         self.assertEqual(config.use(self.conn, 2), "mine")
 
-    def test_the_server_needs_a_scope(self):
+    def test_the_server_api_is_the_system_default_for_everyone(self):
         self.ready(ADMIN, None)
+        api = service.turn_on(self.conn, ADMIN, None, self.dir)
+        self.assertEqual((api.switch.on, api.switch.scope, api.switch.by), (True, "all", 1))
+        self.assertEqual(service.choice(self.conn, None), "mine")
         with self.assertRaises(Invalid):
-            service.turn_on(self.conn, ADMIN, None, self.dir)
-        api = service.turn_on(self.conn, ADMIN, None, self.dir, scope="me")
-        self.assertEqual((api.switch.on, api.switch.scope, api.switch.by), (True, "me", 1))
+            service.turn_on(self.conn, ADMIN, None, self.dir, scope="some")
 
     def test_removing_a_users_key_turns_them_off(self):
         self.ready(BOB, 2)
@@ -207,19 +208,51 @@ class TestSwitch(AiCase):
         service.set_budget(self.conn, BOB, 2, None, self.dir)
         self.assertFalse(config.load(self.conn, 2, self.dir).switch.on)
 
-    def test_server_choice_only_when_on_for_all(self):
-        with self.assertRaises(NotAllowed):
-            service.set_use(self.conn, BOB, 2, "server", self.dir)
-        self.ready(ADMIN, None)
-        service.turn_on(self.conn, ADMIN, None, self.dir, scope="me")
-        with self.assertRaises(NotAllowed):
-            service.set_use(self.conn, BOB, 2, "server", self.dir)
+    def test_the_system_default_follows_the_admin(self):
+        self.assertEqual(service.choice(self.conn, None), "workers")
         self.assertEqual(service.applies(self.conn, 2, self.dir), "workers")
-        service.turn_on(self.conn, ADMIN, None, self.dir, scope="all")
+        self.ready(ADMIN, None)
+        service.set_choice(self.conn, ADMIN, None, "mine", self.dir)
+        # Chosen, and not yet started: still workers.
+        self.assertEqual(service.applies(self.conn, 2, self.dir), "workers")
+        service.turn_on(self.conn, ADMIN, None, self.dir)
         self.assertEqual(service.applies(self.conn, 2, self.dir), "server")
-        service.set_use(self.conn, BOB, 2, "server", self.dir)
+        self.assertEqual(service.applies(self.conn, 1, self.dir), "server")
+        # The old name of the default reads as it.
+        self.assertEqual(service.set_use(self.conn, BOB, 2, "server", self.dir), "default")
         service.set_use(self.conn, BOB, 2, "workers", self.dir)
         self.assertEqual(service.applies(self.conn, 2, self.dir), "workers")
+        # The admin chooses workers: the server's API goes off for everyone.
+        service.set_choice(self.conn, ADMIN, None, "workers", self.dir)
+        self.assertFalse(config.load(self.conn, None, self.dir).switch.on)
+        self.assertEqual(service.applies(self.conn, 3, self.dir), "workers")
+        with self.assertRaises(Invalid):
+            service.set_choice(self.conn, ADMIN, None, "default", self.dir)
+        with self.assertRaises(NotAllowed):
+            service.set_choice(self.conn, BOB, None, "mine", self.dir)
+
+    def test_the_admin_keeps_their_own_choice(self):
+        service.set_use(self.conn, ADMIN, 1, "workers", self.dir)
+        self.ready(ADMIN, None)
+        service.set_choice(self.conn, ADMIN, None, "mine", self.dir)
+        service.turn_on(self.conn, ADMIN, None, self.dir)
+        self.assertEqual(config.use(self.conn, 1), "workers")
+        self.assertEqual(service.applies(self.conn, 1, self.dir), "workers")
+        self.assertEqual(service.applies(self.conn, 2, self.dir), "server")
+        # Their own hosted AI, apart from the system default's.
+        self.ready(ADMIN, 1)
+        service.turn_on(self.conn, ADMIN, 1, self.dir)
+        self.assertEqual(service.applies(self.conn, 1, self.dir), "mine")
+        self.assertTrue(config.load(self.conn, None, self.dir).switch.on)
+
+    def test_without_cryptography_a_key_is_a_clear_error(self):
+        from app.ai import secrets as sec
+
+        with mock.patch.object(sec, "_fernet", side_effect=sec.NoCipher()):
+            with self.assertRaises(service.AiError) as cm:
+                service.set_key(self.conn, BOB, 2, "openai", OPENAI, self.dir)
+        self.assertEqual(cm.exception.status, 503)
+        self.assertIn("cryptography", str(cm.exception))
 
 
 class TestLooseRule(AiCase):
@@ -373,6 +406,28 @@ class TestRoutes(base.SignInCase):
         self.assertEqual(r.json(), {"reels": 0})
         r = self.client.post("/api/admin/ai/requeue", json={"stage": "nope", "made_by": "cpu"})
         self.assertEqual(r.status_code, 400)
+
+    def test_every_change_answers_with_the_whole_page(self):
+        """The page replaces what it shows with each answer: one missing a
+        field crashed it (0.23.0's /use had no `spent`)."""
+        want = {"stages", "keys", "switch", "spent", "history", "choice", "choices", "applies"}
+        bob = self.bob()
+        for method, path, body in (
+            ("GET", "/api/me/providers", None),
+            ("PUT", "/api/me/providers/use", {"use": "mine"}),
+            ("PUT", "/api/me/providers/stages/asr", {"provider": "groq"}),
+            ("PUT", "/api/me/providers/budget", {"usd": 2}),
+            ("PUT", "/api/me/providers/language", {"code": "ja"}),
+            ("PUT", "/api/me/providers/keys/groq", {"key": "gsk_abcdefghijklmnop1234"}),
+            ("DELETE", "/api/me/providers/keys/groq", None),
+            ("POST", "/api/me/providers/switch", {"on": False}),
+            ("PUT", "/api/me/providers/use", {"use": "workers"}),
+        ):
+            r = bob.request(method, path, json=body)
+            self.assertEqual(r.status_code, 200, (path, r.text))
+            self.assertLessEqual(want, set(r.json()), path)
+        r = self.client.put("/api/admin/settings/providers/use", json={"use": "mine"})
+        self.assertLessEqual(want - {"applies"}, set(r.json()))
 
     def test_bad_input_is_400(self):
         r = self.client.put("/api/me/providers/stages/asr", json={"provider": "nope"})

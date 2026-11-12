@@ -3,6 +3,7 @@
   import {
     getAllTokens, getPipeline, getWorkerTokens, makeWorkerToken, retryStage, revokeAnyToken, revokeWorkerToken,
   } from "#lib/api.js";
+  import AiProviders from "#lib/components/AiProviders.svelte";
   import Notice from "#lib/components/Notice.svelte";
   import Rich from "#lib/components/Rich.svelte";
   import Topbar from "#lib/components/Topbar.svelte";
@@ -343,6 +344,12 @@
                   onclick={() => retry(s.stage)}>{m.pl_retry()}</button>
         </div>
       {/each}
+    </section>
+
+    <section class="p-sec" id="ai-default" aria-labelledby="p-ai-default">
+      <h2 id="p-ai-default">{m.ai_default_title()}</h2>
+      <p class="p-lede">{m.ai_default_lede()}</p>
+      <AiProviders whose="server" bind:notice />
     </section>
 
     <p class="p-links">
