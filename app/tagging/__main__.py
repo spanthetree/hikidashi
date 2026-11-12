@@ -1,10 +1,11 @@
-"""CLI: python -m app.tagging [--llm] [--force] [--eval]
+"""CLI: python -m app.tagging [--llm] [--force] [--eval [--labels PATH] [--db PATH]] [--pick N]
 
 Derives each post's category from its hashtags, and cleans them: deterministic,
 offline and instant. With --llm it then asks a local model (Ollama) about each
 reel's caption, hashtags, transcript and on-screen text, which is what tags the
 posts whose hashtags say nothing. The model pass is resumable: interrupt it and
-re-run. --eval scores both against the tags you set by hand.
+re-run. --eval scores both against the tags you set by hand (#6), and --pick
+lists reels worth setting one on.
 """
 
 from __future__ import annotations
@@ -121,11 +122,24 @@ def main(argv: list[str] | None = None) -> int:
         help="with --eval: score the answers in another database, such "
         "as a backup from before a change, on today's labels",
     )
+    ap.add_argument(
+        "--labels",
+        metavar="PATH",
+        type=Path,
+        help="with --eval: labels from a file instead of your hand-set tags "
+        "(tests/tag_labels.json labels the demo library)",
+    )
+    ap.add_argument(
+        "--pick",
+        metavar="N",
+        type=int,
+        help="list about N reels worth labelling by hand, and change nothing",
+    )
     ap.add_argument("--limit", type=int)
     args = ap.parse_args(argv)
 
     if args.eval:
-        from .evaluate import evaluate, report
+        from .evaluate import evaluate, labels_from, report
 
         # Read only, and not through open_db: scoring an old backup must not
         # migrate it to this schema first. Your labels are always the live ones.
@@ -133,7 +147,18 @@ def main(argv: list[str] | None = None) -> int:
             return sqlite3.connect(f"file:{path}?mode=ro", uri=True)
 
         conn = read_only(settings.db_path)
-        print(report(evaluate(conn, read_only(args.db) if args.db else None)))
+        truth = labels_from(args.labels) if args.labels else None
+        print(report(evaluate(conn, read_only(args.db) if args.db else None, truth)))
+        return 0
+
+    if args.pick:
+        from .evaluate import pick
+
+        conn = sqlite3.connect(f"file:{settings.db_path}?mode=ro", uri=True)
+        chosen = pick(conn, args.pick)
+        print(f"  {len(chosen)} reels to label: open each, and set its tag in the detail sheet\n")
+        for shortcode, shown, why in chosen:
+            print(f"  {shortcode:<14} shows {shown:<12} {why}")
         return 0
 
     settings.ensure_dirs()
