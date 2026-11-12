@@ -4,6 +4,7 @@
     changeAccount, changePassword, exportUrl, getAccounts, getExportOptions, getInvites, getMyTokens,
     logout, makeInvite, makeMyToken, revokeInvite, revokeMyToken, signOutEverywhere, updateMe,
   } from "#lib/api.js";
+  import AiProviders from "#lib/components/AiProviders.svelte";
   import Notice from "#lib/components/Notice.svelte";
   import Rich from "#lib/components/Rich.svelte";
   import Topbar from "#lib/components/Topbar.svelte";
@@ -31,6 +32,8 @@
   const SCOPE_HINT: Record<string, () => string> = {
     "read:library": m.tokens_read_library,
     "write:library": m.tokens_write_library,
+    "read:ai": m.tokens_read_ai,
+    "write:ai": m.tokens_write_ai,
     "read:admin": m.tokens_read_admin,
     "write:admin": m.tokens_write_admin,
   };
@@ -308,6 +311,20 @@
         </div>
       </div>
     </section>
+
+    <section class="a-sec" id="ai">
+      <h2>{m.ai_title()}</h2>
+      <p class="lede">{m.ai_lede()}</p>
+      <AiProviders whose="mine" bind:notice />
+    </section>
+
+    {#if me.is_admin}
+      <section class="a-sec" id="ai-server">
+        <h2>{m.ai_server_title()}</h2>
+        <p class="lede">{m.ai_server_lede()}</p>
+        <AiProviders whose="server" bind:notice />
+      </section>
+    {/if}
 
     {#if mine}
       <section class="a-sec">

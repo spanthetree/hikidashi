@@ -61,6 +61,7 @@ used unmodified. The main ones:
 | faster-whisper, CTranslate2 | MIT |
 | sqlite-vec | MIT or Apache-2.0 |
 | argon2-cffi | MIT |
+| cryptography | Apache-2.0 or BSD-3-Clause |
 | Svelte, SvelteKit, Paraglide JS | MIT |
 | Leaflet, Leaflet.markercluster | BSD-2-Clause, MIT |
 
@@ -82,6 +83,7 @@ is yours to follow.
 |---|---|---|
 | Instagram, through yt-dlp | fetching the reels you saved | [Instagram's Terms of Use](https://help.instagram.com/581066165581870). Downloading is for your own saves, in your own library |
 | OpenStreetMap's map tiles (the default) | the map view | [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/); map data © OpenStreetMap contributors, [ODbL](https://www.openstreetmap.org/copyright). For heavy use, set `HIKIDASHI_TILES` to another provider |
+| Hosted AI providers: OpenAI, Groq, Mistral, Google Gemini, OpenRouter, Cerebras, GitHub Models, Cloudflare Workers AI, Hugging Face | only while someone has switched a hosted API on, for the reels it takes | each provider's own API terms and usage policy, and its data terms ([operation](docs/operation.md#providers)). Gemini's free tier lets Google use what is sent to improve its products |
 | Nominatim (`public`, or your own server) | looking up places | [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/) for the public server: at most one request a second, which Hikidashi keeps to, and an identifying User-Agent, which it sends |
 
 ## Demo media

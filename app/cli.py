@@ -43,6 +43,7 @@ COMMANDS = {
     "places": ("app.places", "find places in captions, and put them on the map"),
     "export": ("app.export", "write recipes or the library out for other tools"),
     "worker": ("app.jobs", "run the stages on new reels as they arrive"),
+    "ai": ("app.ai", "hosted AI: providers, keys, the switch, budget and usage"),
 }
 
 # After an optional import. Each stage feeds the next; OCR waits on transcripts,
@@ -67,6 +68,8 @@ LOCK = "pipeline.lock"
 # commands that write the database run on the server only.
 REMOTE_COMMANDS = {"transcribe": "asr", "ocr": "ocr", "tag": "tag", "recipe": "recipe"}
 SERVER_COMMANDS = ("import", "enrich", "embed", "places", "user", "token", "export")
+# `ai` runs anywhere: on the host it opens the database, and with --server it
+# goes through the server's routes (#125).
 
 
 class Busy(Exception):
@@ -347,8 +350,40 @@ def status(argv: list[str]) -> int:
         + (" · looking up now" if locating(settings.run_dir) else "")
     )
     print_queue(conn)
+    print_apis(conn)
     print_models()
     return 0
+
+
+def print_apis(conn: sqlite3.Connection) -> None:
+    """A line a hosted API (#125): on or off, and why it went off; in
+    flight; this month's spend."""
+    try:
+        from app.ai import status as ai_status
+
+        found = ai_status.apis(conn, settings.db_path.parent)
+    except ImportError:
+        return
+    shown = [a for a in found if a.get("on") or a.get("reason") or a.get("spent")]
+    if not shown:
+        print("\n  hosted AI   off; workers process every reel (`hikidashi ai` to set it up)")
+        return
+    print()
+    for i, a in enumerate(shown):
+        label = "hosted AI" if i == 0 else ""
+        if a.get("on") is None:  # a hosted worker on another machine
+            line = f"reported {a['spent']:.2f} USD this month"
+        elif a["on"]:
+            budget = f" of {a['budget']:g}" if a.get("budget") else ""
+            scope = f" for {a['scope']}" if a.get("scope") else ""
+            line = (
+                f"on{scope} · {a['in_flight']} in flight · {a['waiting']} waiting · "
+                f"{a['spent']:.2f}{budget} USD this month"
+            )
+        else:
+            line = "off" + (f": {a['reason']}" if a.get("reason") else "")
+            line += f" · {a['spent']:.2f} USD this month"
+        print(f"  {label:<10}  {a['name']}  {line}")
 
 
 def print_models() -> None:

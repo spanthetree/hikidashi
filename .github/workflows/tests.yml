@@ -18,7 +18,7 @@ jobs:
       # without the web layer and argon2 so do the API and account tests,
       # which are what show one person's library is invisible to another.
       - run: pip install sqlite-vec==0.1.9
-      - run: pip install fastapi==0.115.6 httpx==0.28.1 python-multipart==0.0.20 argon2-cffi==25.1.0
+      - run: pip install fastapi==0.115.6 httpx==0.28.1 python-multipart==0.0.20 argon2-cffi==25.1.0 cryptography==50.0.2
       # Under coverage, so the summary shows where the tests are thin. Report
       # only: no threshold fails the build (docs/testing.md). Hypothesis runs
       # the property tests, which skip without it.
@@ -39,9 +39,9 @@ jobs:
           python-version: "3.12"
       - run: pip install ruff==0.17.0 mypy==2.4.0
       # What the type checker reads the app against: the web layer, argon2,
-      # numpy and hypothesis are typed. The models' own packages are not
-      # installed and are ignored (pyproject.toml).
-      - run: pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" httpx==0.28.1 python-multipart==0.0.20 argon2-cffi==25.1.0 numpy==2.5.3 hypothesis==6.170.9
+      # cryptography, numpy and hypothesis are typed. The models' own packages
+      # are not installed and are ignored (pyproject.toml).
+      - run: pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" httpx==0.28.1 python-multipart==0.0.20 argon2-cffi==25.1.0 cryptography==50.0.2 numpy==2.5.3 hypothesis==6.170.9
       - run: ruff check --output-format github
       - run: ruff format --check
       - run: mypy
@@ -92,7 +92,7 @@ jobs:
           curl -fsSL https://github.com/astral-sh/uv/releases/download/0.11.14/uv-x86_64-unknown-linux-gnu.tar.gz \
             | tar -xz --strip-components=1 -C "$RUNNER_TEMP/bin"
           "$RUNNER_TEMP/bin/uv" venv --python 3.12 --managed-python "$RUNNER_TEMP/venv"
-          VIRTUAL_ENV="$RUNNER_TEMP/venv" "$RUNNER_TEMP/bin/uv" pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" python-multipart==0.0.20 argon2-cffi==25.1.0
+          VIRTUAL_ENV="$RUNNER_TEMP/venv" "$RUNNER_TEMP/bin/uv" pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" python-multipart==0.0.20 argon2-cffi==25.1.0 cryptography==50.0.2
           echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
       - uses: actions/setup-node@v7
         with:

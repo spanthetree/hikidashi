@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 
 from app import accounts, jobs, library, logs, search, spa
 from app.accounts import AccountError, User
+from app.api import ai_routes
 from app.config import settings
 from app.db import open_db
 from app.enrich import worker as fetches
@@ -279,6 +280,10 @@ def by_session(request: Request, user: Who) -> User:
 
 
 Signed = Annotated[User, Depends(by_session)]
+
+
+# Hosted AI settings (#125): /api/me/providers and /api/admin/settings/providers.
+ai_routes.install(app, db, current_user, _scoped, lambda: settings.db_path.parent)
 
 
 @app.exception_handler(AccountError)
@@ -1550,15 +1555,28 @@ def pipeline_state(user: Admin) -> dict[str, Any]:
     # has nothing for them to work on. The sidebar's "failed" counts these.
     fetch = fetches.failures(conn, limit=10)
     found = job_queue.workers(conn)
+    from app.ai import status as ai_status
+
     return {
         "fetch": fetch,
         "stages": stages,
         "workers": found,
+        # The hosted APIs (#125): each one's switch, why it went off, in flight, spend.
+        "apis": ai_status.apis(conn, settings.db_path.parent),
         "overall": job_queue.overall(found),
         "attempts": job_queue.MAX_ATTEMPTS,
         "stale": job_queue.STALE,
         "now": int(time.time()),
     }
+
+
+@app.get("/api/me/pipeline")
+def my_pipeline(user: Me) -> dict[str, Any]:
+    """Your own reels' way through the pipeline (#125): waiting per stage,
+    when a worker last checked in, and your API. Nothing of anyone else's."""
+    from app.ai import status as ai_status
+
+    return ai_status.mine(db(), user.id, settings.db_path.parent)
 
 
 class StageName(BaseModel):
@@ -1587,7 +1605,7 @@ def retry_stage(body: StageName, user: Admin) -> dict[str, Any]:
 # app/jobs/protocol.py. Not a person: a token of its own, not an account.
 
 
-def worker_auth(request: Request) -> None:
+def worker_auth(request: Request) -> User:
     """The worker's token, as `Authorization: Bearer <token>`: one an admin
     made on the Pipeline page or with `hikidashi token make --worker`. Off, a
     404, while there is none."""
@@ -1599,9 +1617,13 @@ def worker_auth(request: Request) -> None:
     given = bearer(request) or ""
     if not accounts.worker_token_ok(conn, given):
         raise _unauthorized("Wrong or missing worker token.", "invalid_token" if given else None)
+    found = accounts.find_token(conn, given)
+    assert found is not None
+    return found.user
 
 
-RemoteWorker = Annotated[None, Depends(worker_auth)]
+# The worker token's owner: an admin.
+RemoteWorker = Annotated[User, Depends(worker_auth)]
 
 
 class WorkerIn(BaseModel):
@@ -1619,6 +1641,10 @@ class ResultsIn(WorkerIn):
     stage: str
     profile: str
     results: list[dict[str, Any]]
+    # A hosted worker's (#125): the language each transcript is in, and what
+    # each reel's requests used.
+    languages: dict[str, str | None] | None = None
+    usage: list[dict[str, Any]] | None = None
 
 
 class ReleaseIn(WorkerIn):
@@ -1666,7 +1692,8 @@ def worker_results(body: ResultsIn, _: RemoteWorker) -> dict[str, Any]:
     """Record what a worker made of the reels it holds, and give them back:
     what is still to do after this counts as an attempt, as locally."""
     _remote(body, body.stage)
-    if body.profile not in ("cpu", "cuda"):
+    hosted = bool(protocol.HOSTED_PROFILE.match(body.profile))
+    if body.profile not in ("cpu", "cuda") and not hosted:
         raise HTTPException(422, f"Unknown profile {body.profile!r}.")
     try:
         parsed = protocol.parse(body.stage, body.results)
@@ -1675,9 +1702,71 @@ def worker_results(body: ResultsIn, _: RemoteWorker) -> dict[str, Any]:
     conn = db()
     source = job_queue.LocalJobs(conn, body.worker)
     held = set(source.held().get(body.stage, []))
-    recorded = protocol.record(conn, body.stage, parsed, profile=body.profile, held=held)
+    languages = None
+    if hosted and body.languages:
+        languages = {k: (v[:16] if isinstance(v, str) else None) for k, v in body.languages.items()}
+    recorded = protocol.record(
+        conn, body.stage, parsed, profile=body.profile, held=held, languages=languages
+    )
+    if hosted:
+        from app.ai import remote as hosted_remote
+
+        hosted_remote.record_usage(conn, body.worker, body.stage, body.usage)
     out = source.release(body.stage, [c for c, _, _ in parsed if c in held])
     return {"recorded": recorded, **_released(out)}
+
+
+class HostedClaimIn(WorkerIn):
+    scope: str = Field(max_length=3)  # me | all: --for
+    limit: int = Field(4, ge=1, le=16)
+
+
+class HostedRowsIn(WorkerIn):
+    stage: str
+    shortcodes: list[str] = Field(max_length=16)
+
+
+class HostedErrorIn(WorkerIn):
+    shortcode: str = Field(max_length=64)
+    reason: str = Field(max_length=500)
+
+
+def _hosted(body: WorkerIn) -> None:
+    for stage in protocol.REMOTE:
+        _remote(body, stage)
+
+
+@app.post("/api/worker/hosted/claim")
+def hosted_claim(body: HostedClaimIn, owner: RemoteWorker) -> dict[str, Any]:
+    """A hosted worker (#125) leases reels for all their remaining stages:
+    those the server's API would take, for the token owner or for all."""
+    from app.ai import remote as hosted_remote
+
+    _hosted(body)
+    try:
+        return hosted_remote.claim(
+            db(), body.worker, owner.id, body.scope, body.limit, settings.db_path.parent
+        )
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.post("/api/worker/hosted/rows")
+def hosted_rows(body: HostedRowsIn, _: RemoteWorker) -> dict[str, Any]:
+    """A stage's rows for the reels a hosted worker holds that still need it."""
+    from app.ai import remote as hosted_remote
+
+    _remote(body, body.stage)
+    return {"jobs": hosted_remote.rows(db(), body.worker, body.stage, body.shortcodes)}
+
+
+@app.post("/api/worker/hosted/error")
+def hosted_error(body: HostedErrorIn, _: RemoteWorker) -> dict[str, Any]:
+    """An API error on a reel: its stages back, uncounted; counted apart."""
+    from app.ai import remote as hosted_remote
+
+    _hosted(body)
+    return {"errors": hosted_remote.error(db(), body.worker, body.shortcode, body.reason)}
 
 
 @app.post("/api/worker/release")

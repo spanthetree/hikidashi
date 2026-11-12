@@ -21,7 +21,7 @@ new: a later decision gets its own record and marks the old one
 | [0006](0006-one-primary-tag-per-reel.md) | One primary tag per reel | Accepted; its precedence superseded by 0014 | #21 |
 | [0007](0007-trigram-rejected-for-japanese.md) | Trigram rejected for Japanese | Accepted | #33 |
 | [0008](0008-mutmut-dropped.md) | Mutation testing (mutmut) dropped for now | Accepted | #39, #70 |
-| [0009](0009-local-models-only.md) | Local models only | Accepted | #2, #3, #4 |
+| [0009](0009-local-models-only.md) | Local models only | Superseded by 0019 | #2, #3, #4 |
 | [0010](0010-always-on-workers-before-remote.md) | Always-on workers before remote ones | Accepted | #72 |
 | [0011](0011-hybrid-search-rank-fusion.md) | Hybrid search by rank fusion, no reranker | Accepted | #4, #20 |
 | [0012](0012-nas-installs-templates-and-yaml.md) | NAS installs: Unraid templates and TrueNAS YAML, any user, no PUID | Accepted; its `HIKIDASHI_WORKER_TOKEN` note superseded by 0013, its TrueNAS pin by 0017 | #87 |
@@ -31,6 +31,7 @@ new: a later decision gets its own record and marks the old one
 | [0016](0016-polyform-noncommercial.md) | Source-available under PolyForm Noncommercial | Accepted | #122 |
 | [0017](0017-version-written-once.md) | The version is written once, in pyproject.toml | Accepted; supersedes 0012's TrueNAS pin | #123 |
 | [0018](0018-categories-from-hand-labels.md) | Categories come from hand labels | Accepted | #145 |
+| [0019](0019-hosted-ai-behind-a-switch.md) | Hosted AI, behind an on/off switch | Accepted; supersedes 0009 | #116, #125 |
 
 ## Adding one
 

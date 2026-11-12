@@ -3,6 +3,7 @@
 
 export const SEEDED = 8093;
 export const FIRST_RUN = 8094;
+export const FAKE_AI = 8095;  // a fake OpenAI-compatible API, beside SEEDED (#125)
 
 // Relative to frontend/, where Playwright runs.
 export const OUT = "test-results/e2e";

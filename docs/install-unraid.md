@@ -97,6 +97,16 @@ The worker pulls the model it needs on first use: `qwen2.5:3b` on the CPU,
 slow. Tags and recipes are where a GPU, here or on a desktop, makes the
 biggest difference.
 
+### Or a hosted API, with no Ollama and no GPU
+
+A server with no GPU can hand transcription, on-screen text, tags and
+recipes to a hosted API instead: Groq's free Whisper for transcripts, say,
+and a small paid chat model for the rest. Set it up after the first run, on
+**Account → AI providers**, and turn the switch on there. The server-worker
+runs it; the worker container and Ollama can then be left out. The keys can
+also go in the templates' advanced **Hosted AI** fields, masked. What is sent
+where, and what it costs: [operation](operation.md#hosted-ai).
+
 ## First run
 
 Open the web UI: **Hikidashi** → **WebUI**, or `http://<server>:8080`.
@@ -254,6 +264,10 @@ first, since a copy of a SQLite file taken mid-write can be torn. The
 **Appdata Backup** plugin stops them for you. A ZFS snapshot of the pool
 needs no stop: it's taken at one instant, and SQLite recovers from that the
 way it recovers from a power cut.
+
+`Data/secret.key` encrypts any hosted AI keys saved on the settings page. A
+backup that holds it and the database can read them; keep it with the
+database, or set **Hosted AI: secret key** instead.
 
 `Data/models` and `Data/cache` can be left out. They're downloaded again.
 `Data/media`, the videos and thumbnails, is most of the size. It can be

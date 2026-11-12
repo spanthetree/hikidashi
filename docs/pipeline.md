@@ -150,6 +150,12 @@ host that runs only the fetch leaves the rest waiting for whoever runs them.
 A worker on another machine, such as a GPU desktop, claims through the server
 over HTTP instead: see [remote workers](remote-workers.md).
 
+A hosted AI API, once someone switches one on, is one more claimer: the
+worker that runs `enrich` runs it, and it takes every worker stage of the
+reels it may take, all at once (`api:server`, `api:user:<id>` in status). It
+needs no models and no Ollama. Off, which is the default, it takes nothing.
+How it works: [operation](operation.md#hosted-ai).
+
 ### Idle, and woken
 
 When a round finds nothing ready, the worker waits 5 seconds before looking
@@ -348,6 +354,12 @@ Spoken words are the signal captions do not carry. A reel captioned
 `the best one yet 🔥` might spend sixty seconds naming the restaurant, the dish
 and the street. Transcripts go into the same FTS5 index as captions, so the
 search box finds a reel by what was said in it.
+
+On a hosted API (#116), the audio goes up as 16 kHz mono FLAC instead, cut
+into parts if it is over the provider's limit, and a multilingual model's
+language is kept in `item.asr_language`. The local models below are
+English-only and leave it empty. The music guard there is the segments'
+`no_speech_prob`, not the VAD: see [operation](operation.md#providers).
 
 ```bash
 ./hikidashi transcribe                  # every video without a transcript

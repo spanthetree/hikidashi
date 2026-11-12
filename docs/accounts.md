@@ -64,8 +64,10 @@ curl -H "Authorization: Bearer hk_api_…" https://your.host/api/stats
 ```
 
 A token acts as you and reads only your library: `read:library` reads it, and
-`write:library` may change it too. Admins can also grant `read:admin` or
-`write:admin`, for the pipeline, logs and accounts. A token can't change a
+`write:library` may change it too. `read:ai` and `write:ai` are for your
+hosted AI settings (`hikidashi ai --server`); write spends money, so it is
+its own scope. Admins can also grant `read:admin` or `write:admin`, for the
+pipeline, logs and accounts. A token can't change a
 password, make another token, or be extended. Admins see everyone's tokens on
 the **Pipeline** page and can revoke any.
 

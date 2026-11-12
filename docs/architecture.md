@@ -16,8 +16,9 @@ the [decision records](adr/README.md).
 ## Context
 
 Hikidashi is one server with one SQLite file, and workers that make what
-search needs out of each reel. Everything heavy runs on your own hardware.
-Three things leave the machine, and two of them only if you configure them.
+search needs out of each reel. Everything heavy runs on your own hardware,
+unless someone switches a hosted AI API on. Four things leave the machine,
+and three of them only if you configure them.
 
 ```mermaid
 flowchart LR
@@ -30,6 +31,7 @@ flowchart LR
   ig[("Instagram<br/>public posts")]
   geo[("Nominatim<br/>geocoder")]
   tiles[("map tiles<br/>OpenStreetMap")]
+  hosted[("hosted AI<br/>OpenAI, Groq, …")]
 
   person -- "HTTPS: pages, API, media" --> server
   person -. "tiles, from the browser" .-> tiles
@@ -37,6 +39,8 @@ flowchart LR
   workers -- "HTTP" --> ollama
   server -- "yt-dlp: video, thumbnail, metadata" --> ig
   server -. "place names, if HIKIDASHI_GEOCODER is set" .-> geo
+  server -. "audio, frames, text, while an API is switched on" .-> hosted
+  workers -. "the same, from a hosted worker, with its own key" .-> hosted
 ```
 
 | Outside | Who calls it | What goes out | Off by |
@@ -44,6 +48,7 @@ flowchart LR
 | Instagram, through yt-dlp | the server's enrich stage | a permalink. No login, no cookies: public posts only | not enriching (`HIKIDASHI_LOCAL_STAGES` without `enrich`) |
 | A Nominatim geocoder | the server's places locator | the place names read from captions | default: `HIKIDASHI_GEOCODER` is empty |
 | Map tiles | your browser, on the map view | the tile coordinates you look at | `HIKIDASHI_TILES` pointing at your own |
+| Hosted AI providers (#116, #125) | the server's worker, for each API that is switched on; or a hosted worker on another machine | a reel's audio (transcription), its cover and five frames (on-screen text), and its caption, hashtags, transcript and on-screen text (tags and recipes) | default: every switch is off, and env never turns one on ([ADR 0019](adr/0019-hosted-ai-behind-a-switch.md)) |
 
 Installing and updating under Docker pulls the images from GitHub's
 registry, `ghcr.io/spanthetree` ([#77](https://github.com/spanthetree/hikidashi/issues/77)): an image pull, with nothing of your
@@ -210,7 +215,7 @@ their keys; the schema has every column, with a comment on each.
 ```mermaid
 erDiagram
   item {
-    text shortcode PK "and 40 more columns"
+    text shortcode PK "and 42 more columns"
     integer first_seen_in FK
   }
   item_slide {
@@ -277,6 +282,9 @@ erDiagram
   import_run {
     integer id PK
   }
+  hosted_usage {
+    integer id PK
+  }
   import_run |o--o{ item : "first_seen_in"
   item ||--o{ item_slide : "shortcode"
   item ||--o{ item_tag : "shortcode"
@@ -289,6 +297,7 @@ erDiagram
   item ||--|| item_fts : "content (FTS5)"
   recipe ||..o| recipe_fts : "indexed by app/recipes"
   geocode |o..o{ item_place : "text"
+  item |o..o{ hosted_usage : "shortcode"
 ```
 <!-- /make_diagrams -->
 
@@ -357,6 +366,12 @@ erDiagram
   tag {
     integer id PK
   }
+  ai_audit {
+    integer id PK
+  }
+  hosted_usage {
+    integer id PK
+  }
   user ||--o{ user_item : "user_id"
   item ||--o{ user_item : "shortcode"
   import_run |o--o{ user_item : "first_seen_in"
@@ -370,6 +385,8 @@ erDiagram
   user ||--o{ invite : "created_by"
   user |o--o{ invite : "used_by"
   user ||--o{ api_token : "user_id"
+  user |o..o{ ai_audit : "user_id"
+  user |o..o{ hosted_usage : "user_id"
 ```
 <!-- /make_diagrams -->
 
@@ -408,6 +425,59 @@ erDiagram
   item ||--o{ job_lease : "shortcode"
   item ||--o{ job_attempt : "shortcode"
   job_worker ||..o{ job_lease : "worker"
+```
+<!-- /make_diagrams -->
+
+### Hosted AI
+
+Settings for each user's own API and the server's (keys encrypted), the
+audit log, what each API knows of a reel (when it first found it ready, for
+the grace period; its API errors; the backlog it left to workers), and what
+every hosted request used, with its cost. How the switch, the claims and the
+loose rule work is in [operation.md](operation.md#hosted-ai), and why in
+[ADR 0019](adr/0019-hosted-ai-behind-a-switch.md).
+
+<!-- make_diagrams: er-ai -->
+```mermaid
+erDiagram
+  setting {
+    integer user_id FK
+    text key
+    text value
+    integer updated_at
+    integer updated_by
+  }
+  ai_audit {
+    integer id PK
+    integer at
+    integer actor_id
+    integer user_id
+    text action
+    text detail
+  }
+  api_reel {
+    text api PK
+    text shortcode PK, FK
+    integer seen_at
+    integer errors
+    text reason
+    integer last_at
+    integer left
+  }
+  hosted_usage {
+    integer id PK "and 13 more columns"
+  }
+  user {
+    integer id PK
+  }
+  item {
+    text shortcode PK
+  }
+  user |o--o{ setting : "user_id"
+  item ||--o{ api_reel : "shortcode"
+  user |o..o{ ai_audit : "user_id"
+  user |o..o{ hosted_usage : "user_id"
+  item |o..o{ hosted_usage : "shortcode"
 ```
 <!-- /make_diagrams -->
 
@@ -451,7 +521,13 @@ data/
   logs/                   HIKIDASHI_LOGS     server.log, worker.log, server-worker.log
   run/                    HIKIDASHI_RUN      pidfile, pipeline lock, worker.wake
   cache/                  HIKIDASHI_CACHE    a remote worker's downloaded media only
+  secret.key                                 encrypts saved API keys (0600), unless HIKIDASHI_SECRET_KEY
 ```
+
+`secret.key` is outside the SQLite file on purpose: a copy of the database
+alone can't read the hosted AI keys saved in it. A backup of all of `data/`
+holds both, and can. Lose it and nothing else is lost: the saved keys read as
+missing and are entered again.
 
 **It must be on a local disk.** SQLite locks its file through the filesystem,
 and NFS, SMB and FUSE shares don't keep those locks reliably. With the server
@@ -487,7 +563,7 @@ flowchart LR
   subgraph srv["server"]
     csrf{"same origin?<br/>Sec-Fetch-Site / Origin"}
     who{"who is asking?<br/>none / local / proxy / API token"}
-    scopes{"token's scopes?<br/>read / write, library / admin"}
+    scopes{"token's scopes?<br/>read / write, library / ai / admin"}
     scope["library.mine(user)<br/>inside every query"]
     wauth{"worker token?"}
     proto["protocol.check + parse<br/>versions, shape, lease"]
@@ -499,6 +575,14 @@ flowchart LR
   script -- "Authorization: Bearer hk_api_…" --> csrf
   rw -- "Authorization: Bearer hk_wkr_…" --> wauth --> proto --> db
 ```
+
+**Hosted AI keys** (#125). A user's own key is theirs alone: an admin can
+see whether one is saved, and remove it (which turns that user's switch
+off), but never read or set it. Keys are encrypted at rest, write-only (a
+`GET` returns `sk-…abcd`), and kept out of logs, `repr`, errors and every
+response by `app/providers/keys.py`. The server never sends a key to a
+worker: a hosted worker brings its own. API tokens need the `read:ai` or
+`write:ai` scope for these routes, and a worker token can't reach them.
 
 **What a remote worker can make true.** It sends what its model said; the
 server records it with the stage's own `record`. For a reel's game that means

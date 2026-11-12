@@ -27,6 +27,29 @@ x-hikidashi: &hikidashi
     # share like Unraid's /mnt/user: use a pool, as /mnt/cache/appdata/hikidashi.
     - ${HIKIDASHI_DATA:-./data}:/data
 
+# Hosted AI (#116, #125; docs/operation.md#hosted-ai): the server's API, for
+# the app (its settings page) and the server-worker (which runs the switched-on
+# APIs). All optional: set it up on Account → AI providers or with
+# `hikidashi ai` instead. Env never turns it on. Both read the same
+# HIKIDASHI_SECRET_KEY, or /data/secret.key.
+x-hosted-ai: &hosted-ai
+  HIKIDASHI_ASR_PROVIDER: ${HIKIDASHI_ASR_PROVIDER:-}
+  HIKIDASHI_ASR_MODEL: ${HIKIDASHI_ASR_MODEL:-}
+  HIKIDASHI_OCR_PROVIDER: ${HIKIDASHI_OCR_PROVIDER:-}
+  HIKIDASHI_OCR_MODEL: ${HIKIDASHI_OCR_MODEL:-}
+  HIKIDASHI_LLM_PROVIDER: ${HIKIDASHI_LLM_PROVIDER:-}
+  HIKIDASHI_LLM_MODEL: ${HIKIDASHI_LLM_MODEL:-}
+  HIKIDASHI_ASR_LANGUAGE: ${HIKIDASHI_ASR_LANGUAGE:-}
+  HIKIDASHI_OPENAI_BASE_URL: ${HIKIDASHI_OPENAI_BASE_URL:-}
+  HIKIDASHI_OPENAI_API_KEY: ${HIKIDASHI_OPENAI_API_KEY:-}
+  HIKIDASHI_HOSTED_BUDGET: ${HIKIDASHI_HOSTED_BUDGET:-}
+  HIKIDASHI_SECRET_KEY: ${HIKIDASHI_SECRET_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  GROQ_API_KEY: ${GROQ_API_KEY:-}
+  MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+
 # A worker on new reels: its name, its share of the CPU, its models.
 x-worker: &worker
   <<: *hikidashi
@@ -46,6 +69,7 @@ services:
       context: .
       target: server
     environment:
+      <<: *hosted-ai
       # Accounts: none (everyone is the owner), local or proxy. See the README.
       HIKIDASHI_AUTH: ${HIKIDASHI_AUTH:-none}
       HIKIDASHI_ORIGIN: ${HIKIDASHI_ORIGIN:-}
@@ -89,6 +113,7 @@ services:
     # Its name in `./hikidashi status`.
     hostname: ${HIKIDASHI_SERVER_WORKER_NAME:-hikidashi-server-worker}
     environment:
+      <<: *hosted-ai
       # Of enrich and embed. The other stages need the worker image.
       HIKIDASHI_LOCAL_STAGES: ${HIKIDASHI_SERVER_STAGES:-enrich,embed}
       HIKIDASHI_UNLOAD_AFTER: ${HIKIDASHI_UNLOAD_AFTER:-300}

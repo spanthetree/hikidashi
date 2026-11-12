@@ -82,7 +82,10 @@ def record(
     shortcode: str,
     transcript: str | None,
     profile: str,
+    language: str | None = None,
 ) -> None:
+    """`language`: what a multilingual hosted model heard (#116); None from
+    the local English-only models."""
     with lock:
         conn.execute(
             """UPDATE item SET
@@ -97,13 +100,20 @@ def record(
                  transcript  = :transcript,
                  asr_v       = :v,
                  asr_profile = :profile,
+                 asr_language = :language,
                  -- Only move forward: a later stage's state is not undone.
                  state       = CASE WHEN state = 'fetched' THEN 'transcribed'
                                     ELSE state END,
                  fail_stage  = CASE WHEN fail_stage = 'asr' THEN NULL ELSE fail_stage END,
                  fail_reason = CASE WHEN fail_stage = 'asr' THEN NULL ELSE fail_reason END
                WHERE shortcode = :shortcode""",
-            {"transcript": transcript, "v": ASR_V, "profile": profile, "shortcode": shortcode},
+            {
+                "transcript": transcript,
+                "v": ASR_V,
+                "profile": profile,
+                "language": language,
+                "shortcode": shortcode,
+            },
         )
 
 

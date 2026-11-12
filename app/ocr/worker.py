@@ -78,8 +78,13 @@ def pending(
 
 
 def record(
-    conn: sqlite3.Connection, lock: threading.Lock, shortcode: str, text: str | None
+    conn: sqlite3.Connection,
+    lock: threading.Lock,
+    shortcode: str,
+    text: str | None,
+    profile: str | None = None,
 ) -> None:
+    """`profile`: the hosted provider:model that read it; None for tesseract."""
     with lock:
         conn.execute(
             """UPDATE item SET
@@ -90,10 +95,11 @@ def record(
                                     THEN 0 ELSE recipe_v END,
                  ocr_text    = :text,
                  ocr_v       = :v,
+                 ocr_profile = :profile,
                  fail_stage  = CASE WHEN fail_stage = 'ocr' THEN NULL ELSE fail_stage END,
                  fail_reason = CASE WHEN fail_stage = 'ocr' THEN NULL ELSE fail_reason END
                WHERE shortcode = :shortcode""",
-            {"text": text, "v": OCR_V, "shortcode": shortcode},
+            {"text": text, "v": OCR_V, "profile": profile, "shortcode": shortcode},
         )
 
 

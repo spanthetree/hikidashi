@@ -1,6 +1,6 @@
 [project]
 name = "hikidashi"
-version = "0.22.0"
+version = "0.23.0"
 description = "A self-hosted, searchable library for Instagram saves"
 readme = "README.md"
 # Source-available, not open source: free for any noncommercial use (#122,
@@ -37,6 +37,7 @@ server = [
     "fastembed==0.9.0",       # embeddinggemma-300m on ONNX Runtime; no torch
     "sqlite-vec==0.1.9",
     "argon2-cffi==25.1.0",    # local account passwords; app/accounts imports it lazily
+    "cryptography==50.0.2",   # API keys encrypted at rest (#125); app/ai/secrets.py imports it lazily
 ]
 # ASR. OCR shells out to tesseract, and tag and recipe talk to Ollama over
 # HTTP, so they need nothing more.

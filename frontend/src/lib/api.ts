@@ -1,4 +1,5 @@
 import type {
+  AiBacklog, AiPage, AiStage, AiTest, AiUse, AiUserRow, MyPipeline,
   Account, ApiToken, AuthState, ExportOptions, ImportResult, Invite, ItemDetail, ItemGame, ItemPage,
   LogTail, Me,
   MyTokens, Named, WorkerToken,
@@ -9,7 +10,12 @@ import type {
    session is gone, and the browser goes to sign in and comes back after. */
 export const PUBLIC = ["/login", "/setup", "/invite/"];
 
+/* Set on signing out: a request still in flight then comes back 401, and
+   must not send the browser to sign in "and come back" to the page it left. */
+let leaving = false;
+
 function signIn() {
+  if (leaving) return;
   const here = location.pathname + location.search;
   if (PUBLIC.some((p) => location.pathname.startsWith(p))) return;
   location.assign(`/login?next=${encodeURIComponent(here)}`);
@@ -189,7 +195,10 @@ export const getMe = () => api<Me>("/api/me");
 
 export const login = (username: string, password: string) =>
   api<Me>("/api/auth/login", send("POST", { username, password }));
-export const logout = () => api<object>("/api/auth/logout", send("POST"));
+export const logout = () => {
+  leaving = true;
+  return api<object>("/api/auth/logout", send("POST"));
+};
 
 /** Claim the library with the token from the server's log. */
 export const setup = (token: string, username: string, password: string) =>
@@ -234,3 +243,37 @@ export const makeWorkerToken = (name: string) =>
   api<{ id: number; token: string; tokens: WorkerToken[] }>("/api/worker-tokens", send("POST", { name }));
 export const revokeWorkerToken = (id: number) =>
   api<WorkerToken[]>(`/api/worker-tokens/${id}`, send("DELETE"));
+
+/* Hosted AI (#125): a user's own API under /api/me/providers, the server's
+   under /api/admin/settings/providers. The same calls for both. */
+export type AiWhose = "mine" | "server";
+const aiBase = (whose: AiWhose) =>
+  whose === "server" ? "/api/admin/settings/providers" : "/api/me/providers";
+
+export const ai = {
+  get: (w: AiWhose) => api<AiPage>(aiBase(w)),
+  setStage: (w: AiWhose, stage: AiStage | "all", body: { provider?: string; model?: string; base_url?: string }) =>
+    api<AiPage>(`${aiBase(w)}/stages/${stage}`, send("PUT", body)),
+  setKey: (w: AiWhose, provider: string, key: string) =>
+    api<AiPage>(`${aiBase(w)}/keys/${encodeURIComponent(provider)}`, send("PUT", { key })),
+  removeKey: (w: AiWhose, provider: string) =>
+    api<AiPage>(`${aiBase(w)}/keys/${encodeURIComponent(provider)}`, send("DELETE")),
+  setBudget: (w: AiWhose, usd: number | null) => api<AiPage>(`${aiBase(w)}/budget`, send("PUT", { usd })),
+  setLanguage: (w: AiWhose, code: string | null) =>
+    api<AiPage>(`${aiBase(w)}/language`, send("PUT", { code })),
+  backlog: (w: AiWhose, scope?: "me" | "all") =>
+    api<AiBacklog>(`${aiBase(w)}/backlog${scope ? `?scope=${scope}` : ""}`),
+  switchOn: (w: AiWhose, backlog: boolean, scope?: "me" | "all") =>
+    api<AiPage>(`${aiBase(w)}/switch`, send("POST", { on: true, backlog, scope: scope ?? null })),
+  switchOff: (w: AiWhose) => api<AiPage>(`${aiBase(w)}/switch`, send("POST", { on: false })),
+  test: (w: AiWhose, stage?: AiStage) =>
+    api<Record<AiStage, AiTest>>(`${aiBase(w)}/test`, send("POST", { stage: stage ?? null })),
+  models: (w: AiWhose, provider: string) =>
+    api<string[]>(`${aiBase(w)}/models?provider=${encodeURIComponent(provider)}`),
+  setUse: (use: AiUse) => api<AiPage>("/api/me/providers/use", send("PUT", { use })),
+  users: () => api<AiUserRow[]>("/api/admin/ai/users"),
+  removeUserKey: (id: number, provider: string) =>
+    api<AiUserRow[]>(`/api/admin/ai/users/${id}/keys/${encodeURIComponent(provider)}`, send("DELETE")),
+};
+
+export const getMyPipeline = () => api<MyPipeline>("/api/me/pipeline");

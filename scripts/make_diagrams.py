@@ -82,6 +82,7 @@ GROUPS = {
         "api_token",
     ),
     "er-jobs": ("job_lease", "job_attempt", "job_worker"),
+    "er-ai": ("setting", "ai_audit", "api_reel", "hosted_usage"),
 }
 
 # Links the schema makes by value rather than by a foreign key.
@@ -90,6 +91,9 @@ LOGICAL = (
     ("recipe", "recipe_fts", "||..o|", "indexed by app/recipes"),
     ("geocode", "item_place", "|o..o{", "text"),
     ("job_worker", "job_lease", "||..o{", "worker"),
+    ("user", "ai_audit", "|o..o{", "user_id"),
+    ("user", "hosted_usage", "|o..o{", "user_id"),
+    ("item", "hosted_usage", "|o..o{", "shortcode"),
 )
 
 

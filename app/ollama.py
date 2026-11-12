@@ -113,3 +113,9 @@ class Client:
             raise ReplyError(f"reply hit the {num_predict}-token cap")
         content: str = data.get("message", {}).get("content", "")
         return content
+
+    def ask(
+        self, system: str, prompt: str, *, schema: dict[str, Any], max_tokens: int, name: str
+    ) -> str:
+        """The stages' one request, as every chat backend takes it (app/chat.py)."""
+        return self.chat(system, prompt, schema=schema, num_predict=max_tokens)
