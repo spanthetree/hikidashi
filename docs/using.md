@@ -105,10 +105,10 @@ and errors. With accounts on, both are for admins only.
 
 ## Settings
 
-The menu at the top right picks the theme (Instagram-style by default, plus
-cyberpunk, retrowave and retrofuture), light, dark or the system's choice, and
-pixel art, which redraws any theme in pixels. These are remembered in the
-browser.
+The menu at the top right picks the theme: Hikidashi by default (paper, ink
+and vermilion, after the logo), or cyberpunk, retrowave or retrofuture; light,
+dark or the system's choice; and pixel art, which redraws any theme, its icons
+and the logo in pixels. These are remembered in the browser.
 
 It also leads to **Your account**: your Instagram @handle, your password, API
 tokens, the export form and, for admins, invitations and accounts

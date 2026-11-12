@@ -161,7 +161,7 @@
 
   .thumb:hover { transform: translateY(-2px); }
 
-  /* Hover rings the reel in Instagram's gradient, as a story is ringed. The
+  /* Hover rings the reel in the theme's --brand gradient. The
      mask keeps only the border band of a gradient-filled box. */
   .thumb::after {
     content: "";

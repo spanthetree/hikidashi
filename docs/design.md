@@ -202,7 +202,7 @@ frontend/           Svelte 5 + SvelteKit, built with adapter-static
     filters.ts      search, filters and sort in the query string
     motion.svelte.ts   every transition, and the reduced-motion fallbacks
     theme.svelte.ts    the chosen theme, light/dark mode and pixel art, set on <html>
-  src/app.css       design tokens: the Instagram theme, and every theme's defaults
+  src/app.css       design tokens: the Hikidashi theme, and every theme's defaults
   src/themes/       the other themes, then pixel art over any of them
   static/icon.svg   favicon and header mark
   scripts/record-demo.mjs  films the README animation and the tour

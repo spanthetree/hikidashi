@@ -10,6 +10,12 @@
 @import "@fontsource/jost/700.css";
 
 :root[data-theme="retrofuture"] {
+  /* The mark, printed: an offset shadow in the second ink. */
+  --logo-card: #3fb8af;
+  --logo-lit: #d4491f;
+  --logo-body: #1b2a38;
+  --logo-slot: #f2b134;
+  --logo-filter: drop-shadow(1.5px 1.5px 0 #3fb8af);
   --paper: #f3e9d2;
   --surface: #faf4e4;
   --surface-2: #ece0c2;
@@ -42,6 +48,11 @@
 }
 
 :root[data-theme="retrofuture"][data-scheme="dark"] {
+  --logo-card: #5fd3c8;
+  --logo-lit: #f08a3c;
+  --logo-body: #f5ecd7;
+  --logo-slot: #0d1b2a;
+  --logo-filter: drop-shadow(1.5px 1.5px 0 #d4491f);
   --paper: #0d1b2a;
   --surface: #13263a;
   --surface-2: #1d3550;
