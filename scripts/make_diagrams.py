@@ -300,7 +300,7 @@ def eval_chart() -> str:
     """The table's three scores across releases, on one axis from 0.5 to 1."""
     rows = _eval_rows()
     W, H = 720, 260
-    x0, x1, y0, y1 = 64, 600, 214, 30  # plot area: y0 is 0.5, y1 is 1.0
+    x0, x1, y0, y1 = 64, 560, 214, 30  # plot area: y0 is 0.5, y1 is 1.0
     lo = 0.5
 
     def y(v: float) -> float:
