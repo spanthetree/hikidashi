@@ -17,6 +17,12 @@ requires-python = ">=3.12"
 # (#86). One host with uv: `uv sync --extra server --extra worker`.
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/spanthetree/hikidashi"
+Documentation = "https://github.com/spanthetree/hikidashi/tree/master/docs"
+Changelog = "https://github.com/spanthetree/hikidashi/blob/master/CHANGELOG.md"
+Issues = "https://github.com/spanthetree/hikidashi/issues"
+
 [project.optional-dependencies]
 # The web UI and API, and the stages that run beside them: enrich and embed.
 server = [
