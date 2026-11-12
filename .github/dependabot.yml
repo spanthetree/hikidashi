@@ -1,17 +1,24 @@
 # Dependency updates, grouped so each ecosystem is one pull request a month.
-# Security updates come as soon as they are published, outside the schedule.
+# Only minor and patch versions: a major version is a migration (SvelteKit 3,
+# say), done on purpose in an issue of its own, and one in a group would hold
+# back every other update in it. Security updates come as soon as they are
+# published, outside the schedule.
 #
 # Each update is a normal pull request, so it needs the changelog and version
-# commit before merging (CONTRIBUTING.md). @playwright/test in
-# frontend/package.json and the Playwright image tag in tests.yml move
-# together, and tests/test_ci.py fails when they don't. The pip pins in
-# tests.yml are not updated here: bring them along with pyproject.toml.
+# commit before merging (CONTRIBUTING.md). Kept out, and moved by hand:
+# - @playwright/test, which moves with the Playwright image tag in tests.yml
+#   (tests/test_ci.py fails when they differ);
+# - Python past 3.12, the version CI, uv, mypy and the images are all on;
+# - the pip pins in tests.yml, which follow pyproject.toml.
 version: 2
 updates:
   - package-ecosystem: uv
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       python:
         patterns: ["*"]
@@ -20,6 +27,10 @@ updates:
     directory: /frontend
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@playwright/test"
     groups:
       frontend:
         patterns: ["*"]
@@ -28,14 +39,25 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       actions:
         patterns: ["*"]
 
+  # The Dockerfile's base images: python:3.12-slim, and node for the web
+  # build stage. 3.12 to 3.13 is a "minor" to Dependabot, so Python is held
+  # at 3.12 by version.
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: python
+        versions: [">= 3.13"]
     groups:
       images:
         patterns: ["*"]

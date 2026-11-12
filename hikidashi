@@ -26,20 +26,6 @@ WORKER_CONTAINER=hikidashi-worker
 die() { echo "hikidashi: $*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
-# Hikidashi was called ReelVault before 0.18.0. Settings under the old
-# REELVAULT_ names still count, until 0.19.0: an .env that has them is
-# rewritten to the new names once, kept as .env.reelvault.bak, since Compose
-# reads .env itself; and one set in the shell stands in for its HIKIDASHI_
-# name when that is unset.
-if [ -f .env ] && grep -q '^[[:space:]]*\(export[[:space:]]\{1,\}\)\{0,1\}REELVAULT_' .env; then
-	cp -p .env .env.reelvault.bak
-	sed 's/REELVAULT_/HIKIDASHI_/g' .env.reelvault.bak >.env
-	echo "hikidashi: renamed the REELVAULT_ settings in .env to HIKIDASHI_ (the old file is .env.reelvault.bak)" >&2
-fi
-for name in $(env | sed -n 's/^REELVAULT_\([A-Z0-9_]*\)=.*/\1/p'); do
-	eval "[ -n \"\${HIKIDASHI_$name+set}\" ] || export HIKIDASHI_$name=\"\$REELVAULT_$name\""
-done
-
 usage() {
 	cat <<EOF
 usage: ./hikidashi [--uv | --docker] <command> [flags]

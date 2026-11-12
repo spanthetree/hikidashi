@@ -5,7 +5,7 @@
 # embedder; the worker image has Whisper and tesseract. Both are published
 # (#77): `docker compose up -d` pulls them, and builds from this checkout only
 # when there is nothing to pull, or with --build. HIKIDASHI_VERSION picks the
-# release (latest unless set, as 0.19.0); a tag nobody published, as `dev`,
+# release (latest unless set, as 1.2.3); a tag nobody published, as `dev`,
 # keeps your own builds. Each tag is built by one service, as two services
 # building one tag at once collide (#79).
 #

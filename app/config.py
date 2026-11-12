@@ -48,16 +48,6 @@ def _path(env: str, default: str) -> Path:
     return p if p.is_absolute() else ROOT / p
 
 
-def _db_path(path: Path) -> Path:
-    """The database, or the one beside it under its name from before the
-    rename (reelvault.sqlite3), while there is no new one. Rename the file
-    with the server and workers stopped to move to the new name."""
-    legacy = path.with_name("reelvault.sqlite3")
-    if path.name == "hikidashi.sqlite3" and not path.exists() and legacy.exists():
-        return legacy
-    return path
-
-
 @dataclass(frozen=True)
 class Settings:
     db_path: Path
@@ -110,7 +100,7 @@ class Settings:
     @classmethod
     def from_env(cls) -> Settings:
         return cls(
-            db_path=_db_path(_path("HIKIDASHI_DB", "data/hikidashi.sqlite3")),
+            db_path=_path("HIKIDASHI_DB", "data/hikidashi.sqlite3"),
             media_dir=_path("HIKIDASHI_MEDIA", "data/media"),
             imports_dir=_path("HIKIDASHI_IMPORTS", "data/imports"),
             models_dir=_path("HIKIDASHI_MODELS", "data/models"),

@@ -13,7 +13,7 @@
     var theme = "hikidashi", mode = "system", pixel = "off";
     try {
       theme = localStorage.getItem("theme") || theme;
-      // Before 0.18.8 the default was "instagram"; theme.svelte.ts does the same.
+      // Before 0.19.0 the default was "instagram"; theme.svelte.ts does the same.
       if (!/^(hikidashi|cyberpunk|retrowave|retrofuture)$/.test(theme)) theme = "hikidashi";
       mode = localStorage.getItem("mode") || mode;
       pixel = localStorage.getItem("pixel") || pixel;

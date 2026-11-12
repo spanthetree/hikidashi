@@ -30,7 +30,7 @@ function keep(key: string, value: string) {
 
 const system = window.matchMedia("(prefers-color-scheme: dark)");
 
-// A theme saved before 0.18.8 may be "instagram", the old default: not in
+// A theme saved before 0.19.0 may be "instagram", the old default: not in
 // THEMES, so it falls back to the default that replaced it.
 let theme = $state<Theme>(saved(THEME_KEY, THEMES, "hikidashi"));
 let mode = $state<Mode>(saved(MODE_KEY, MODES, "system"));
