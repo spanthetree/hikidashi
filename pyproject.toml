@@ -9,6 +9,12 @@ license = "PolyForm-Noncommercial-1.0.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
 
+[project.urls]
+Homepage = "https://github.com/spanthetree/hikidashi"
+Documentation = "https://github.com/spanthetree/hikidashi/tree/master/docs"
+Changelog = "https://github.com/spanthetree/hikidashi/blob/master/CHANGELOG.md"
+Issues = "https://github.com/spanthetree/hikidashi/issues"
+
 # Nothing by default: app/db.py and app/importer/ are stdlib-only by design, so
 # the core stays testable on a bare checkout with nothing installed, and a bare
 # `uv sync` already runs the CLI, import, exports, and a worker for tag and
