@@ -10,8 +10,11 @@
 [![Tests](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/spanthetree/hikidashi/actions/workflows/tests.yml)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-lightgrey)](LICENSE)
 
+**English** · [日本語](README.ja.md)
+
 [Getting started](#getting-started) ·
 [Documentation](docs/README.md) ·
+[FAQ](docs/faq.md) ·
 [Changelog](CHANGELOG.md) ·
 [Contributing](CONTRIBUTING.md)
 
@@ -112,6 +115,7 @@ faster ([hardware profiles](docs/pipeline.md#hardware-profiles)).
 
 | | |
 |---|---|
+| [FAQ](docs/faq.md) | Passwords, privacy, hardware, languages |
 | [Installing](docs/install.md) | Docker or uv, importing, updating |
 | [Using Hikidashi](docs/using.md) | Search, recipes, the map, the pipeline page |
 | [Configuration](docs/configuration.md) | Every setting and its default |

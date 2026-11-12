@@ -11,7 +11,7 @@ and not a catalog app. [Unraid](install-unraid.md) ·
 
 > The file pulls the published images
 > (`ghcr.io/spanthetree/hikidashi-server`, `-worker`, `-worker-cuda`), which
-> each release publishes (#77), at `:latest`.
+> each release publishes, at `:latest`.
 
 ## What's in the file
 
@@ -103,7 +103,7 @@ work.
 3. **Save**. Give the Ollama app the card too, in its own settings.
 
 If you change cards later, change the UUID here as well. TrueNAS doesn't
-update it for a custom app. See #64 for what waits on a GPU.
+update it for a custom app. See [#64](https://github.com/spanthetree/hikidashi/issues/64) for what waits on a GPU.
 
 ## A GPU desktop as a remote worker
 

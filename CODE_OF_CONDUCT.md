@@ -36,7 +36,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement by email to the maintainer, at the address on [@spanthetree's GitHub profile](https://github.com/spanthetree). All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement. For an issue, pull request, discussion or comment, use **Report content** in its **⋯** menu and choose to report it to the repository's maintainers: the report is private. For anything else, email the maintainer at TODO-CONTACT-ADDRESS. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 

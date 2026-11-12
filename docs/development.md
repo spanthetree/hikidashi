@@ -135,8 +135,9 @@ installs them (`.github/workflows/tests.yml`) so they run there.
 [testing.md](testing.md) has the rest: the browser tests, coverage, property
 tests, ruff and mypy, the seeded library they share, and what CI runs when.
 
-Search quality has its own check against the real library, separate from the
-tests: `uv run python -m app.search.eval` (see [search.md](search.md)). Run it
+Search quality has its own check, separate from the tests:
+`uv run python -m app.search.eval`, over the demo library's queries or your
+own (see [search.md](search.md)). Run it
 before and after any change to `app/search/` or to what gets embedded.
 
 ## Regenerating the diagrams
@@ -157,7 +158,7 @@ Generated Mermaid sits between `<!-- make_diagrams: NAME -->` and
 fails when any output is stale, so CI does too. A new table must be added to
 one of `GROUPS` in the script, or the run stops and says so.
 
-The animated SVGs follow #88's rules, which the script's docstring repeats:
+The animated SVGs follow [#88](https://github.com/spanthetree/hikidashi/issues/88)'s rules, which the script's docstring repeats:
 CSS animation only, a dark theme under `prefers-color-scheme`, the end state as
 the base style (what reduced motion and non-animating viewers show), anything
 still to appear drawn faint in the first frame, no raster images, and an

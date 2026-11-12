@@ -4,6 +4,7 @@
 
 ## Setting up
 
+- **[FAQ](faq.md)**: passwords, what leaves your machine, hardware, languages
 - **[Installing](install.md)**: your Instagram export, Docker or uv, importing,
   updating
 - **[Installing on Unraid](install-unraid.md)** and

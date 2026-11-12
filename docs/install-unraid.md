@@ -12,8 +12,8 @@ these two and not others. [TrueNAS SCALE](install-truenas.md) ·
 
 > The templates pull the published images
 > (`ghcr.io/spanthetree/hikidashi-server`, `-worker`, `-worker-cuda`), which
-> each release publishes (#77). They aren't in Community Applications search
-> yet (#102): install them by hand, as below.
+> each release publishes. They aren't in Community Applications search
+> yet ([#102](https://github.com/spanthetree/hikidashi/issues/102)): install them by hand, as below.
 
 ## What you install
 
@@ -135,7 +135,7 @@ The card goes to **Hikidashi-Worker-CUDA**, in place of Hikidashi-Worker.
    or `all`. Its Extra Parameters already have `--runtime=nvidia`.
 5. Give Ollama the card too, the same way, if it runs here.
 
-See #64 for what waits on a GPU.
+See [#64](https://github.com/spanthetree/hikidashi/issues/64) for what waits on a GPU.
 
 ## A GPU desktop as a remote worker
 
