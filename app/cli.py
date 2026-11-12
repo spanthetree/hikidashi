@@ -347,8 +347,40 @@ def status(argv: list[str]) -> int:
         + (" · looking up now" if locating(settings.run_dir) else "")
     )
     print_queue(conn)
+    print_apis(conn)
     print_models()
     return 0
+
+
+def print_apis(conn: sqlite3.Connection) -> None:
+    """A line a hosted API (#125): on or off, and why it went off; in
+    flight; this month's spend."""
+    try:
+        from app.ai import status as ai_status
+
+        found = ai_status.apis(conn, settings.db_path.parent)
+    except ImportError:
+        return
+    shown = [a for a in found if a.get("on") or a.get("reason") or a.get("spent")]
+    if not shown:
+        print("\n  hosted AI   off; workers process every reel (`hikidashi ai` to set it up)")
+        return
+    print()
+    for i, a in enumerate(shown):
+        label = "hosted AI" if i == 0 else ""
+        if a.get("on") is None:  # a hosted worker on another machine
+            line = f"reported {a['spent']:.2f} USD this month"
+        elif a["on"]:
+            budget = f" of {a['budget']:g}" if a.get("budget") else ""
+            scope = f" for {a['scope']}" if a.get("scope") else ""
+            line = (
+                f"on{scope} · {a['in_flight']} in flight · {a['waiting']} waiting · "
+                f"{a['spent']:.2f}{budget} USD this month"
+            )
+        else:
+            line = "off" + (f": {a['reason']}" if a.get("reason") else "")
+            line += f" · {a['spent']:.2f} USD this month"
+        print(f"  {label:<10}  {a['name']}  {line}")
 
 
 def print_models() -> None:

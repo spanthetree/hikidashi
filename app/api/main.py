@@ -1555,15 +1555,28 @@ def pipeline_state(user: Admin) -> dict[str, Any]:
     # has nothing for them to work on. The sidebar's "failed" counts these.
     fetch = fetches.failures(conn, limit=10)
     found = job_queue.workers(conn)
+    from app.ai import status as ai_status
+
     return {
         "fetch": fetch,
         "stages": stages,
         "workers": found,
+        # The hosted APIs (#125): each one's switch, why it went off, in flight, spend.
+        "apis": ai_status.apis(conn, settings.db_path.parent),
         "overall": job_queue.overall(found),
         "attempts": job_queue.MAX_ATTEMPTS,
         "stale": job_queue.STALE,
         "now": int(time.time()),
     }
+
+
+@app.get("/api/me/pipeline")
+def my_pipeline(user: Me) -> dict[str, Any]:
+    """Your own reels' way through the pipeline (#125): waiting per stage,
+    when a worker last checked in, and your API. Nothing of anyone else's."""
+    from app.ai import status as ai_status
+
+    return ai_status.mine(db(), user.id, settings.db_path.parent)
 
 
 class StageName(BaseModel):

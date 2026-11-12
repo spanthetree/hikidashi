@@ -349,6 +349,21 @@ class TestRoutes(base.SignInCase):
         r = anon.put("/api/me/providers/budget", headers=h, json={"usd": 3})
         self.assertEqual(r.status_code, 403)
 
+    def test_the_pipeline_shows_the_apis_and_each_user_their_own(self):
+        r = self.client.get("/api/pipeline")
+        self.assertEqual(r.json()["apis"][0]["name"], "api:server")
+        bob = self.bob()
+        r = bob.get("/api/me/pipeline")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["applies"], "workers")
+        self.assertEqual(bob.get("/api/pipeline").status_code, 403)
+
+    def test_requeue(self):
+        r = self.client.post("/api/admin/ai/requeue", json={"stage": "tag", "made_by": "cpu"})
+        self.assertEqual(r.json(), {"reels": 0})
+        r = self.client.post("/api/admin/ai/requeue", json={"stage": "nope", "made_by": "cpu"})
+        self.assertEqual(r.status_code, 400)
+
     def test_bad_input_is_400(self):
         r = self.client.put("/api/me/providers/stages/asr", json={"provider": "nope"})
         self.assertEqual(r.status_code, 400)

@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.accounts import User
-from app.ai import service, usage
+from app.ai import service, status, usage
 from app.ai.service import AiError
 
 
@@ -189,6 +189,25 @@ def install(  # noqa: C901 -- one closure per route
     def ai_remove_user_key(user_id: int, provider: str, user: Adm) -> list[dict[str, Any]]:
         service.remove_key(db(), user, user_id, provider, data_dir())
         return service.users(db(), data_dir())
+
+    @app.get("/api/admin/ai/profiles")
+    def ai_profiles(user: Adm) -> dict[str, list[dict[str, Any]]]:
+        """Per stage, which model (provider:model, or cpu/cuda) made how many reels."""
+        return status.profiles(db())
+
+    class RequeueIn(BaseModel):
+        stage: str = Field(..., max_length=10)
+        made_by: str = Field(..., min_length=1, max_length=300)
+
+    @app.post("/api/admin/ai/requeue")
+    def ai_requeue(body: RequeueIn, user: Adm) -> dict[str, Any]:
+        """Queue again the reels an older model made at a stage."""
+        try:
+            n = status.requeue(db(), body.stage, body.made_by)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        service.audit(db(), user.id, None, f"requeue {body.stage}", f"{body.made_by}: {n} reels")
+        return {"reels": n}
 
     @app.get("/api/admin/ai/usage")
     def ai_usage(user: Adm, month: str | None = Query(None, max_length=7)) -> dict[str, Any]:
