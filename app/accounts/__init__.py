@@ -366,8 +366,6 @@ def revoke_invite(conn: sqlite3.Connection, invite_id: int) -> None:
 # A token reads hk_api_ or hk_wkr_, then 30 random base62 characters (178
 # bits), then a 6-character CRC32 of them, as GitHub's do: the prefix says
 # what a leaked one is, and the checksum turns a mistyped one away unlooked-up.
-# Tokens made before the rename to Hikidashi read rv_api_ and rv_wkr_, and
-# still work until they expire or are revoked.
 
 API, WORKER = "api", "worker"
 SCOPES = ("read:library", "write:library", "read:admin", "write:admin")
@@ -377,7 +375,6 @@ TOKEN_DAYS = 30  # the longest an api token lives; there is no extending one
 USED_EVERY = 60  # seconds: last_used_at is written at most this often
 
 _PREFIX = {API: "hk_api_", WORKER: "hk_wkr_"}
-_LEGACY_PREFIXES = ("rv_api_", "rv_wkr_")
 _BASE62 = string.digits + string.ascii_letters
 _RANDOM, _CHECK = 30, 6
 
@@ -415,7 +412,7 @@ def _new_token(kind: str) -> str:
 def well_formed(token: str) -> bool:
     """Whether `token` could be one of ours, checked without the database. A
     worker token made before #103 has no prefix, and is only looked up."""
-    for prefix in (*_PREFIX.values(), *_LEGACY_PREFIXES):
+    for prefix in _PREFIX.values():
         if token.startswith(prefix):
             body, check = token[len(prefix) : -_CHECK], token[-_CHECK:]
             return len(body) == _RANDOM and _base62(zlib.crc32(body.encode()), _CHECK) == check
