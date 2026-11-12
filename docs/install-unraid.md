@@ -206,7 +206,7 @@ each holding one file that includes the checkout's compose files:
    ```
 
    To stay on one release, set `HIKIDASHI_VERSION` in `.env` to it, such as
-   `0.19.0`; unset, it is `latest`. Building from the checkout instead
+   `1.2.3`; unset, it is `latest`. Building from the checkout instead
    (`docker compose build`) still works, and is what happens when there is
    nothing to pull.
 

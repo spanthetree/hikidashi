@@ -7,7 +7,7 @@ name: images
 #   ghcr.io/spanthetree/hikidashi-worker-cuda   amd64
 #
 # A release (release.yml, on a version bump merged to master) calls this with
-# the version: 0.19.0 publishes 0.19.0, 0.19 and latest. Run by hand
+# the version: 1.2.3 publishes 1.2.3, 1.2 and latest. Run by hand
 # (Actions → images → Run workflow, on any branch), it publishes edge and
 # sha-<commit>, for trying a branch on a NAS before a release. A pull request
 # that changes what goes into an image builds the amd64 ones and starts them,
@@ -17,7 +17,7 @@ on:
   workflow_call:
     inputs:
       version:
-        description: The release, as 0.19.0; the version in pyproject.toml
+        description: The release, as 1.2.3; the version in pyproject.toml
         type: string
         required: true
   workflow_dispatch:

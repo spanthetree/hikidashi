@@ -229,7 +229,7 @@ Tag and recipe use the desktop's own Ollama, a native install or
 `http://host.docker.internal:11434`). It pulls the published cuda image
 (`ghcr.io/spanthetree/hikidashi-worker-cuda`) unless
 `HIKIDASHI_WORKER_IMAGE=hikidashi-worker` asks for the smaller CPU one. Set
-`HIKIDASHI_VERSION` to the server's release, such as `0.19.0`; unset, it is
+`HIKIDASHI_VERSION` to the server's release, such as `1.2.3`; unset, it is
 `latest`. With `--build` it builds from the checkout instead, the cuda image
 unless `HIKIDASHI_EXTRAS` is set to nothing. For the GPU itself, it needs the NVIDIA container
 toolkit and the `deploy` block uncommented, as for the single-host setup

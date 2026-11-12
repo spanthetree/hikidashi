@@ -125,7 +125,7 @@ The images follow `:latest`. TrueNAS pulls all three of an app's images
 together, so the server and its worker, which must run the same release, stay
 on one. When **Apps** shows an update for `hikidashi`, **Update** pulls them
 and restarts the app. To stay on one release instead, **Edit** the app and
-replace `latest` with it, such as `0.19.0`, on **all three** images. The database catches up
+replace `latest` with it, such as `1.2.3`, on **all three** images. The database catches up
 with a new release on its own when the app starts, and the workers re-run
 only the stages whose version changed. [CHANGELOG.md](../CHANGELOG.md) lists
 what changed.

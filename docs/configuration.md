@@ -47,6 +47,6 @@ On Unraid and TrueNAS the same settings are fields in the template or the YAML
 | `HIKIDASHI_LOCATE_EVERY` | `300` | Seconds between the server's looks for new places to put on the map. `0`: only `./hikidashi places` looks |
 | `HIKIDASHI_TILES` | OpenStreetMap's | Map tiles, as `https://tiles.example.com/{z}/{x}/{y}.png` |
 | `HIKIDASHI_TILES_ATTRIBUTION` | OpenStreetMap's | The credit shown on the map, as HTML. Empty for your own tiles unless set |
-| `HIKIDASHI_VERSION` | `latest` | Docker: the release of the published images, as `0.19.0`. A tag nobody published, as `dev`, keeps your own `--build` images |
+| `HIKIDASHI_VERSION` | `latest` | Docker: the release of the published images, as `1.2.3`. A tag nobody published, as `dev`, keeps your own `--build` images |
 | `HIKIDASHI_WORKER_IMAGE` | `hikidashi-worker`; `hikidashi-worker-cuda` in `docker-compose.worker.yml` | Docker: the worker image, `hikidashi-worker-cuda` for a GPU |
 | `HIKIDASHI_EXTRAS` | *(empty)*; `--extra cuda` in `docker-compose.worker.yml` | Docker builds only. `--extra cuda` adds the GPU libraries to the worker image; set to nothing for the CPU one |

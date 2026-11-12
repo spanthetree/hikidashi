@@ -21,7 +21,7 @@ name: hikidashi-remote
 services:
   worker:
     # The worker image (#86): Whisper and tesseract, no web stack. The same
-    # release as the server's: HIKIDASHI_VERSION, as 0.19.0.
+    # release as the server's: HIKIDASHI_VERSION, as 1.2.3.
     image: ghcr.io/spanthetree/${HIKIDASHI_WORKER_IMAGE:-hikidashi-worker-cuda}:${HIKIDASHI_VERSION:-latest}
     build:
       context: .
