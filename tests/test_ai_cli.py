@@ -71,12 +71,16 @@ class TestLocal(CliCase):
 
         return BOB, 2
 
-    def test_the_server_api_is_for_admins_and_needs_for(self):
+    def test_the_server_api_is_the_admins_system_default(self):
         # On the host the server's API is the first admin's to act on; --user
         # and --server-api do not go together.
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(self.run_cli("show", "--user", "bob", "--server-api")[0], 2)
-        self.assertEqual(self.run_cli("on", "--server-api", "--yes")[0], 2)
+        # No scope needed: the server's API is the system default, for all.
+        code, _, err = self.run_cli("on", "--server-api", "--new-only", "--yes")
+        self.assertEqual(code, 3)
+        self.assertIn("no provider set", err)
+        self.assertEqual(self.run_cli("use", "workers", "--server-api")[0], 0)
 
     def test_env_locked(self):
         with mock.patch.dict(os.environ, {"HIKIDASHI_LLM_MODEL": "x"}):

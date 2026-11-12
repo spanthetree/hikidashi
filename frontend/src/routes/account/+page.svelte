@@ -315,16 +315,9 @@
     <section class="a-sec" id="ai">
       <h2>{m.ai_title()}</h2>
       <p class="lede">{m.ai_lede()}</p>
-      <AiProviders whose="mine" bind:notice />
+      <!-- One choice each. An admin's is the system default, the server's API. -->
+      <AiProviders whose={me.is_admin ? "server" : "mine"} bind:notice />
     </section>
-
-    {#if me.is_admin}
-      <section class="a-sec" id="ai-server">
-        <h2>{m.ai_server_title()}</h2>
-        <p class="lede">{m.ai_server_lede()}</p>
-        <AiProviders whose="server" bind:notice />
-      </section>
-    {/if}
 
     {#if mine}
       <section class="a-sec">

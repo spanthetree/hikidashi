@@ -52,7 +52,10 @@ BASE_URL_ENV = "HIKIDASHI_OPENAI_BASE_URL"
 BUDGET_ENV = "HIKIDASHI_HOSTED_BUDGET"
 LANGUAGE_ENV = "HIKIDASHI_ASR_LANGUAGE"
 
-USES = ("mine", "server", "workers", "default")
+# A user's one choice: the system default (whatever the admin set), their own
+# hosted AI, or workers only. "server" is what 0.23.0 before release called
+# the default, and reads as it.
+USES = ("default", "mine", "workers")
 SCOPES = ("me", "all")
 
 
@@ -250,6 +253,8 @@ def load(
         if isinstance(token, str) and token:
             try:
                 keys[p.name] = KeyState(secrets.unseal(token, data_dir), "saved")
+            except secrets.NoCipher as exc:
+                keys[p.name] = KeyState(None, "saved", str(exc))
             except secrets.Unreadable:
                 keys[p.name] = KeyState(
                     None,
@@ -294,6 +299,19 @@ def use(conn: sqlite3.Connection, user_id: int) -> str:
     except ValueError:
         v = "default"
     return v if v in USES else "default"
+
+
+def server_choice(conn: sqlite3.Connection) -> str:
+    """The system default, as the admin chose it: mine (hosted AI, the server's
+    API) or workers."""
+    row = conn.execute("SELECT value FROM setting WHERE user_id IS NULL AND key = 'use'").fetchone()
+    try:
+        v = json.loads(row["value"]) if row else None
+    except ValueError:
+        v = None
+    if v in ("mine", "workers"):
+        return str(v)
+    return "mine" if any(o is None for o in switched_on(conn)) else "workers"
 
 
 def switched_on(conn: sqlite3.Connection) -> list[int | None]:

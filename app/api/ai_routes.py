@@ -80,7 +80,7 @@ def install(  # noqa: C901 -- one closure per route
     Mine = Annotated[User, Depends(ai_user)]
     Adm = Annotated[User, Depends(ai_admin)]
 
-    def routes(prefix: str, dep: Any, owner_of: Callable[[User], int | None]) -> APIRouter:
+    def routes(prefix: str, dep: Any, owner_of: Callable[[User], int | None]) -> APIRouter:  # noqa: C901
         r = APIRouter(prefix=prefix)
 
         def page(user: User) -> dict[str, Any]:
@@ -116,6 +116,13 @@ def install(  # noqa: C901 -- one closure per route
         @r.put("/language")
         def set_language(body: LanguageIn, user: dep) -> dict[str, Any]:
             service.set_language(db(), user, owner_of(user), body.code, data_dir())
+            return page(user)
+
+        @r.put("/use")
+        def set_use(body: UseIn, user: dep) -> dict[str, Any]:
+            """The one choice: for a user, default, mine or workers; for the
+            server's API, the system default: mine or workers."""
+            service.set_choice(db(), user, owner_of(user), body.use, data_dir())
             return page(user)
 
         @r.get("/backlog")
@@ -161,14 +168,7 @@ def install(  # noqa: C901 -- one closure per route
     def server(user: User) -> int | None:
         return None
 
-    mine = routes("/api/me/providers", Mine, me)
-
-    @mine.put("/use")
-    def set_use(body: UseIn, user: Mine) -> dict[str, Any]:
-        service.set_use(db(), user, user.id, body.use, data_dir())
-        return service.show(db(), user.id, data_dir())
-
-    app.include_router(mine)
+    app.include_router(routes("/api/me/providers", Mine, me))
     app.include_router(routes("/api/admin/settings/providers", Adm, server))
 
     @app.get("/api/admin/ai/users")

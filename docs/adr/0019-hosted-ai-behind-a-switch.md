@@ -25,8 +25,11 @@ saved it, so one person's choice touches reels others saved too.
 
 **Workers by default. Hosted only while someone has switched an API on.**
 
-- **An on/off switch,** per user (their own provider and key) and for the
-  server (the admin's key, for *just me* or *all users*). On, new reels go to
+- **One choice each.** A user picks *System default* (whatever the admin
+  chose), *Hosted AI* (their own provider and key) or *Workers only*. The
+  admin's own choice, Hosted AI or Workers only, is the system default: the
+  server's API, for everyone who keeps the default. Hosted AI, once set up,
+  is an on/off switch. On, new reels go to
   the API as they're ready. Off, nothing is sent, and workers get everything,
   as before. Turning it off is the stop button: in-flight requests finish,
   and what's not sent goes back to workers. Env makes the server's API
@@ -38,8 +41,7 @@ saved it, so one person's choice touches reels others saved too.
 - **Providers can be mixed per stage,** e.g. Groq for transcription and
   OpenAI for the rest, but all four must be set before the switch can go on.
 - **The loose rule for shared reels.** The server's API takes a reel if at
-  least one saver relies on it (their choice is "the server's API", or the
-  server default while it's on for all users). A user's own API is offered
+  least one saver keeps the system default. A user's own API is offered
   their reels first: the server's waits a minute. "Workers only" users have
   nothing sent on their account. But a reel someone else also saved may be
   processed by that person's API, and nothing in the request identifies the

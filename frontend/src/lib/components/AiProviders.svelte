@@ -22,7 +22,6 @@
   let tests = $state.raw<Partial<Record<AiStage, AiTest>>>({});
   let testing = $state(false);
   let asking = $state.raw<AiBacklog | null>(null);   // the backlog, while turning on
-  let scope = $state<"me" | "all">("me");
   let users = $state.raw<AiUserRow[]>([]);
   let mine = $state.raw<MyPipeline | null>(null);
 
@@ -47,7 +46,6 @@
     page = p;
     budget = p.budget.value;
     language = p.language.value ?? "";
-    if (p.switch.scope) scope = p.switch.scope;
   }
 
   async function act(change: () => Promise<unknown>, done?: string) {
@@ -113,7 +111,7 @@
 
   async function startOn() {
     try {
-      asking = await ai.backlog(whose, whose === "server" ? scope : undefined);
+      asking = await ai.backlog(whose);
     } catch (err) {
       notice = { text: (err as Error).message, kind: "error" };
     }
@@ -121,12 +119,16 @@
 
   async function confirmOn(backlog: boolean) {
     const ok = await act(
-      () => ai.switchOn(whose, backlog, whose === "server" ? scope : undefined), m.ai_on_done());
+      () => ai.switchOn(whose, backlog), m.ai_on_done());
     if (ok) asking = null;
   }
 
   const off = () => act(() => ai.switchOff(whose), m.ai_off_done());
-  const setUse = (use: AiUse) => act(() => ai.setUse(use), m.saved());
+  const setUse = (use: AiUse) => act(() => ai.setUse(whose, use), m.saved());
+
+  const USE_LABEL: Record<AiUse, () => string> = {
+    default: m.ai_use_default, mine: m.ai_use_mine, workers: m.ai_use_workers, server: m.ai_use_default,
+  };
 
   const cost = (b: AiBacklog) =>
     Math.abs(b.usd_high - b.usd_low) < 0.005
@@ -136,55 +138,51 @@
 
 {#if page}
   {@const sw = page.switch}
+  {@const hosted = page.choice === "mine"}
   <div class="ai">
-    {#if whose === "mine" && page.applies}
-      <p class="ai-applies">
-        {#if page.applies === "mine"}{m.ai_applies_mine()}
-        {:else if page.applies === "server"}{m.ai_applies_server({ providers: page.server?.providers.join(", ") ?? "" })}
-        {:else}{m.ai_applies_workers()}{/if}
-      </p>
-      <fieldset class="ai-use">
-        <legend>{m.ai_use_title()}</legend>
-        {#each (["default", "mine", "server", "workers"] as AiUse[]) as u (u)}
-          {#if u !== "server" || page.server?.available || page.use === "server"}
-            <label>
-              <input type="radio" name="ai-use" value={u} checked={page.use === u}
-                     onchange={() => setUse(u)}>
-              {({ default: m.ai_use_default, mine: m.ai_use_mine, server: m.ai_use_server, workers: m.ai_use_workers })[u]()}
-            </label>
-          {/if}
-        {/each}
-        <p class="hint">{m.ai_use_hint()}</p>
-      </fieldset>
-    {/if}
+    <fieldset class="ai-use">
+      <legend>{m.ai_use_title()}</legend>
+      {#each page.choices as u (u)}
+        <label>
+          <input type="radio" name={`ai-use-${whose}`} value={u} checked={page.choice === u}
+                 onchange={() => setUse(u)}>
+          {USE_LABEL[u]()}
+        </label>
+      {/each}
+      <p class="hint">{whose === "server" ? m.ai_admin_hint() : m.ai_use_hint()}</p>
+    </fieldset>
 
+    <p class="ai-applies">
+      {#if whose === "server"}
+        {sw.on ? m.ai_system_hosted() : hosted ? m.ai_hosted_not_started() : m.ai_system_workers()}
+      {:else if page.choice === "default"}
+        {page.applies === "server"
+          ? m.ai_applies_default_hosted({ providers: page.server?.providers.join(", ") ?? "" })
+          : m.ai_applies_default_workers()}
+      {:else if hosted}
+        {sw.on ? m.ai_applies_mine() : m.ai_hosted_not_started()}
+      {:else}{m.ai_applies_workers()}{/if}
+    </p>
+
+    {#if hosted}
     <div class={['ai-switch', { on: sw.on }]}>
       <div>
-        <b>{sw.on ? (whose === "server" ? (sw.scope === "all" ? m.ai_on_all() : m.ai_on_me()) : m.ai_on())
-               : m.ai_off()}</b>
+        <b>{sw.on ? m.ai_on() : m.ai_off()}</b>
         {#if !sw.on && sw.reason}<span class="ai-reason">{m.ai_off_because({ reason: sw.reason })}</span>{/if}
         <span class="hint">{m.ai_spent({ usd: page.spent.toFixed(2), budget: page.budget.value != null ? String(page.budget.value) : "–" })}</span>
       </div>
-      {#if whose === "server"}
-        <div class="ai-scope" role="radiogroup" aria-label={m.ai_scope_label()}>
-          <label><input type="radio" name="ai-scope" value="me" bind:group={scope}> {m.ai_scope_me()}</label>
-          <label><input type="radio" name="ai-scope" value="all" bind:group={scope}> {m.ai_scope_all()}</label>
-        </div>
-      {/if}
       <div class="a-row">
-        {#if !sw.on || (whose === "server" && scope !== sw.scope)}
+        {#if !sw.on}
           <button class="btn primary" type="button" disabled={page.problems.length > 0} onclick={startOn}>
-            {sw.on ? m.ai_change_scope() : m.ai_turn_on()}
+            {m.ai_turn_on()}
           </button>
-        {/if}
-        {#if sw.on}<button class="btn" type="button" onclick={off}>{m.ai_turn_off()}</button>{/if}
+        {:else}<button class="btn" type="button" onclick={off}>{m.ai_turn_off()}</button>{/if}
       </div>
       {#if page.problems.length && !sw.on}
         <ul class="ai-problems">{#each page.problems as p (p)}<li>{p}</li>{/each}</ul>
       {/if}
       <p class="hint">{m.ai_switch_hint()}</p>
     </div>
-
     {#if asking}
       <div class="ai-ask" role="dialog" aria-label={m.ai_backlog_title()}>
         <p>{m.ai_backlog({ count: asking.reels, cost: cost(asking) })}</p>
@@ -288,6 +286,7 @@
     </form>
 
     <p class="hint ai-privacy">{m.ai_privacy()}</p>
+    {/if}
     {#if whose === "mine"}<p class="hint">{m.ai_privacy_shared()}</p>{/if}
 
     {#if mine}
@@ -339,7 +338,6 @@
   .ai-switch.on { background: var(--accent-soft); }
   .ai-switch > div:first-child { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
   .ai-reason { color: var(--danger, #b3261e); }
-  .ai-scope { display: flex; gap: 16px; }
   .ai-problems { margin: 0; padding-left: 18px; color: var(--ink-2); }
   .ai-ask { padding: 12px; border: 1px solid var(--accent); border-radius: var(--radius); }
   .ai-ask p { margin: 0 0 8px; }
