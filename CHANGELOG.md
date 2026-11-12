@@ -6,6 +6,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.24.0] — 2026-11-13
+
+### Changed
+
+- **One AI choice each,** on Account → AI providers (#125). A user chooses
+  System default (whatever the admin chose), Hosted AI (their own provider
+  and key) or Workers only, and the settings show under Hosted AI. An admin
+  chooses Hosted AI or Workers only, and that is the system default: there
+  is no separate server section, and no "just me / all users".
+  `hikidashi ai use` takes the same choices; `--server-api` sets the system
+  default.
+
+### Fixed
+
+- Choosing how your reels are processed on Account → AI providers crashed
+  the page ("500 Internal Error").
+- Saving an API key on a server missing the `cryptography` package was a
+  server error; it now says to sync the server extra, and `./hikidashi start`
+  checks for it.
+
 ## [0.23.0] — 2026-11-12
 
 ### Added
@@ -15,9 +35,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   can do transcription, on-screen text, tags and recipes instead of a worker,
   with no GPU and no Ollama. Off by default: nothing is sent anywhere until
   someone turns a switch on.
-  - **One choice each:** System default (whatever the admin chose), Hosted
-    AI (your own provider and key), or Workers only. The admin's choice is
-    the system default.
+  - **Per user and for the server.** Each user can use their own provider and
+    key. The admin's can be on for just them or for all users, and users
+    choose: server default, their own API, the server's, or workers only.
   - **All or nothing per reel:** the API that takes a reel does every stage it
     still needs. Providers can be mixed per stage.
   - **Providers:** OpenAI, Groq (free Whisper large), Mistral, Gemini,
