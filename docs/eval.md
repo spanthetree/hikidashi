@@ -9,6 +9,7 @@ How well search and tagging do, scored the same way at every release
 <!-- make_diagrams: eval-history -->
 | version | date | blended nDCG@10 | keyword nDCG@10 | negatives quiet | tag precision | what moved it |
 |---|---|---|---|---|---|---|
+| 0.21.0 | 2026-11-12 | 0.995 | 0.749 | 4/4 | 0.921 | first row: 30 demo queries, 41 labelled reels |
 <!-- /make_diagrams -->
 
 ## What is scored

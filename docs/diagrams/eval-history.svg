@@ -15,16 +15,26 @@ text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--text);fo
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0L10,5L0,10z"/></marker></defs>
 <rect class="bg" width="720" height="260" rx="8"/>
 <text class="l" x="64" y="18">Evals on the demo library, by release (nDCG@10, precision)</text>
-<path class="grid" d="M64,214L600,214"/>
+<path class="grid" d="M64,214L560,214"/>
 <text class="c e" x="56" y="218">0.5</text>
-<path class="grid" d="M64,177.2L600,177.2"/>
+<path class="grid" d="M64,177.2L560,177.2"/>
 <text class="c e" x="56" y="181.2">0.6</text>
-<path class="grid" d="M64,140.4L600,140.4"/>
+<path class="grid" d="M64,140.4L560,140.4"/>
 <text class="c e" x="56" y="144.4">0.7</text>
-<path class="grid" d="M64,103.6L600,103.6"/>
+<path class="grid" d="M64,103.6L560,103.6"/>
 <text class="c e" x="56" y="107.6">0.8</text>
-<path class="grid" d="M64,66.8L600,66.8"/>
+<path class="grid" d="M64,66.8L560,66.8"/>
 <text class="c e" x="56" y="70.8">0.9</text>
-<path class="grid" d="M64,30L600,30"/>
+<path class="grid" d="M64,30L560,30"/>
 <text class="c e" x="56" y="34">1.0</text>
+<text class="c m" x="312" y="234">0.21.0</text>
+<circle class="blended dot" cx="312.0" cy="31.8" r="3.5"/>
+<text class="s" x="574" y="60">search, blended</text>
+<text class="l blendedt" x="574" y="76">0.995</text>
+<circle class="keyword dot" cx="312.0" cy="122.4" r="3.5"/>
+<text class="s" x="574" y="100">search, keywords only</text>
+<text class="l keywordt" x="574" y="116">0.749</text>
+<circle class="tagging dot" cx="312.0" cy="59.1" r="3.5"/>
+<text class="s" x="574" y="140">tag precision</text>
+<text class="l taggingt" x="574" y="156">0.921</text>
 </svg>
