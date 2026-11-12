@@ -80,19 +80,11 @@ def install(  # noqa: C901 -- one closure per route
     Mine = Annotated[User, Depends(ai_user)]
     Adm = Annotated[User, Depends(ai_admin)]
 
-    def routes(prefix: str, dep: Any, owner_of: Callable[[User], int | None]) -> APIRouter:  # noqa: C901
+    def routes(prefix: str, dep: Any, owner_of: Callable[[User], int | None]) -> APIRouter:
         r = APIRouter(prefix=prefix)
 
         def page(user: User) -> dict[str, Any]:
-            conn = db()
-            owner = owner_of(user)
-            out = service.show(conn, owner, data_dir())
-            api = service.load(conn, owner, data_dir())
-            out["spent"] = round(usage.spent(conn, api.name), 4)
-            if owner is not None:
-                out["applies"] = service.applies(conn, owner, data_dir())
-            out["history"] = service.history(conn, owner, 20)
-            return out
+            return service.page(db(), owner_of(user), data_dir())
 
         @r.get("")
         def show(user: dep) -> dict[str, Any]:

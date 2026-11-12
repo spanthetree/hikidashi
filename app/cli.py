@@ -43,6 +43,7 @@ COMMANDS = {
     "places": ("app.places", "find places in captions, and put them on the map"),
     "export": ("app.export", "write recipes or the library out for other tools"),
     "worker": ("app.jobs", "run the stages on new reels as they arrive"),
+    "ai": ("app.ai", "hosted AI: providers, keys, the switch, budget and usage"),
 }
 
 # After an optional import. Each stage feeds the next; OCR waits on transcripts,
@@ -67,6 +68,8 @@ LOCK = "pipeline.lock"
 # commands that write the database run on the server only.
 REMOTE_COMMANDS = {"transcribe": "asr", "ocr": "ocr", "tag": "tag", "recipe": "recipe"}
 SERVER_COMMANDS = ("import", "enrich", "embed", "places", "user", "token", "export")
+# `ai` runs anywhere: on the host it opens the database, and with --server it
+# goes through the server's routes (#125).
 
 
 class Busy(Exception):

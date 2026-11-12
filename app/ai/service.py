@@ -109,6 +109,19 @@ def show(conn: sqlite3.Connection, owner: int | None, data_dir: Path) -> dict[st
     return out
 
 
+def page(conn: sqlite3.Connection, owner: int | None, data_dir: Path) -> dict[str, Any]:
+    """Everything the settings page and `hikidashi ai show` give: the
+    settings, this month's spend, which way a user's reels go, and the log."""
+    from . import usage
+
+    out = show(conn, owner, data_dir)
+    out["spent"] = round(usage.spent(conn, load(conn, owner, data_dir).name), 4)
+    if owner is not None:
+        out["applies"] = applies(conn, owner, data_dir)
+    out["history"] = history(conn, owner, 20)
+    return out
+
+
 def presets() -> list[dict[str, Any]]:
     return [
         {
