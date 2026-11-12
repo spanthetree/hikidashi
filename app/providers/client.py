@@ -338,12 +338,18 @@ class Client:
             ],
         }
         if schema is not None and self.preset.structured == "json_schema":
+            exact = self.preset.is_strict(model)
             body["response_format"] = {
                 "type": "json_schema",
-                "json_schema": {"name": name, "schema": strict(schema), "strict": True},
+                "json_schema": {
+                    "name": name,
+                    "schema": strict(schema) if exact else schema,
+                    "strict": exact,
+                },
             }
         elif schema is not None and self.preset.structured == "json_object":
             body["response_format"] = {"type": "json_object"}
+        body.update(self.preset.extra.get(model, {}))
         data = self._chat(model, body, max_tokens)
 
         try:
@@ -412,7 +418,10 @@ class Client:
         fields = {"model": model, "response_format": "verbose_json" if segments else "json"}
         if segments:
             fields["timestamp_granularities[]"] = "segment"
-        if language:
+        listed = model in self.preset.languages
+        if language and listed:
+            fields["languages[]"] = language  # gpt-transcribe: a list, never with `language`
+        elif language:
             fields["language"] = language
         ctype, body = multipart(fields, {"file": (filename, content_type, audio)})
         data = self.request("POST", "/audio/transcriptions", body, ctype)
@@ -429,9 +438,14 @@ class Client:
             usage.output_tokens = int(u.get("output_tokens") or 0)
         if not usage.audio_seconds and isinstance(duration, int | float):
             usage.audio_seconds = float(duration)
+        heard = data.get("language") if isinstance(data.get("language"), str) else None
+        langs = data.get("languages")
+        if heard is None and isinstance(langs, list) and langs and isinstance(langs[0], dict):
+            code = langs[0].get("code")
+            heard = code if isinstance(code, str) else None
         return Transcript(
             text=data["text"],
-            language=data.get("language") if isinstance(data.get("language"), str) else None,
+            language=heard,
             duration=float(duration) if isinstance(duration, int | float) else None,
             segments=[s for s in segs if isinstance(s, dict)] if isinstance(segs, list) else None,
             usage=usage,

@@ -100,7 +100,17 @@ class TestSettings(AiCase):
         self.assertEqual(api.model("asr"), "whisper-large-v3")
         # Another provider drops the model chosen for the last.
         service.set_stage(self.conn, BOB, 2, "asr", self.dir, provider="openai")
-        self.assertEqual(config.load(self.conn, 2, self.dir).model("asr"), "whisper-1")
+        self.assertEqual(config.load(self.conn, 2, self.dir).model("asr"), "gpt-transcribe")
+
+    def test_the_base_url_env_never_redirects_a_preset(self):
+        with mock.patch.dict(os.environ, {"HIKIDASHI_OPENAI_BASE_URL": "http://lan:8000/v1"}):
+            service.set_stage(self.conn, ADMIN, None, "asr", self.dir, provider="groq")
+            api = config.load(self.conn, None, self.dir)
+            self.assertEqual(api.client("asr").base_url, "https://api.groq.com/openai/v1")
+            service.set_stage(self.conn, ADMIN, None, "tag", self.dir, provider="compatible")
+            self.assertEqual(
+                config.load(self.conn, None, self.dir).client("tag").base_url, "http://lan:8000/v1"
+            )
 
     def test_a_provider_without_a_stage_cannot_take_it(self):
         import dataclasses

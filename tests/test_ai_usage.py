@@ -15,8 +15,8 @@ from tests.test_ai_settings import ADMIN, BOB, AiCase
 class TestCost(unittest.TestCase):
     def test_tokens_and_cache(self):
         u = Usage(input_tokens=1_000_000, cached_tokens=500_000, output_tokens=1_000_000)
-        # gpt-4.1-mini: 0.40 in, 0.10 cached, 1.60 out
-        self.assertAlmostEqual(usage.cost("openai:gpt-4.1-mini", u), 0.20 + 0.05 + 1.60)
+        # gpt-6-luna: 0.10 in, 0.01 cached, 0.50 out
+        self.assertAlmostEqual(usage.cost("openai:gpt-6-luna", u), 0.05 + 0.005 + 0.50)
 
     def test_audio(self):
         self.assertAlmostEqual(usage.cost("openai:whisper-1", Usage(audio_seconds=120)), 0.012)
@@ -51,7 +51,7 @@ class TestUsage(AiCase):
         api = config.load(self.conn, 2, self.dir)
         self.conn.execute("UPDATE item SET duration = 60")
         est = usage.estimate(self.conn, api, ["B1", "S1"])
-        self.assertGreater(est["usd_low"], 0.012)  # two minutes of whisper-1, and more
+        self.assertGreater(est["usd_low"], 0.009)  # two minutes of gpt-transcribe, and more
         self.assertGreater(est["usd_high"], est["usd_low"])
         self.assertEqual(est["unpriced"], [])
         self.assertEqual(usage.estimate(self.conn, api, [])["usd_high"], 0.0)

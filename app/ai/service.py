@@ -28,7 +28,7 @@ from app.providers import Check
 from app.providers import test as test_connection
 from app.providers.client import Client, ProviderError
 from app.providers.keys import Key
-from app.providers.presets import COMPATIBLE, PRESETS, STAGES
+from app.providers.presets import PRESETS, STAGES
 
 from . import config, eligible, secrets
 from .config import Api
@@ -133,7 +133,8 @@ def presets() -> list[dict[str, Any]]:
             "free": p.free,
             "terms": p.terms,
             "checked": p.checked,
-            "needs_base_url": p.name == COMPATIBLE,
+            "needs_base_url": p.needs_base_url,
+            "key_env": p.key_env,
         }
         for p in PRESETS.values()
     ]
@@ -478,10 +479,11 @@ def _client_for(api: Api, provider: str, base_url: str | None) -> Client:
     p = PRESETS.get(provider)
     if p is None:
         raise Invalid(f"unknown provider {provider!r}")
-    if p.name == COMPATIBLE and not base_url:
-        raise Invalid("an OpenAI-compatible URL needs a base URL")
+    if p.needs_base_url and not base_url:
+        raise Invalid(f"{p.label} needs a base URL")
     try:
-        return Client(p, api.key(provider), base_url=base_url or None, timeout=30)
+        url = base_url if p.needs_base_url else None
+        return Client(p, api.key(provider), base_url=url or None, timeout=30)
     except ValueError as exc:
         raise Invalid(str(exc)) from exc
 

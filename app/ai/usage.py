@@ -48,12 +48,15 @@ class Price:
 # provider:model. To be checked against each provider's pricing page, with
 # the date above; docs/operation.md lists the sources.
 PRICES: dict[str, Price] = {
-    "openai:whisper-1": Price(minute=0.006),
-    "openai:gpt-4o-transcribe": Price(minute=0.006),
-    "openai:gpt-4o-mini-transcribe": Price(minute=0.003),
-    "openai:gpt-4.1-mini": Price(input=0.40, output=1.60, cached=0.10),
-    "openai:gpt-4.1-nano": Price(input=0.10, output=0.40, cached=0.025),
-    "openai:gpt-4o-mini": Price(input=0.15, output=0.60, cached=0.075),
+    # https://developers.openai.com/api/docs/pricing
+    "openai:gpt-transcribe": Price(minute=0.0045),
+    "openai:gpt-live-transcribe": Price(minute=0.017),
+    "openai:whisper-1": Price(minute=0.006),  # shuts down 2027-02-26
+    "openai:gpt-4o-transcribe": Price(minute=0.006),  # shuts down 2027-02-26
+    "openai:gpt-4o-mini-transcribe": Price(minute=0.003),  # shuts down 2027-02-26
+    "openai:gpt-6-luna": Price(input=0.10, output=0.50, cached=0.01),
+    "openai:gpt-5.6-luna": Price(input=0.20, output=1.20, cached=0.02),
+    # https://groq.com/pricing; to check again before relying on a budget
     "groq:whisper-large-v3-turbo": Price(minute=0.04 / 60),
     "groq:whisper-large-v3": Price(minute=0.111 / 60),
     "groq:openai/gpt-oss-20b": Price(input=0.075, output=0.30),

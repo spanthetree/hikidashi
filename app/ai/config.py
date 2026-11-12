@@ -147,7 +147,7 @@ class Api:
                 out.append(f"{name}: {p.label} cannot do {name}")
             if not (st.model.value or p.model(name)):
                 out.append(f"{name}: no model set")
-            if p.name == COMPATIBLE and not st.base_url.value:
+            if p.needs_base_url and not st.base_url.value:
                 out.append(f"{name}: no base URL set")
             if p.name != COMPATIBLE and self.key(p.name) is None:
                 problem = self.keys.get(p.name)
@@ -168,7 +168,10 @@ class Api:
         p = st.preset
         if p is None:
             raise ValueError(f"{stage}: no provider set")
-        return Client(p, self.key(p.name), base_url=st.base_url.value or None)
+        # A base URL is the setting's only where the preset has none of its
+        # own: HIKIDASHI_OPENAI_BASE_URL never sends Groq's requests elsewhere.
+        url = st.base_url.value if p.needs_base_url else None
+        return Client(p, self.key(p.name), base_url=url or None)
 
     def json(self) -> dict[str, Any]:
         """Everything the settings pages show. Keys only masked."""

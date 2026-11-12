@@ -76,8 +76,7 @@ class TestLocal(CliCase):
         # and --server-api do not go together.
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(self.run_cli("show", "--user", "bob", "--server-api")[0], 2)
-        code, _, err = self.run_cli("on", "--server-api", "--yes")
-        self.assertEqual(code, 2)
+        self.assertEqual(self.run_cli("on", "--server-api", "--yes")[0], 2)
 
     def test_env_locked(self):
         with mock.patch.dict(os.environ, {"HIKIDASHI_LLM_MODEL": "x"}):

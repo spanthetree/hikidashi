@@ -110,14 +110,23 @@ class TestKeys(unittest.TestCase):
 
 
 class TestPresets(unittest.TestCase):
-    def test_each_preset_has_a_default_model_for_what_it_can_do(self):
+    def test_a_preset_with_defaults_has_one_for_all_it_can_do(self):
         for p in PRESETS.values():
             self.assertTrue(p.checked, p.name)
-            if p.name == COMPATIBLE:
-                continue
+            if not p.models:
+                continue  # models not checked: chosen from the provider's list
             for stage in STAGES:
                 if p.does(stage):
                     self.assertTrue(p.model(stage), (p.name, stage))
+        self.assertTrue(PRESETS["openai"].models and PRESETS["groq"].models)
+
+    def test_what_each_can_do(self):
+        self.assertFalse(get("gemini").does("asr"))  # no transcription endpoint
+        self.assertFalse(get("cerebras").does("ocr"))
+        self.assertTrue(get("mistral").does("asr"))
+        self.assertTrue(get("cloudflare").needs_base_url)
+        self.assertTrue(get("groq").is_strict("openai/gpt-oss-20b"))
+        self.assertFalse(get("groq").is_strict("meta-llama/llama-4-scout-17b-16e-instruct"))
 
     def test_stage_needs(self):
         self.assertTrue(get("openai").does("ocr"))
@@ -222,6 +231,19 @@ class TestChat(FakeCase):
         self.assertEqual(sent["temperature"], 0)
         self.assertEqual(r.usage.input_tokens, 120)
         self.assertEqual(r.usage.cached_tokens, 64)
+
+    def test_best_effort_schema_and_extra_params(self):
+        self.fake.chat_reply = lambda req: {"summary": "x"}
+        client(self.fake, "groq").chat(
+            "meta-llama/llama-4-scout-17b-16e-instruct", "s", "u", max_tokens=5, schema=SCHEMA
+        )
+        client(self.fake, "groq").chat("openai/gpt-oss-20b", "s", "u", max_tokens=5, schema=SCHEMA)
+        scout, oss = (r.json() for r in self.fake.seen("/chat/completions"))
+        self.assertIs(scout["response_format"]["json_schema"]["strict"], False)
+        self.assertIn("maxItems", str(scout["response_format"]))  # sent as written
+        self.assertIs(oss["response_format"]["json_schema"]["strict"], True)
+        self.assertEqual(oss["reasoning_effort"], "low")
+        self.assertNotIn("reasoning_effort", scout)
 
     def test_json_object_puts_the_schema_in_the_prompt(self):
         self.fake.chat_reply = lambda req: '```json\n{"summary": "x"}\n```'
@@ -376,6 +398,16 @@ class TestTranscribe(FakeCase):
         self.assertEqual(form["response_format"], "verbose_json")
         self.assertEqual(form["language"], "en")
         self.assertEqual(form["model"], "whisper-1")
+
+    def test_a_languages_list(self):
+        self.fake.then(
+            "/audio/transcriptions", 200, {"text": "bonjour", "languages": [{"code": "fr"}]}
+        )
+        t = client(self.fake).transcribe("gpt-transcribe", b"audio", language="fr")
+        self.assertEqual(t.language, "fr")
+        form = self.fake.seen("/audio/transcriptions")[0].form()
+        self.assertEqual(form["languages[]"], "fr")
+        self.assertNotIn("language", form)
 
     def test_plain_json(self):
         t = client(self.fake).transcribe("gpt-4o-mini-transcribe", b"audio")
