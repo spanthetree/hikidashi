@@ -33,7 +33,7 @@ jobs:
       version: ${{ steps.read.outputs.version }}
       new: ${{ steps.read.outputs.new }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: read
         name: Is this version released?
         run: |
@@ -66,7 +66,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Tag and release
         env:
           GH_TOKEN: ${{ github.token }}
