@@ -44,7 +44,21 @@ tagging and recipes. Leave out `--ai` to use an Ollama you already run, at
 of pulling them.
 
 `./hikidashi` picks Docker once its container exists, so later commands need no
-`--docker`. The containers run as root unless `HIKIDASHI_USER` says otherwise
+`--docker`.
+
+**On a low-power device,** such as a small NAS or an ARM board, run the server
+without the worker container or Ollama. In `.env`:
+
+```bash
+COMPOSE_FILE=docker-compose.yml:docker-compose.server-only.yml
+```
+
+Then `./hikidashi --docker start`, without `--ai`. The server still fetches new
+reels and embeds them, so they are searchable by caption and by meaning.
+Transcripts, on-screen text, tags and recipes are done by a
+[remote worker](remote-workers.md) on another machine whenever it runs. To
+transcribe and read on the device itself while that machine is off, leave
+`COMPOSE_FILE` alone and set `HIKIDASHI_LOCAL_STAGES=asr,ocr` instead. The containers run as root unless `HIKIDASHI_USER` says otherwise
 ([configuration](configuration.md)).
 
 ## With uv

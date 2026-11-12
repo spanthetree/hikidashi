@@ -83,8 +83,24 @@ in as the workers get through the library.
 - **Unraid:** templates or Compose Manager. See [Installing on Unraid](docs/install-unraid.md).
 - **TrueNAS SCALE:** one YAML file. See [Installing on TrueNAS SCALE](docs/install-truenas.md).
 
-A NAS can serve the library while a desktop with a GPU does the transcription
-and tagging: see [Remote workers](docs/remote-workers.md).
+### On a low-power device
+
+A small NAS or an ARM board can run the server on its own, without the
+worker container or Ollama. Put this line in a `.env` file in the checkout, then
+start without `--ai`:
+
+```bash
+COMPOSE_FILE=docker-compose.yml:docker-compose.server-only.yml
+```
+
+```bash
+./hikidashi --docker start
+```
+
+The server still downloads new reels and makes them searchable by caption and
+by meaning. Transcripts, on-screen text, tags and recipes come from a worker
+on another machine, ideally one with a GPU, whenever it runs: see
+[Remote workers](docs/remote-workers.md).
 
 ### Requirements
 
