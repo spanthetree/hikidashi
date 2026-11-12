@@ -377,7 +377,15 @@ TAXONOMY: dict[str, tuple[frozenset[str], tuple[str, ...]]] = {
                 "motivation",
             }
         ),
-        ("parenting", "motherhood", "fatherhood", "mentalhealth", "selfcare", "mindful", "wellbeing"),
+        (
+            "parenting",
+            "motherhood",
+            "fatherhood",
+            "mentalhealth",
+            "selfcare",
+            "mindful",
+            "wellbeing",
+        ),
     ),
     "Style & beauty": (
         frozenset(
@@ -397,7 +405,17 @@ TAXONOMY: dict[str, tuple[frozenset[str], tuple[str, ...]]] = {
                 "streetwear",
             }
         ),
-        ("fashion", "outfit", "makeup", "skincare", "hairstyl", "haircut", "menswear", "streetwear", "beauty"),
+        (
+            "fashion",
+            "outfit",
+            "makeup",
+            "skincare",
+            "hairstyl",
+            "haircut",
+            "menswear",
+            "streetwear",
+            "beauty",
+        ),
     ),
 }
 
