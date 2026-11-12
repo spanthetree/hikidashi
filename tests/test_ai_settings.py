@@ -393,6 +393,28 @@ class TestRoutes(base.SignInCase):
         r = self.client.post("/api/admin/ai/requeue", json={"stage": "nope", "made_by": "cpu"})
         self.assertEqual(r.status_code, 400)
 
+    def test_every_change_answers_with_the_whole_page(self):
+        """The page replaces what it shows with each answer: one missing a
+        field crashed it (0.23.0's /use had no `spent`)."""
+        want = {"stages", "keys", "switch", "spent", "history", "choice", "choices", "applies"}
+        bob = self.bob()
+        for method, path, body in (
+            ("GET", "/api/me/providers", None),
+            ("PUT", "/api/me/providers/use", {"use": "mine"}),
+            ("PUT", "/api/me/providers/stages/asr", {"provider": "groq"}),
+            ("PUT", "/api/me/providers/budget", {"usd": 2}),
+            ("PUT", "/api/me/providers/language", {"code": "ja"}),
+            ("PUT", "/api/me/providers/keys/groq", {"key": "gsk_abcdefghijklmnop1234"}),
+            ("DELETE", "/api/me/providers/keys/groq", None),
+            ("POST", "/api/me/providers/switch", {"on": False}),
+            ("PUT", "/api/me/providers/use", {"use": "workers"}),
+        ):
+            r = bob.request(method, path, json=body)
+            self.assertEqual(r.status_code, 200, (path, r.text))
+            self.assertLessEqual(want, set(r.json()), path)
+        r = self.client.put("/api/admin/settings/providers/use", json={"use": "mine"})
+        self.assertLessEqual(want - {"applies"}, set(r.json()))
+
     def test_bad_input_is_400(self):
         r = self.client.put("/api/me/providers/stages/asr", json={"provider": "nope"})
         self.assertEqual(r.status_code, 400)
