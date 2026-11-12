@@ -29,7 +29,7 @@ two workers never hold one reel and a dead one's reels come back; readiness,
 so a reel waits for the stages before it; and an attempts cap, so a reel that
 crashes the worker is given up on. It reaches the database through a small
 job source, which is local SQLite today and will be HTTP for workers on other
-hosts (#35), so the loop is the same either way.
+hosts ([#35](https://github.com/spanthetree/hikidashi/issues/35)), so the loop is the same either way.
 
 **One tag per reel, with provenance.** `item_tag` holds one answer per source
 (`hashtag`, `model`, `game`), and yours is in `user_item`, so re-running any
@@ -107,7 +107,7 @@ weakly means the food when no reel says it.
 
 ## Finding places in captions
 
-Calibrated against the real library rather than guessed at. Of 420 captions, 59
+Calibrated against a real library of 420 saves rather than guessed at. Of 420 captions, 59
 use a 📍 pin, 22 contain a street address, and 2 use a `Where:` label. The pin
 is the strongest signal and usually carries a venue name as well as an address —
 `📍Corner Noodle Bar — 12 Example St, Portland, OR 97201` — which makes a
@@ -202,7 +202,7 @@ frontend/           Svelte 5 + SvelteKit, built with adapter-static
     filters.ts      search, filters and sort in the query string
     motion.svelte.ts   every transition, and the reduced-motion fallbacks
     theme.svelte.ts    the chosen theme, light/dark mode and pixel art, set on <html>
-  src/app.css       design tokens: the Instagram theme, and every theme's defaults
+  src/app.css       design tokens: the Hikidashi theme, and every theme's defaults
   src/themes/       the other themes, then pixel art over any of them
   static/icon.svg   favicon and header mark
   scripts/record-demo.mjs  films the README animation and the tour

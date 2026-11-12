@@ -68,6 +68,9 @@ The interface fonts (Audiowide, DotGothic16, Exo 2, Jost, Orbitron, Pixelify
 Sans, Press Start 2P, Rajdhani, Righteous) are under the
 [SIL Open Font License 1.1](https://openfontlicense.org), bundled from
 Fontsource.
+The lettering in the wordmark and the social preview
+(`docs/brand/`) is drawn from Zen Maru Gothic and Zen Kaku Gothic New, under
+the same license, as outlines: the fonts themselves are not included.
 
 ## Services
 

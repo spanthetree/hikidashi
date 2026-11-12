@@ -1,7 +1,7 @@
 # Tags
 
 What a tag is, what was decided about each one in the October 2026 audit
-(#21), and how the result is measured.
+([#21](https://github.com/spanthetree/hikidashi/issues/21)), and how the result is measured.
 [Back to the README](../README.md)
 
 ## The model
@@ -52,7 +52,7 @@ items had one tag, 134 had two, 70 had three to five, and 33 had none.
 | tag        | items | decision | why |
 |------------|------:|----------|-----|
 | Travel     | 154 | keep | the largest group |
-| Food       | 107 | keep | also the Recipes candidate filter (#13) |
+| Food       | 107 | keep | also the Recipes candidate filter ([#13](https://github.com/spanthetree/hikidashi/issues/13)) |
 | Automotive |  68 | keep | |
 | Technology |  51 | keep | absorbs the `websites` and `hacking` proposals |
 | Design     |  34 | keep | |
@@ -76,7 +76,7 @@ once for a flight simulator. So after the migration, where the model outranks
 the hashtags, only 5 reels show Sim racing. The other 8 show what the old
 model said, mostly Automotive. The next `./hikidashi tag --llm` re-tags every
 reel (`TAG_V` 2), with one category and its definition. Check the result
-with `--eval` once #6 has labels. If the model still misfiles sim rigs, fold
+with `--eval` once [#6](https://github.com/spanthetree/hikidashi/issues/6) has labels. If the model still misfiles sim rigs, fold
 the category.
 
 A removed category is gone from both passes and the model's choices. An old
@@ -136,10 +136,10 @@ model run fills those in.
 
 ## Games
 
-The one category stays one (#21), but a gaming reel is mostly about one game,
-which is worth knowing and finding. Since #117 the tagger asks those reels
+The one category stays one ([#21](https://github.com/spanthetree/hikidashi/issues/21)), but a gaming reel is mostly about one game,
+which is worth knowing and finding. Since [#117](https://github.com/spanthetree/hikidashi/issues/117) the tagger asks those reels
 which game they show; [the pipeline](pipeline.md#which-game) has the questions
-and the rule. The rule was set on this library's 39 candidates (32 filed under
+and the rule. The rule was set on a real library's 39 candidates (32 filed under
 Gaming or Sim racing, 7 by their text), each read by hand:
 
 | | Reels | Right |
@@ -169,7 +169,7 @@ and a guess costs one click.
 ## Measuring it
 
 ```bash
-./hikidashi tag --eval                         # this library
+./hikidashi tag --eval                         # your library
 ./hikidashi tag --eval --db backup.sqlite3     # another one's answers, today's labels
 ```
 
@@ -179,7 +179,7 @@ report gives, for the model, the hashtags and what the reel shows without
 you, how many labelled reels each answered and how often it was right.
 
 **Not measured yet.** The library has no hand-set tags, so there is no
-precision to report. The calibration set is #6: label about 50 reels across
+precision to report. The calibration set is [#6](https://github.com/spanthetree/hikidashi/issues/6): label about 50 reels across
 the categories in the detail sheet, then run `--eval`. To compare the old
 tagger, keep a copy of the database from before upgrading and pass it as
 `--db`. Its multi-tag answers score under **hit**, meaning your tag was among

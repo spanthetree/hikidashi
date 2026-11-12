@@ -46,19 +46,19 @@ flowchart LR
 | Map tiles | your browser, on the map view | the tile coordinates you look at | `HIKIDASHI_TILES` pointing at your own |
 
 Installing and updating under Docker pulls the images from GitHub's
-registry, `ghcr.io/spanthetree` (#77): an image pull, with nothing of your
+registry, `ghcr.io/spanthetree` ([#77](https://github.com/spanthetree/hikidashi/issues/77)): an image pull, with nothing of your
 library in it. `--build` and a `HIKIDASHI_VERSION` nobody published build
 from the checkout instead.
 
 Ollama is part of the system, not outside it: it runs on the server
 (`./hikidashi start --ai`) or on the machine of the worker that calls it. The
-server itself never calls Ollama (#86).
+server itself never calls Ollama ([#86](https://github.com/spanthetree/hikidashi/issues/86)).
 
 ## Containers and images
 
-Two images built from one `Dockerfile`, plus the upstream Ollama image (#86).
+Two images built from one `Dockerfile`, plus the upstream Ollama image ([#86](https://github.com/spanthetree/hikidashi/issues/86)).
 Each release publishes them to `ghcr.io/spanthetree`
-(`.github/workflows/release.yml`, #77): the server and worker images for
+(`.github/workflows/release.yml`, [#77](https://github.com/spanthetree/hikidashi/issues/77)): the server and worker images for
 amd64 and arm64, the cuda one for amd64. The compose files pull them, and
 build from the checkout only with `--build` or when there is nothing to
 pull.
@@ -419,7 +419,7 @@ A few things the diagrams can't show:
   a sure video game on a reel the others filed elsewhere), else the model's,
   else the hashtags'. `item.primary_tag` is kept by triggers so it can be
   indexed for search.
-- **The game a reel shows** (#117) is `item.game` when the tagger is sure of
+- **The game a reel shows** ([#117](https://github.com/spanthetree/hikidashi/issues/117)) is `item.game` when the tagger is sure of
   it, and indexed; `item.game_guess` when it is not, to ask about; and
   `user_item.game` when its saver has said, `''` meaning none. Like the tag,
   a person's answer is theirs alone and outranks the pass's.
@@ -470,7 +470,7 @@ do, because there is no SQLite on it.
 
 `hikidashi.sqlite3-init.lock` makes opening the database one process at a
 time: the schema and migrations are many statements, and on a first start
-every container opens a new database at once (#87).
+every container opens a new database at once ([#87](https://github.com/spanthetree/hikidashi/issues/87)).
 
 `run/worker.wake` is how an import wakes the workers: a file's mtime, because
 it crosses processes and containers that share the folder, where a signal or a

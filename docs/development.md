@@ -135,8 +135,9 @@ installs them (`.github/workflows/tests.yml`) so they run there.
 [testing.md](testing.md) has the rest: the browser tests, coverage, property
 tests, ruff and mypy, the seeded library they share, and what CI runs when.
 
-Search quality has its own check against the real library, separate from the
-tests: `uv run python -m app.search.eval` (see [search.md](search.md)). Run it
+Search quality has its own check, separate from the tests:
+`uv run python -m app.search.eval`, over the demo library's queries or your
+own (see [search.md](search.md)). Run it
 before and after any change to `app/search/` or to what gets embedded.
 
 ## Regenerating the diagrams
@@ -157,7 +158,7 @@ Generated Mermaid sits between `<!-- make_diagrams: NAME -->` and
 fails when any output is stale, so CI does too. A new table must be added to
 one of `GROUPS` in the script, or the run stops and says so.
 
-The animated SVGs follow #88's rules, which the script's docstring repeats:
+The animated SVGs follow [#88](https://github.com/spanthetree/hikidashi/issues/88)'s rules, which the script's docstring repeats:
 CSS animation only, a dark theme under `prefers-color-scheme`, the end state as
 the base style (what reduced motion and non-animating viewers show), anything
 still to appear drawn faint in the first frame, no raster images, and an
@@ -188,6 +189,7 @@ uv run python scripts/make_diagrams.py          # draws the terminal from that r
 cd frontend
 node scripts/record-demo.mjs hero               # docs/demo/app.webp
 node scripts/record-demo.mjs tour               # docs/demo/tour.mp4
+node scripts/screenshots.mjs                    # the stills: docs/demo/*.webp
 ```
 
 The demo runs on its own files and port, so it never touches `data/` or a
@@ -195,6 +197,12 @@ running Hikidashi, but it reads models from `data/models` and asks the Ollama at
 `OLLAMA_URL`. It uses the CPU profile unless `HIKIDASHI_PROFILE` says otherwise.
 Places are looked up on a stub geocoder inside `demo_library.py`, which knows
 only the places the captions name.
+
+`screenshots.mjs` takes the stills in the docs (a reel open, a recipe, the
+import box, the pipeline page, the Japanese UI and the four themes) in a
+headless browser, in the same fonts; name one (`screenshots.mjs themes`) to
+take only that. Run `demo_library.py worker` too while it takes `pipeline`,
+or the page shows no worker running.
 
 `record-demo.mjs` needs Xvfb, ffmpeg with libwebp and libx264, and Playwright's
 Chromium (`npx playwright install chromium`). It films a real browser at

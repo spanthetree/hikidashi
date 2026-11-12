@@ -88,8 +88,8 @@ What is covered so far:
 | Flow | File |
 |------|------|
 | First run: a library is claimed with the setup link and opens on the import box, its link to Instagram's export page in a new tab; a wrong token is refused; the owner signs out and back in; an invite makes one account, once | `first-run.spec.ts` |
-| Isolation (#12): Bob's grid, sidebar and search hold none of Alice's reels; her deep link opens nothing; her reel and its files are a 404, like a reel nobody has; the reel they share opens for both | `isolation.spec.ts` |
-| Importing an export (#105): chosen in the import box, dropped on its zone, or dropped anywhere on the page; a file that isn't a ZIP refused without being sent; the toolbar's dialog keeps focus, closes on Esc and gives focus back; what one person imports lands in their library only | `import.spec.ts` |
+| Isolation ([#12](https://github.com/spanthetree/hikidashi/issues/12)): Bob's grid, sidebar and search hold none of Alice's reels; her deep link opens nothing; her reel and its files are a 404, like a reel nobody has; the reel they share opens for both | `isolation.spec.ts` |
+| Importing an export ([#105](https://github.com/spanthetree/hikidashi/issues/105)): chosen in the import box, dropped on its zone, or dropped anywhere on the page; a file that isn't a ZIP refused without being sent; the toolbar's dialog keeps focus, closes on Esc and gives focus back; what one person imports lands in their library only | `import.spec.ts` |
 
 Selectors are what a person sees (roles, labels, text) where that is stable,
 and `data-card` for cards. The English strings come from
@@ -103,7 +103,7 @@ it fails on Alice's thumbnail. Both were tried while writing it.
 
 **In CI** the `e2e` job runs inside Playwright's own image,
 `mcr.microsoft.com/playwright`, which already has Chromium and the system
-packages it needs, so nothing is installed from Ubuntu's mirrors (#131). Its
+packages it needs, so nothing is installed from Ubuntu's mirrors ([#131](https://github.com/spanthetree/hikidashi/issues/131)). Its
 tag names a Playwright release, and the browsers in it only work with that
 release of `@playwright/test`: when one moves in `frontend/package.json`, move
 the `container:` tag in `.github/workflows/tests.yml` with it.
@@ -197,7 +197,7 @@ crashing when no enabled admin existed, a route function shadowing the
 `TestCase.fail`.
 
 Mutation testing (mutmut) was tried and set aside for now: it needs pytest,
-and its repeated runs tripped Hypothesis's health checks. #70 has what was
+and its repeated runs tripped Hypothesis's health checks. [#70](https://github.com/spanthetree/hikidashi/issues/70) has what was
 learnt, for when it comes back as a nightly job.
 
 ## Not yet
@@ -206,8 +206,8 @@ Each has a follow-up issue:
 
 - The remaining browser flows: search and filters through the URL, the
   detail sheet, editing tags and recipes, 日本語, reduced motion, sharing,
-  and semantic search with the embedder (#66)
-- WebKit, Firefox and phone viewports (#67)
-- Accessibility (axe) and visual regression checks (#68)
-- Svelte component tests, and StrykerJS for `frontend/src/lib/` (#69)
-- Mutation testing with mutmut, nightly (#70)
+  and semantic search with the embedder ([#66](https://github.com/spanthetree/hikidashi/issues/66))
+- WebKit, Firefox and phone viewports ([#67](https://github.com/spanthetree/hikidashi/issues/67))
+- Accessibility (axe) and visual regression checks ([#68](https://github.com/spanthetree/hikidashi/issues/68))
+- Svelte component tests, and StrykerJS for `frontend/src/lib/` ([#69](https://github.com/spanthetree/hikidashi/issues/69))
+- Mutation testing with mutmut, nightly ([#70](https://github.com/spanthetree/hikidashi/issues/70))

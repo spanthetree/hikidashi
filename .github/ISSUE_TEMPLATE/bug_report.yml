@@ -1,0 +1,69 @@
+name: Bug report
+description: Something in Hikidashi doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting it. A security problem goes to a
+        [private report](https://github.com/spanthetree/hikidashi/security/advisories/new)
+        instead ([SECURITY.md](https://github.com/spanthetree/hikidashi/blob/master/SECURITY.md)).
+
+        Logs and screenshots can show your saves: captions, creators' handles,
+        file names. Look them over and blank out anything you'd rather not post.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Import an export ZIP with…
+        2. Search for…
+        3. …
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The image tag or release, e.g. 0.18.7. For a branch build, the commit.
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How it is installed
+      options:
+        - Docker Compose
+        - Unraid
+        - TrueNAS SCALE
+        - uv (from source)
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: workers
+    attributes:
+      label: Workers
+      options:
+        - The default (server and worker on one machine, CPU)
+        - With a GPU (cuda image)
+        - With a remote worker
+        - Not sure
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      description: For anything in the web app, e.g. Safari on iPhone, Firefox on Windows.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        From the Logs page, `./hikidashi logs`, or `docker compose logs app worker`.
+        The lines around the error are usually enough.
+      render: text

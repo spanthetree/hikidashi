@@ -671,6 +671,64 @@ wheels = [
 ]
 
 [[package]]
+name = "hikidashi"
+version = "0.18.8"
+source = { editable = "." }
+
+[package.optional-dependencies]
+cuda = [
+    { name = "nvidia-cublas-cu12" },
+    { name = "nvidia-cudnn-cu12" },
+]
+server = [
+    { name = "argon2-cffi" },
+    { name = "fastapi" },
+    { name = "fastembed" },
+    { name = "python-multipart" },
+    { name = "sqlite-vec" },
+    { name = "uvicorn", extra = ["standard"] },
+    { name = "yt-dlp" },
+]
+worker = [
+    { name = "faster-whisper" },
+]
+
+[package.dev-dependencies]
+lint = [
+    { name = "mypy" },
+    { name = "ruff" },
+]
+test = [
+    { name = "coverage" },
+    { name = "hypothesis" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "argon2-cffi", marker = "extra == 'server'", specifier = "==25.1.0" },
+    { name = "fastapi", marker = "extra == 'server'", specifier = "==0.115.6" },
+    { name = "fastembed", marker = "extra == 'server'", specifier = "==0.9.0" },
+    { name = "faster-whisper", marker = "extra == 'worker'", specifier = "==1.2.1" },
+    { name = "nvidia-cublas-cu12", marker = "extra == 'cuda'", specifier = "==12.9.2.10" },
+    { name = "nvidia-cudnn-cu12", marker = "extra == 'cuda'", specifier = "==9.*" },
+    { name = "python-multipart", marker = "extra == 'server'", specifier = "==0.0.20" },
+    { name = "sqlite-vec", marker = "extra == 'server'", specifier = "==0.1.9" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'server'", specifier = "==0.34.0" },
+    { name = "yt-dlp", marker = "extra == 'server'", specifier = "==2026.8.19" },
+]
+provides-extras = ["server", "worker", "cuda"]
+
+[package.metadata.requires-dev]
+lint = [
+    { name = "mypy", specifier = "==2.4.0" },
+    { name = "ruff", specifier = "==0.17.0" },
+]
+test = [
+    { name = "coverage", specifier = "==7.17.0" },
+    { name = "hypothesis", specifier = "==6.170.9" },
+]
+
+[[package]]
 name = "httpcore"
 version = "1.0.9"
 source = { registry = "https://pypi.org/simple" }
@@ -1596,64 +1654,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/da/92/1446574745d74df0c92e6aa4a7b0b3130706a4142b2d1a5869f2eaa423c6/pyyaml-6.0.3-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:16249ee61e95f858e83976573de0f5b2893b3677ba71c9dd36b9cf8be9ac6d65", size = 829923, upload-time = "2025-09-25T21:32:54.537Z" },
     { url = "https://files.pythonhosted.org/packages/f0/7a/1c7270340330e575b92f397352af856a8c06f230aa3e76f86b39d01b416a/pyyaml-6.0.3-cp314-cp314t-win_amd64.whl", hash = "sha256:4ad1906908f2f5ae4e5a8ddfce73c320c2a1429ec52eafd27138b7f1cbe341c9", size = 174062, upload-time = "2025-09-25T21:32:55.767Z" },
     { url = "https://files.pythonhosted.org/packages/f1/12/de94a39c2ef588c7e6455cfbe7343d3b2dc9d6b6b2f40c4c6565744c873d/pyyaml-6.0.3-cp314-cp314t-win_arm64.whl", hash = "sha256:ebc55a14a21cb14062aa4162f906cd962b28e2e9ea38f9b4391244cd8de4ae0b", size = 149341, upload-time = "2025-09-25T21:32:56.828Z" },
-]
-
-[[package]]
-name = "hikidashi"
-version = "0.18.7"
-source = { editable = "." }
-
-[package.optional-dependencies]
-cuda = [
-    { name = "nvidia-cublas-cu12" },
-    { name = "nvidia-cudnn-cu12" },
-]
-server = [
-    { name = "argon2-cffi" },
-    { name = "fastapi" },
-    { name = "fastembed" },
-    { name = "python-multipart" },
-    { name = "sqlite-vec" },
-    { name = "uvicorn", extra = ["standard"] },
-    { name = "yt-dlp" },
-]
-worker = [
-    { name = "faster-whisper" },
-]
-
-[package.dev-dependencies]
-lint = [
-    { name = "mypy" },
-    { name = "ruff" },
-]
-test = [
-    { name = "coverage" },
-    { name = "hypothesis" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "argon2-cffi", marker = "extra == 'server'", specifier = "==25.1.0" },
-    { name = "fastapi", marker = "extra == 'server'", specifier = "==0.115.6" },
-    { name = "fastembed", marker = "extra == 'server'", specifier = "==0.9.0" },
-    { name = "faster-whisper", marker = "extra == 'worker'", specifier = "==1.2.1" },
-    { name = "nvidia-cublas-cu12", marker = "extra == 'cuda'", specifier = "==12.9.2.10" },
-    { name = "nvidia-cudnn-cu12", marker = "extra == 'cuda'", specifier = "==9.*" },
-    { name = "python-multipart", marker = "extra == 'server'", specifier = "==0.0.20" },
-    { name = "sqlite-vec", marker = "extra == 'server'", specifier = "==0.1.9" },
-    { name = "uvicorn", extras = ["standard"], marker = "extra == 'server'", specifier = "==0.34.0" },
-    { name = "yt-dlp", marker = "extra == 'server'", specifier = "==2026.8.19" },
-]
-provides-extras = ["server", "worker", "cuda"]
-
-[package.metadata.requires-dev]
-lint = [
-    { name = "mypy", specifier = "==2.4.0" },
-    { name = "ruff", specifier = "==0.17.0" },
-]
-test = [
-    { name = "coverage", specifier = "==7.17.0" },
-    { name = "hypothesis", specifier = "==6.170.9" },
 ]
 
 [[package]]

@@ -8,6 +8,12 @@
 @import "@fontsource/rajdhani/700.css";
 
 :root[data-theme="cyberpunk"] {
+  /* The mark: a hazard drawer with its corners cut, neon cards. */
+  --logo-card: #00b8c8;
+  --logo-lit: #b8002c;
+  --logo-body: #0a0a0f;
+  --logo-slot: #fcee0a;
+  --logo-body-clip: polygon(0 0, 88% 0, 100% 25%, 100% 100%, 12% 100%, 0 75%);
   --paper: #fcee0a;
   --surface: #fcee0a;
   --surface-2: #ecdd00;
@@ -40,6 +46,11 @@
 }
 
 :root[data-theme="cyberpunk"][data-scheme="dark"] {
+  --logo-card: #00f0ff;
+  --logo-lit: #ff003c;
+  --logo-body: #fcee0a;
+  --logo-slot: #07080c;
+  --logo-filter: drop-shadow(0 0 3px rgb(0 240 255 / 60%));
   --paper: #07080c;
   --surface: #0c0e15;
   --surface-2: #151a26;

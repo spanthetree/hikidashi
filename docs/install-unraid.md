@@ -12,8 +12,8 @@ these two and not others. [TrueNAS SCALE](install-truenas.md) ·
 
 > The templates pull the published images
 > (`ghcr.io/spanthetree/hikidashi-server`, `-worker`, `-worker-cuda`), which
-> each release publishes (#77). They aren't in Community Applications search
-> yet (#102): install them by hand, as below.
+> each release publishes. They aren't in Community Applications search
+> yet ([#102](https://github.com/spanthetree/hikidashi/issues/102)): install them by hand, as below.
 
 ## What you install
 
@@ -107,7 +107,7 @@ Open the web UI: **Hikidashi** → **WebUI**, or `http://<server>:8080`.
   admin's name and password. The link changes each time the container
   starts, and stops working once someone has claimed the library.
 - **Import:** drop the Instagram export ZIP onto the page (the
-  [README](../README.md#quick-start) says how to get it). Search works on
+  [Installing](install.md#getting-your-instagram-export) says how to get it). Search works on
   captions straight away. The workers then fetch, transcribe and tag in the
   background. The **Pipeline** page shows how far they've got.
 
@@ -135,7 +135,7 @@ The card goes to **Hikidashi-Worker-CUDA**, in place of Hikidashi-Worker.
    or `all`. Its Extra Parameters already have `--runtime=nvidia`.
 5. Give Ollama the card too, the same way, if it runs here.
 
-See #64 for what waits on a GPU.
+See [#64](https://github.com/spanthetree/hikidashi/issues/64) for what waits on a GPU.
 
 ## A GPU desktop as a remote worker
 

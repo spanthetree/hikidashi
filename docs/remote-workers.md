@@ -6,7 +6,7 @@ desktop with a GPU that is only on some of the time. The worker transcribes,
 reads on-screen text, tags and checks for recipes, and sends what it found back
 to the server. When the desktop is off, new reels wait, and nothing is lost.
 
-This page covers the options that were weighed (#35), how the chosen one
+This page covers the options that were weighed ([#35](https://github.com/spanthetree/hikidashi/issues/35)), how the chosen one
 works, and how to set it up. [The pipeline](pipeline.md#the-worker) covers the
 worker itself.
 
@@ -18,19 +18,19 @@ corruption path.
 
 | | Option | What it takes | Verdict |
 |---|---|---|---|
-| A | Remote Ollama only | the server's worker pointed at the desktop's Ollama | Retired (#86). Only tagging and recipes moved, with the server's model; a remote worker does all of it with the desktop's own |
+| A | Remote Ollama only | the server's worker pointed at the desktop's Ollama | Retired ([#86](https://github.com/spanthetree/hikidashi/issues/86)). Only tagging and recipes moved, with the server's model; a remote worker does all of it with the desktop's own |
 | B | Workers as API clients | a claim/result API on the server | **Built.** Everything heavy moves; the server stays the only writer |
 | C | Postgres instead of SQLite | a rewrite of the SQL, a database service to run | Ruled out for now |
 | D | Ship the database around | a replica on the desktop, changesets back | Ruled out |
 
 **A** needed no code, and was the baseline while B was built. It helped the
 stages that need a large model most, but the server still transcribed on its
-own CPU, and asked for the model of its own profile. Since #86 the server
+own CPU, and asked for the model of its own profile. Since [#86](https://github.com/spanthetree/hikidashi/issues/86) the server
 never talks to Ollama: a worker does, its own.
 
 **B** is what this page describes. Every stage is already resumable and
 versioned, so "what is left to do" is a query the server can answer, and the
-always-on worker (#72) already claims reels with leases. A remote worker
+always-on worker ([#72](https://github.com/spanthetree/hikidashi/issues/72)) already claims reels with leases. A remote worker
 claims through the server instead of the database, and posts results, which
 the server records with the same functions a local worker uses.
 
@@ -40,7 +40,7 @@ sqlite-vec, the JSON helpers), re-tuning search, running a database service,
 and needing one for every test run. It still would not stop a worker from
 writing a vector from the wrong model, or keep workers and server on one
 schema. Worth revisiting only if the server needs several replicas (k8s) or
-many people use it at once. The full comparison is in #35.
+many people use it at once. The full comparison is in [#35](https://github.com/spanthetree/hikidashi/issues/35).
 
 **D** avoids an API, but merging changesets back makes conflicts Hikidashi's
 problem, for no gain over B.
@@ -233,7 +233,7 @@ Tag and recipe use the desktop's own Ollama, a native install or
 `latest`. With `--build` it builds from the checkout instead, the cuda image
 unless `HIKIDASHI_EXTRAS` is set to nothing. For the GPU itself, it needs the NVIDIA container
 toolkit and the `deploy` block uncommented, as for the single-host setup
-(#64); without them, `auto` runs on the CPU. A container has no terminal to
+([#64](https://github.com/spanthetree/hikidashi/issues/64)); without them, `auto` runs on the CPU. A container has no terminal to
 ask for the token at, so `HIKIDASHI_WORKER_TOKEN` is required here.
 
 By hand, with no container left running:

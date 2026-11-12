@@ -287,7 +287,7 @@ flowchart TD
 | `COMMON` | 0.1 | a word in more than a tenth of the library ("best") doesn't count as distinctive |
 
 The index (FTS5 `item_fts`) holds the caption, transcript, on-screen text,
-summary, tag, cleaned hashtags, keywords and, since #117, the game a reel is
+summary, tag, cleaned hashtags, keywords and, since [#117](https://github.com/spanthetree/hikidashi/issues/117), the game a reel is
 sure to show. A guess is not indexed: it is not yet the reel's game. A game
 you named is yours, so like your tag it is matched in the second tier rather
 than indexed. The filters (`tag`, `game`, `hashtag`, each repeatable, and

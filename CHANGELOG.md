@@ -6,6 +6,44 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.18.8] — 2026-11-12
+
+Getting ready to go public (#89).
+
+### Added
+
+- **Community files.** A code of conduct (Contributor Covenant 2.1), a
+  security policy that sends reports to GitHub's private vulnerability
+  reporting, bug and feature issue forms, a pull request template, and
+  Dependabot, monthly and grouped. CONTRIBUTING.md now starts with what an
+  outside contributor needs: ways to help, setup, the checks CI runs, and
+  translations.
+- **An FAQ** (`docs/faq.md`): passwords, whether it's allowed, what leaves the
+  machine, hardware, GPUs, disk, languages, backups.
+- **A Japanese README** (`README.ja.md`).
+- **Brand files.** A wordmark for light and dark backgrounds, a social preview
+  card, `favicon.ico` and app icons at 180, 192 and 512 px, all drawn by
+  `scripts/make_brand.py`.
+- **The logo follows the theme.** The top bar's mark is recoloured by each
+  theme, light and dark, and redrawn in pixels with pixel art on.
+- **Stills in the docs,** taken on the demo library by
+  `frontend/scripts/screenshots.mjs`.
+
+### Changed
+
+- **The default theme is Hikidashi,** after the logo: paper and ink, indigo
+  links, vermilion buttons. It replaces the Instagram theme, which used
+  Instagram's colours, gradient and story ring. A browser that had it chosen
+  moves to the new default.
+- **The README is a landing page.** What it held moves into `docs/`:
+  installing, using the app, accounts and access, configuration, and the
+  measured run in the pipeline page. `docs/README.md` lists every page.
+- **Running the server alone on a low-power device** is described in the
+  README and the install guide.
+- **The docs link issue numbers** to their issues, and say "a real library of
+  420 saves" where they said "the real library".
+- **The README animation and the tour** are filmed again, in the new theme.
+
 ## [0.18.7] — 2026-11-12
 
 ### Changed

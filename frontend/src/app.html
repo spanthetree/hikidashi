@@ -3,14 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="%sveltekit.assets%/favicon.ico" sizes="48x48">
 <link rel="icon" href="%sveltekit.assets%/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png">
 <script>
   /* The saved theme, mode and pixel art, before the first paint;
      src/lib/theme.svelte.ts takes over from here and uses the same keys. */
   (function () {
-    var theme = "instagram", mode = "system", pixel = "off";
+    var theme = "hikidashi", mode = "system", pixel = "off";
     try {
       theme = localStorage.getItem("theme") || theme;
+      // Before 0.18.8 the default was "instagram"; theme.svelte.ts does the same.
+      if (!/^(hikidashi|cyberpunk|retrowave|retrofuture)$/.test(theme)) theme = "hikidashi";
       mode = localStorage.getItem("mode") || mode;
       pixel = localStorage.getItem("pixel") || pixel;
     } catch (e) {}

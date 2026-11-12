@@ -5,7 +5,7 @@
    first paint from the same keys, so a dark page never flashes white; keep
    the two in step. */
 
-export const THEMES = ["instagram", "cyberpunk", "retrowave", "retrofuture"] as const;
+export const THEMES = ["hikidashi", "cyberpunk", "retrowave", "retrofuture"] as const;
 export const MODES = ["system", "light", "dark"] as const;
 
 export type Theme = (typeof THEMES)[number];
@@ -30,7 +30,9 @@ function keep(key: string, value: string) {
 
 const system = window.matchMedia("(prefers-color-scheme: dark)");
 
-let theme = $state<Theme>(saved(THEME_KEY, THEMES, "instagram"));
+// A theme saved before 0.18.8 may be "instagram", the old default: not in
+// THEMES, so it falls back to the default that replaced it.
+let theme = $state<Theme>(saved(THEME_KEY, THEMES, "hikidashi"));
 let mode = $state<Mode>(saved(MODE_KEY, MODES, "system"));
 let pixel = $state(saved(PIXEL_KEY, ["on", "off"], "off") === "on");
 let systemDark = $state(system.matches);

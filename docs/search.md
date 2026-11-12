@@ -1,6 +1,6 @@
 # Search quality
 
-How search is measured, what it scores, and what was tried (#20).
+How search is measured, what it scores, and what was tried ([#20](https://github.com/spanthetree/hikidashi/issues/20)).
 [Back to the README](../README.md) · [Design](design.md)
 
 ## Measuring it
@@ -49,7 +49,7 @@ of 0.01 or 0.02 in a kind as noise unless the per-query table shows why.
 ## Results
 
 Measured 2026-10-24 on the 420-item library, CPU, embeddinggemma-300m, with
-`--against 83c01ae`: search as it was before #20 and as it is now, on the same
+`--against 83c01ae`: search as it was before [#20](https://github.com/spanthetree/hikidashi/issues/20) and as it is now, on the same
 library and the same 73 queries.
 
 ```
@@ -120,7 +120,7 @@ no longer reproduced two days later: re-summarised reels move the numbers
    `{"match": ["keyword", "semantic", "transcript"], "similarity": 0.52}`.
    Cards show it as a badge under `npm run dev`, or on the built app with
    `localStorage.explain = "1"`.
-6. **A reel's game is indexed** (#117). `item_fts` gained `game`, the title
+6. **A reel's game is indexed** ([#117](https://github.com/spanthetree/hikidashi/issues/117)). `item_fts` gained `game`, the title
    the tagger is sure a reel shows, so "gran turismo" finds a reel whose
    caption spells it "Grand Turismo". A game you named matches with your tags
    in the second tier. On the 73 queries, against the code before it, nothing
@@ -142,7 +142,7 @@ results on average). Two things caused it:
 | every content word, any two when none has all | 0.91 | 0.86 | 0.88 | 1.00 | 5/8 |
 | every content word, any one when none has all | 0.91 | 0.83 | 0.87 | 1.00 | 3/8 |
 
-The pre-#20 code scores paraphrase 0.861; "now" is 0.859, and any-two as the
+The pre-[#20](https://github.com/spanthetree/hikidashi/issues/20) code scores paraphrase 0.861; "now" is 0.859, and any-two as the
 fallback 0.855. Without vectors that fallback is what the app uses.
 
 - **One word was a match.** ORed, a query about grooming a pet found 24 reels
@@ -159,7 +159,7 @@ Every content-word weight from 0.25 to 0.75 scores the same; 0.5 is the
 middle. So does every RRF `K` from 30 to 90, and a chunk floor of 0.45. A
 floor of 0.55 loses voiceover reels (0.93) and creator (0.88). A chunk
 offset of 0.2 is the one setting that puts paraphrase and creator exactly
-back at their pre-#20 scores (0.861 and 0.879), but overall drops to 0.915,
+back at their pre-[#20](https://github.com/spanthetree/hikidashi/issues/20) scores (0.861 and 0.879), but overall drops to 0.915,
 against 0.918 at 0.1.
 
 ## What was tried and rejected
@@ -257,4 +257,4 @@ in place of the LIKE tier for words of three characters or more (LIKE stays for
 | index size | 0.58 MB (`item_fts`) | +1.8 MB |
 
 No query moved in blended search, and trigram finds `京都` in `東京都` just the
-same. With LIKE, keyword search takes 2 ms at the median on this library.
+same. With LIKE, keyword search takes 2 ms at the median on the measured library.

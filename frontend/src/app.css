@@ -1,33 +1,39 @@
 /* Design tokens and the few rules every page shares. Everything else lives in
    the component that draws it.
 
-   These are the Instagram theme, and the defaults every theme starts from.
+   These are the Hikidashi theme, and the defaults every theme starts from.
    The others, in themes/, override the tokens for their data-theme on <html>
    and add their own motion; data-scheme picks light or dark
    (src/lib/theme.svelte.ts). */
 :root {
-  /* Instagram's palette: white and near-black with grey rules, its blue for
-     anything you can act on, and the brand gradient kept for a few marks. */
-  --paper: #fff;
-  --surface: #fff;
-  --surface-2: #efefef;
-  --surface-3: #dbdbdb;
-  --field: #efefef;
-  --ink: #0c1014;
-  --ink-2: #363636;
-  --muted: #737373;
-  --rule: #dbdbdb;
-  /* --accent is for text and rings; --accent-fill is the button blue, which
-     is too light for small text on white. */
-  --accent: #0074cc;
-  --accent-fill: #0095f6;
-  --accent-soft: #e0f1ff;
-  --ok: #0a7d45;
+  /* The brand's palette (docs/brand/README.md): paper and sumi ink, kiri wood
+     for the quieter surfaces, ai (indigo) for links and focus, and shu
+     (vermilion), the lit card in the mark, for the one thing to press. */
+  --paper: #f7f2e9;
+  --surface: #fffcf6;
+  --surface-2: #eee6d8;
+  --surface-3: #e0d4c0;
+  --field: #f0e9dc;
+  --ink: #1c1b19;
+  --ink-2: #3a3631;
+  --muted: #6b6257;
+  --rule: #e3d9c8;
+  /* --accent is for text and rings; --accent-fill is the button shu. */
+  --accent: #2b5079;
+  --accent-fill: #d13a20;
+  --accent-soft: #e2e9f1;
+  --ok: #2f6b3a;
   --warn: #8a5d00;
-  --risk: #c92a3e;
+  --risk: #a3241a;
   --on-accent: #fff;
-  --accent-fill-hover: #1877f2;
-  --brand: linear-gradient(45deg, #feda75 0%, #fa7e1e 25%, #d62976 50%, #962fbf 75%, #4f5bd5 100%);
+  --accent-fill-hover: #b3301a;
+  --brand: linear-gradient(135deg, #d13a20, #b89a74);
+  /* The mark in the top bar (Logo.svelte): each theme recolours it. */
+  --logo-card: #b89a74;
+  --logo-lit: #d13a20;
+  --logo-body: #1c1b19;
+  --logo-slot: #8a7660;
+  --logo-filter: none;
   /* Japanese falls through to the first font that has it. Without these a
      Windows browser draws kana in the mono labels and chips with MS Gothic. */
   --cjk: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI",
@@ -54,21 +60,27 @@
 }
 
 :root[data-scheme="dark"] {
-  --paper: #0c1014;
-  --surface: #0c1014;
-  --surface-2: #25292e;
-  --surface-3: #343a40;
-  --field: #25292e;
-  --ink: #f5f5f5;
-  --ink-2: #d4d4d4;
-  --muted: #a8a8a8;
-  --rule: #30363c;
-  --accent: #0095f6;
-  --accent-fill: #0095f6;
-  --accent-soft: #0b2438;
-  --ok: #4cc38a;
+  --paper: #151412;
+  --surface: #1c1b19;
+  --surface-2: #2a2824;
+  --surface-3: #3a3631;
+  --field: #24221f;
+  --ink: #f3ece0;
+  --ink-2: #d8cfc0;
+  --muted: #a89a86;
+  --rule: #34302b;
+  --accent: #9dbbe0;
+  --accent-fill: #d13a20;
+  --accent-fill-hover: #e2462b;
+  --accent-soft: #1f2a37;
+  --ok: #7fbf8c;
   --warn: #e0ae4e;
-  --risk: #ff6b78;
+  --risk: #ff8a7a;
+  --brand: linear-gradient(135deg, #e2462b, #d8c3a5);
+  --logo-card: #d8c3a5;
+  --logo-lit: #e2462b;
+  --logo-body: #f3ece0;
+  --logo-slot: #a89a86;
 
   color-scheme: dark;
 }

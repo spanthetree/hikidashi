@@ -1,0 +1,26 @@
+name: Feature request
+description: An idea for something Hikidashi could do.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a look through the [open issues](https://github.com/spanthetree/hikidashi/issues)
+        first: it may already be planned.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you're trying to do
+      description: The problem or the situation, more than the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help
+      description: How you picture it working.
+  - type: textarea
+    id: else
+    attributes:
+      label: Anything else
+      description: Other tools that do it well, screenshots, or limits you know of (a GPU, a language, a NAS).

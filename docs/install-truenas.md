@@ -11,7 +11,7 @@ and not a catalog app. [Unraid](install-unraid.md) ·
 
 > The file pulls the published images
 > (`ghcr.io/spanthetree/hikidashi-server`, `-worker`, `-worker-cuda`), which
-> each release publishes (#77), at `:latest`.
+> each release publishes, at `:latest`.
 
 ## What's in the file
 
@@ -70,7 +70,7 @@ Open `http://<truenas>:8080`.
   password. The link changes each time the container starts, and stops
   working once someone has claimed the library.
 - **Import:** drop the Instagram export ZIP onto the page (the
-  [README](../README.md#quick-start) says how to get it). Search works on
+  [Installing](install.md#getting-your-instagram-export) says how to get it). Search works on
   captions straight away. The workers then fetch, transcribe and tag in the
   background. The **Pipeline** page shows how far they've got.
 
@@ -103,7 +103,7 @@ work.
 3. **Save**. Give the Ollama app the card too, in its own settings.
 
 If you change cards later, change the UUID here as well. TrueNAS doesn't
-update it for a custom app. See #64 for what waits on a GPU.
+update it for a custom app. See [#64](https://github.com/spanthetree/hikidashi/issues/64) for what waits on a GPU.
 
 ## A GPU desktop as a remote worker
 

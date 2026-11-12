@@ -4,6 +4,7 @@ How an Instagram export becomes a searchable library, stage by stage.
 [Back to the README](../README.md)
 
 - [How an item flows](#how-an-item-flows)
+- [The stages](#the-stages) · [Measured on a real library](#measured-on-a-real-library)
 - [What the export contains](#what-the-export-contains)
 - [The worker](#the-worker)
 - [Running the stages by hand](#running-the-stages-by-hand)
@@ -26,6 +27,40 @@ Only **fetch** is expensive to redo: it is network-bound, rate-limited and
 depends on posts that may be gone next year. Everything downstream is a pure
 function of bytes already on disk, so a change to a cheap stage never
 invalidates an expensive one.
+
+## The stages
+
+| | Stage | Command | What it does |
+|---|-------|---------|--------------|
+| 1 | Import | `import` | Reads the export: captions, creators, hashtags, collections |
+| 2 | Enrich | `enrich --media` | Downloads metadata, thumbnails and mp4s with yt-dlp |
+| 3 | Transcribe | `transcribe` | Speech to text with faster-whisper, skipping music-only reels and the stock phrases Whisper writes over them |
+| 4 | OCR | `ocr` | Reads on-screen text from photos and reels with no speech |
+| 5 | Tag | `tag --llm` | Hashtag mapping, then a local LLM for summaries and categories |
+| 6 | Recipes | `recipe` | Finds recipes and extracts ingredients and steps |
+| 7 | Embed | `embed` | Vectors for semantic search (embeddinggemma-300m) |
+| 8 | Places | `places` | Reads places from captions, and puts them on the map |
+
+The workers run stages 2 to 7 as reels arrive, and the server finds places
+itself. Under Docker, `server-worker` runs 2 and 7 from the server image and
+`worker` runs 3 to 6 from the worker image. Each stage can also be run on its
+own with `./hikidashi <command>`, and `./hikidashi pipeline` runs them all in
+order.
+
+## Measured on a real library
+
+Measured against **420 saves (335 reels and 85 photo posts) across 7
+collections**:
+
+| | |
+|---|---|
+| Captions | 420 / 420, straight from the export |
+| Videos | 322 of 335 reels, 3.5 GB, ~8 minutes |
+| Transcripts | 224 videos, 4.4 hours of audio in 5 minutes on an RTX 3080 |
+| On-screen text | 115 of the 187 items with no speech, in 30 seconds on CPU |
+| Model tagging | 411 reels in 5.6 minutes on an RTX 3080 (`qwen2.5:7b`), 0 failures |
+| Untagged items | 171 from hashtags alone → 25 after the model and OCR |
+| Unfetchable | 9, restricted or login-only posts |
 
 ## What the export contains
 
@@ -126,7 +161,7 @@ unloads its own models.
 
 ### In Docker
 
-There are two images (#86), and Ollama is the upstream `ollama/ollama`:
+There are two images, and Ollama is the upstream `ollama/ollama`:
 
 | Image | Has | Runs by default | `HIKIDASHI_LOCAL_STAGES` |
 |---|---|---|---|
@@ -327,7 +362,7 @@ music-only reel will write out lyrics nobody sang, and those would then show up
 in search. With the filter on, a reel with no speech gets no transcript. It is
 still stamped, so it is not queued again.
 
-On the real library, 98 of 322 videos came back with no speech. A spot check
+On the measured library, 98 of 322 videos came back with no speech. A spot check
 with the filter off shows what it prevented: `Thank you.` on silent travel
 clips, `I'm going to be able to be` repeated over a Japanese house tour, and
 pop lyrics pulled from a road-trip montage.
@@ -337,7 +372,7 @@ Whisper writes its stock phrases there. Its own guard keeps them, because
 their no-speech probability is low. So a transcript is dropped afterwards when
 the filter kept less than 2.5 s of speech, when it holds fewer than one word
 for every two seconds of that speech, or when more than half its sentences are
-stock phrases (`Thank you.`, `you`, `I don't know.`…). On the real library
+stock phrases (`Thank you.`, `you`, `I don't know.`…). On the measured library
 that cleared 31 of 227 transcripts, all a scrap of a word or two (`Thank you.`
 six times, `Oh`, `Yep!`, `same`). The shortest real sentence, 2.7 s, stayed.
 
@@ -354,7 +389,7 @@ with `fail_stage = 'asr'` and retried on the next run. It never sets
 stamped into `asr_profile` and `tag_profile`, so every transcript and every set
 of model tags records which model wrote it.
 
-| Profile | Model | Precision | Workers | Speed on this library |
+| Profile | Model | Precision | Workers | Speed on the measured library |
 |---------|-------|-----------|---------|-----------------------|
 | `cpu` | `distil-small.en` | `int8` | 4, sharing the cores | ~25× realtime on 28 threads |
 | `cuda` | `distil-large-v3` | `float16` | 1 | ~50× realtime on an RTX 3080 |
@@ -427,7 +462,7 @@ What it changed on the library, from re-tagging the 115 items with text:
 - 106 summaries were rewritten. Most got more specific, such as "a map of
   western US cities" where it had said "a humorous caption about Utah".
 
-These are spot checks. The calibration set (#6) is what will measure it.
+These are spot checks. The calibration set ([#6](https://github.com/spanthetree/hikidashi/issues/6)) is what will measure it.
 
 Only English is installed in the worker image (`tesseract-ocr` brings `eng`),
 so Japanese and other non-Latin text on screen is not read.
@@ -541,7 +576,7 @@ Cheapest first:
 
 1. **Candidate filter**, no model: tagged Food, or a quantity with a unit
    ("2 tbsp", "200g"), or the word for ingredients or recipe. Numbered steps
-   alone are not enough; in this library they were travel and "top 10" lists.
+   alone are not enough; in the measured library they were travel and "top 10" lists.
 2. **Check**: the dish the reel makes, whether it is something to eat or
    drink, and a yes or no with a confidence, capped at 60 tokens. Restaurant
    reviews, food tours, mukbangs, food sold at a stall and kitchen tips that
@@ -653,7 +688,7 @@ taken off the map rather than left on the wrong continent. A list of the best
 of a whole country, whose places are spread too wide to agree on a region, is
 left as it is.
 
-On the real library: 38 reels name 110 places. 83 are on the map, 11 were
+On the measured library: 38 reels name 110 places. 83 are on the map, 11 were
 found but too unsurely to pin, and 16 were not found, most of them not places
 at all ("Where to stay", "Queenstown → Wanaka (2 nights)"). The second look
 moved 12.

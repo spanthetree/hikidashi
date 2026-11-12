@@ -3,6 +3,7 @@
   import { m } from "$lib/paraglide/messages";
   import { session } from "$lib/session.svelte";
   import Icon from "./Icon.svelte";
+  import Logo from "./Logo.svelte";
   import { look, MODES, THEMES, type Mode, type Theme } from "$lib/theme.svelte";
 
   let { children, onmenu, menuOpen = false, account = true }: {
@@ -22,7 +23,7 @@
                        && (session.me.ig_handle ? `@${session.me.ig_handle}` : session.me.username));
 
   const THEME_NAMES: Record<Theme, () => string> = {
-    instagram: m.theme_instagram, cyberpunk: m.theme_cyberpunk, retrowave: m.theme_retrowave,
+    hikidashi: m.theme_hikidashi, cyberpunk: m.theme_cyberpunk, retrowave: m.theme_retrowave,
     retrofuture: m.theme_retrofuture,
   };
   const MODE_NAMES: Record<Mode, () => string> = {
@@ -40,7 +41,7 @@
     </button>
   {/if}
   <a class="brand" href="/" translate="no">
-    <img class="logo" src="/icon.svg" alt="" width="26" height="26">
+    <Logo />
     <strong>Hikidashi</strong>
   </a>
   {@render children?.()}
@@ -120,7 +121,6 @@
 
   .brand strong { font-family: var(--title); font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
 
-  .logo { width: 26px; height: 26px; display: block; }
 
   .menu {
     display: none;
@@ -161,7 +161,7 @@
   .who:hover, .who:has(+ .pop:popover-open) { background: var(--surface-2); }
   .who:not(:has(.name)) { padding: 4px; }
 
-  /* The account in a story ring: the gradient, a gap of page, then the face. */
+  /* The account in a ring of the theme's --brand, a gap of page, then the face. */
   .avatar {
     display: grid;
     place-items: center;
@@ -250,26 +250,24 @@
   .theme:hover { background: var(--surface-2); }
   .theme:has(:checked) { font-weight: 700; }
   /* The chosen theme is marked at the left, each theme in its own way (the
-     themes' CSS); this is Instagram's, a story ring. */
+     themes' CSS); this is Hikidashi's, the lit card from the mark. */
   .theme:has(:checked)::before {
     content: "";
     position: absolute;
-    left: 10px;
-    top: calc(50% - 6px);
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: conic-gradient(from 210deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5, #feda75);
-    -webkit-mask: radial-gradient(circle, transparent 3px, #000 3.5px);
-    mask: radial-gradient(circle, transparent 3px, #000 3.5px);
+    left: 13px;
+    top: calc(50% - 7px);
+    width: 6px;
+    height: 14px;
+    border-radius: 1.5px;
+    background: var(--accent-fill);
     animation: ring-in 320ms var(--ease-out);
   }
 
-  @keyframes ring-in { from { opacity: 0; transform: scale(0.3) rotate(-120deg); } }
+  @keyframes ring-in { from { opacity: 0; transform: translateY(5px) scaleY(0.4); } }
   .theme:has(:focus-visible), .seg label:has(:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
 
   .swatch { flex: none; width: 22px; height: 22px; border-radius: var(--radius-sm); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%); }
-  .swatch[data-swatch="instagram"] { background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5); }
+  .swatch[data-swatch="hikidashi"] { background: linear-gradient(135deg, #f3ece0 0 45%, #d13a20 45% 65%, #1c1b19 65%); }
   .swatch[data-swatch="cyberpunk"] { background: linear-gradient(135deg, #fcee0a 0 50%, #00f0ff 50% 75%, #ff003c 75%); }
   .swatch[data-swatch="retrofuture"] { background: conic-gradient(from 20deg, #d4491f, #f2b134, #3fb8af, #f3e9d2, #d4491f); }
   .swatch[data-swatch="retrowave"] { background: linear-gradient(180deg, #ffd319 0%, #ff2975 45%, #8c1eff 70%, #1b0b3a 70%); }

@@ -1,5 +1,79 @@
 # Contributing to Hikidashi
 
+Thanks for wanting to help. Bug reports, ideas, translations, docs fixes and
+code are all welcome.
+
+Everyone taking part is expected to follow the
+[Code of Conduct](CODE_OF_CONDUCT.md). A security problem goes to a
+[private report](SECURITY.md), not an issue.
+
+## Ways to help
+
+- **Report a bug** or **suggest a feature** with the
+  [issue forms](https://github.com/spanthetree/hikidashi/issues/new/choose).
+- **Pick up an issue.** Ones labelled
+  [`good first issue`](https://github.com/spanthetree/hikidashi/labels/good%20first%20issue)
+  or [`help wanted`](https://github.com/spanthetree/hikidashi/labels/help%20wanted)
+  are a good start. Say in the issue that you're on it, so no one else starts too.
+- **For anything larger,** a new feature, a new dependency, or a change to the
+  schema, the pipeline or the remote protocol, open an issue or comment on the
+  existing one before you write much code. The
+  [decision records](docs/adr/README.md) explain why things are the way they
+  are; a change that goes against one needs a new record.
+- **Translate the UI.** See [Translations](#translations).
+
+## Setting up
+
+You need Python 3.12 with [uv](https://docs.astral.sh/uv/), Node 20 or later,
+and FFmpeg. Docker is only needed to work on the images.
+
+```bash
+git clone https://github.com/spanthetree/hikidashi.git && cd hikidashi
+uv sync --extra server --extra worker --group test --group lint
+npm ci --prefix frontend
+./hikidashi start          # the server and a worker, on http://localhost:8080
+```
+
+To work on the web app with live reload, run the API and Vite side by side
+([development.md](docs/development.md#the-front-end)).
+
+For a library to try things on, use the demo library rather than your own
+saves: `scripts/demo_library.py` builds one from freely licensed media and runs
+it on port 8090 ([development.md](docs/development.md#recording-the-demo)).
+Anything you post (screenshots, logs, test data) should come from it, or be
+made up.
+
+[docs/development.md](docs/development.md) covers the rest of the setup, and
+[docs/architecture.md](docs/architecture.md) and
+[docs/operation.md](docs/operation.md) how the pieces fit together.
+
+## Checks
+
+CI runs all of these on every pull request. To run them yourself:
+
+```bash
+python3 -m unittest discover -s tests -t .   # Python tests; stdlib only, no network
+uv run --group lint ruff format              # format
+uv run --group lint ruff check --fix         # lint
+uv run --group lint mypy                     # types, strict
+npm run check --prefix frontend              # Svelte and TypeScript
+npm test --prefix frontend                   # web app unit tests
+npm run e2e --prefix frontend                # browser tests (Playwright)
+```
+
+[docs/testing.md](docs/testing.md) explains each, what is skipped without
+optional packages, and the seeded library the tests share. A change comes with
+tests for what it changes.
+
+## Translations
+
+The UI ships in English and Japanese. Every string is a message in
+`frontend/messages/en.json`, with the translation under the same key in the
+other languages' files. Fixing a translation is a one-file pull request. To
+add a language, follow the four steps in
+[development.md](docs/development.md#translations). `npm test` catches a
+missing key or a mismatched `{input}`.
+
 ## Licensing your contribution
 
 Hikidashi is source-available under the
@@ -38,6 +112,9 @@ say so in the pull request before it is merged.
     agrees ([ADR 0017](docs/adr/0017-version-written-once.md)).
     `tests/test_deploy.py` fails if they disagree, or if a copy turns up
     anywhere else.
+
+  Not sure which version a change should be? A fix is a patch, a feature a
+  minor; ask in the PR, and the maintainer will settle it before merging.
 - **Merging is releasing.** Once a version bump lands on `master`,
   `.github/workflows/release.yml` publishes the images to GHCR, then tags the
   commit `vX.Y.Z` and makes a GitHub release from its changelog section.
@@ -62,7 +139,7 @@ that makes the change or one right after it.
 | changes how search ranks: a list, a weight, a threshold, a tier | the table in [operation.md](docs/operation.md#a-search-request), the `search()` SVG if what it shows changes, and [search.md](docs/search.md) with the eval numbers |
 | changes import, sign-in, sessions, CSRF, proxy trust, worker tokens or per-user scoping | the matching sequence in [operation.md](docs/operation.md) and [architecture.md](docs/architecture.md#security-boundaries) |
 | adds a call to anything outside the machine, or a new place data is kept | the context table in [architecture.md](docs/architecture.md#context), or its storage layout |
-| changes what the library looks like or how it is used, enough that the README animation no longer shows the app | re-record it on the demo library: `node scripts/record-demo.mjs hero` (and `tour`) in `frontend/`, as in [development.md](docs/development.md#recording-the-demo) |
+| changes what the library looks like or how it is used, enough that the README animation no longer shows the app | re-record it on the demo library: `node scripts/record-demo.mjs hero` (and `tour`), and retake the stills with `node scripts/screenshots.mjs`, in `frontend/`, as in [development.md](docs/development.md#recording-the-demo) |
 | changes what a worker logs | re-record the terminal: `uv run python scripts/demo_library.py cast`, then run `make_diagrams.py` |
 | makes or reverses a decision argued out in an issue | a new record in [docs/adr/](docs/adr/README.md). Don't rewrite an accepted record: add one that supersedes it, and mark the old one **Superseded by** |
 
