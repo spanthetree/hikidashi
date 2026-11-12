@@ -315,8 +315,9 @@
     <section class="a-sec" id="ai">
       <h2>{m.ai_title()}</h2>
       <p class="lede">{m.ai_lede()}</p>
-      <!-- One choice each. An admin's is the system default, the server's API. -->
-      <AiProviders whose={me.is_admin ? "server" : "mine"} bind:notice />
+      <!-- One choice each, for your own library. An admin sets the system
+           default, which "System default" follows, on the Pipeline page. -->
+      <AiProviders whose="mine" bind:notice />
     </section>
 
     {#if mine}

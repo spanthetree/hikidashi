@@ -69,11 +69,17 @@ test.describe("hosted AI", () => {
     await bob.close();
   });
 
-  test("an admin's one choice is the system default", async ({ browser }) => {
+  test("an admin has their own choice, and sets the system default on the Pipeline page", async ({ browser }) => {
     const alice = await browser.newPage({ storageState: PEOPLE.alice.state });
     await alice.goto("/account");
-    const ai = alice.locator("#ai");
+    // Her own library: the same three choices as anyone.
     await expect(alice.getByRole("heading", { name: "AI providers" })).toHaveCount(1);
+    await expect(alice.locator("#ai").getByRole("radio")).toHaveCount(3);
+    await expect(alice.locator("#ai-default")).toHaveCount(0);
+
+    await alice.goto("/pipeline");
+    const ai = alice.locator("#ai-default");
+    await expect(ai.getByRole("heading", { name: "System default for AI" })).toBeVisible();
     await expect(ai.getByRole("radio")).toHaveCount(2);
     await expect(ai.getByText("Workers are the system default.")).toBeVisible();
     await ai.getByRole("radio", { name: "Hosted AI" }).check();

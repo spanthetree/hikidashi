@@ -10,11 +10,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **One AI choice each,** on Account → AI providers (#125). A user chooses
-  System default (whatever the admin chose), Hosted AI (their own provider
-  and key) or Workers only, and the settings show under Hosted AI. An admin
-  chooses Hosted AI or Workers only, and that is the system default: there
-  is no separate server section, and no "just me / all users".
+- **One AI choice each,** on Account → AI providers (#125), admins
+  included: System default, Hosted AI (your own provider and key) or Workers
+  only, with the settings under Hosted AI. The **system default** that
+  System default follows (workers, or hosted AI with the server's own key) is
+  set by an admin on the Pipeline page. No "just me / all users".
   `hikidashi ai use` takes the same choices; `--server-api` sets the system
   default.
 

@@ -792,10 +792,12 @@
   "pipeline_api_hosted": "a hosted worker: {spent} USD this month",
   "tokens_read_ai": "see your AI provider settings and usage",
   "tokens_write_ai": "change them, and turn your API on or off, which spends money",
-  "ai_admin_hint": "Your choice is the system default: everyone on System default follows it, and anyone can choose their own instead.",
+  "ai_admin_hint": "This is the system default: everyone who keeps System default on their account page follows it. Anyone can choose their own instead, you included.",
   "ai_system_hosted": "Hosted AI is the system default, and it is on.",
   "ai_system_workers": "Workers are the system default.",
   "ai_hosted_not_started": "Hosted AI is chosen, and not started yet: finish setting it up below, then turn it on. Until then, workers process the reels.",
   "ai_applies_default_hosted": "Your reels follow the system default: hosted AI ({providers}).",
-  "ai_applies_default_workers": "Your reels follow the system default: workers."
+  "ai_applies_default_workers": "Your reels follow the system default: workers.",
+  "ai_default_title": "System default for AI",
+  "ai_default_lede": "How the reels of everyone on System default are processed: workers, or hosted AI with the server's own provider and key. Your own library follows your choice on your account page, like everyone else's."
 }

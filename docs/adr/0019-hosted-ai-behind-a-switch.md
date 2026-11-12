@@ -25,10 +25,11 @@ saved it, so one person's choice touches reels others saved too.
 
 **Workers by default. Hosted only while someone has switched an API on.**
 
-- **One choice each.** A user picks *System default* (whatever the admin
-  chose), *Hosted AI* (their own provider and key) or *Workers only*. The
-  admin's own choice, Hosted AI or Workers only, is the system default: the
-  server's API, for everyone who keeps the default. Hosted AI, once set up,
+- **One choice each,** for their own library: *System default*, *Hosted AI*
+  (their own provider and key) or *Workers only*. Admins too. Separately, on
+  the Pipeline page, an admin sets the **system default**: workers, or hosted
+  AI with the server's own provider and key (the server's API), for everyone
+  who keeps System default. Hosted AI, once set up,
   is an on/off switch. On, new reels go to
   the API as they're ready. Off, nothing is sent, and workers get everything,
   as before. Turning it off is the stop button: in-flight requests finish,

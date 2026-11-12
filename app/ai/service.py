@@ -179,9 +179,6 @@ def set_choice(
         raise Invalid("the system default is mine (hosted AI) or workers")
     _put(conn, None, "use", value, actor.id)
     audit(conn, actor.id, None, f"use {value}")
-    # The admin's own reels follow the system default they just chose.
-    if config.use(conn, actor.id) != "default":
-        set_use(conn, actor, actor.id, "default", data_dir)
     if value == "workers" and load(conn, None, data_dir).switch.on:
         turn_off(conn, actor.id, None, data_dir)
     return value

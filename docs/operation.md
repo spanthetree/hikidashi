@@ -277,10 +277,11 @@ stateDiagram-v2
 - **On**, the API claims new reels as soon as they are fetched. A worker that
   checks in later finds none of them. **Off**, workers get everything, as
   before.
-- **One choice each**, on Account → AI providers. A user: **System default**
-  (whatever the admin chose), **Hosted AI** (their own provider and key), or
-  **Workers only**. The admin: Hosted AI or Workers only, and that choice is
-  the system default, run as the server's API.
+- **One choice each**, on Account → AI providers, for your own library:
+  **System default**, **Hosted AI** (your own provider and key), or
+  **Workers only**. Admins have the same choice for theirs.
+- **The system default**, on the Pipeline page (admins): workers, or hosted
+  AI with the server's own provider and key, run as the server's API.
 - The server's API takes a reel if at least one saver keeps the system
   default. A user's own hosted AI is offered their reels first, and the
   server's waits a minute (`GRACE`) after it first finds a reel ready.

@@ -231,6 +231,20 @@ class TestSwitch(AiCase):
         with self.assertRaises(NotAllowed):
             service.set_choice(self.conn, BOB, None, "mine", self.dir)
 
+    def test_the_admin_keeps_their_own_choice(self):
+        service.set_use(self.conn, ADMIN, 1, "workers", self.dir)
+        self.ready(ADMIN, None)
+        service.set_choice(self.conn, ADMIN, None, "mine", self.dir)
+        service.turn_on(self.conn, ADMIN, None, self.dir)
+        self.assertEqual(config.use(self.conn, 1), "workers")
+        self.assertEqual(service.applies(self.conn, 1, self.dir), "workers")
+        self.assertEqual(service.applies(self.conn, 2, self.dir), "server")
+        # Their own hosted AI, apart from the system default's.
+        self.ready(ADMIN, 1)
+        service.turn_on(self.conn, ADMIN, 1, self.dir)
+        self.assertEqual(service.applies(self.conn, 1, self.dir), "mine")
+        self.assertTrue(config.load(self.conn, None, self.dir).switch.on)
+
     def test_without_cryptography_a_key_is_a_clear_error(self):
         from app.ai import secrets as sec
 
