@@ -132,8 +132,8 @@
   {
    "version": "0.22.0",
    "date": "2026-11-12",
-   "commit": "2fcf2fa",
-   "note": "four more categories (#145): 2 demo reels relabelled; model tags from before them",
+   "commit": "64240cc",
+   "note": "six more categories (#145): 2 demo reels relabelled; model tags from before them",
    "queries": 30,
    "search": {
     "blended": {

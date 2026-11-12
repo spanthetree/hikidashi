@@ -134,31 +134,55 @@ on many reels where the two agreed, because the old schema allowed only one
 row per tag per item and the hashtag pass usually wrote it first. The next
 model run fills those in.
 
-## Four more categories
+## Six more categories
 
 November 2026, [#145](https://github.com/spanthetree/hikidashi/issues/145),
 [ADR 0018](adr/0018-categories-from-hand-labels.md). Hand-labelling 50 reels
 for [#6](https://github.com/spanthetree/hikidashi/issues/6) found 7 that fitted
-none of the ten, 5 of them films, series or anime. The library's untagged
-reels fell into the same groups, so four categories were added:
+none of the ten, 5 of them films, series or anime. Re-tagging the library left
+36 reels with no category, and nearly all of them were about something real.
+Every reel with something to go on should have a category, so six were added:
 
-| tag | what it covers | for the model, not |
+| tag | what it covers | where the line is |
 |---|---|---|
 | Movies & TV | films, series and anime: recommendations, reviews, scenes, how they were made | |
-| Nature & science | wildlife, the night sky, weather, science explainers | gardening (Home & DIY), a trip somewhere (Travel) |
+| Nature & science | wildlife, the night sky, weather, science explainers | a view, a landscape or a place is Travel; gardening is Home & DIY |
 | Family & wellbeing | parenting, relationships, mental health, mindfulness, encouragement | |
 | Style & beauty | fashion, outfits, hair, makeup, skincare, grooming | |
+| Home & living | neighbourhoods, moving to a city, renting or buying a home to live in | fixing a home is Home & DIY; property as money is Finance |
+| Shopping | stores worth visiting, collectibles, gift ideas, buying guides, hauls | |
 
-Their hashtag stems were checked not to take reels from the others. Plain
-`#nature` is left out, because travel reels use it as much as wildlife ones;
-`#film` matches only whole, so `#filmphotography` stays Design;
-`#fitnessmotivation` stays Fitness. On the library they moved one reel (a film
-list, from Design to Movies & TV) and tagged twelve that had none. A pet video
-still fits nothing: Pets was removed in [#21](https://github.com/spanthetree/hikidashi/issues/21)
-and the labels did not argue for it.
+Travel's note now names attractions and the outdoors (hikes, beaches, national
+parks, scenery and views), and Technology's names useful websites and apps.
+"Other" stays for reels too thin to tell what they show.
 
-`TAG_V` 4 and `HASHTAG_V` 3 re-tag every library with the new list. Measure the
-model after that re-tag against your labels: `python -m app.tagging --eval`.
+Their hashtag stems were checked not to take reels from the others:
+
+- Plain `#nature` is left out, because travel reels use it as much as wildlife
+  ones.
+- `#film` matches only whole, so `#filmphotography` stays Design.
+- `#shop` matches only whole, so `#workshop` stays Home & DIY.
+- `#realestate` stays Finance; a `#…realtor` showing a city to live in is
+  Home & living.
+
+On the library the stems moved two reels and tagged fifteen that had none.
+
+### Measured
+
+qwen2.5:7b re-tagged the whole library with each list, scored against the
+50 hand labels:
+
+| list | right | answered | left without a category |
+|---|---|---|---|
+| the ten | 31/50 | 40/50 | 36 |
+| the sixteen | 36/50 | 49/50 | 5, of which 4 are too thin to tell |
+
+Two runs of the same list differ on about 7% of reels, so read a difference
+of one or two labels as noise. Most of the misses left are at Travel's edges:
+food at a destination goes to Food, and a landscape now and then goes to
+Nature & science. Sim racing and Gaming still swap now and then, as before.
+
+`TAG_V` 4 and `HASHTAG_V` 3 re-tag every library with the new list.
 
 ## Games
 
