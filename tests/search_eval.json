@@ -21,7 +21,15 @@
     {"kind": "non-english", "q": "塩ラーメン", "relevant": {"DQshioramen": 2}},
     {"kind": "non-english", "q": "伏見稲荷", "relevant": {"DQfushimi01": 2}},
     {"kind": "non-english", "q": "高雄 早餐", "relevant": {"DQkaohsiun1": 2}},
+    {"kind": "voiceover", "q": "the English chef who cooks in Oklahoma", "relevant": {"DQcurry0001": 2}},
+    {"kind": "voiceover", "q": "should you put salt in the water when you wash greens", "relevant": {"DQleafyveg1": 2}},
+    {"kind": "voiceover", "q": "the bakery that won a blind contest", "relevant": {"DQcroissnt1": 2}},
+    {"kind": "voiceover", "q": "a sauce with dried scallops", "relevant": {"DQporkbelly": 2}},
+    {"kind": "voiceover", "q": "make a well in the middle and add cold water", "relevant": {"DQpasta0001": 2}},
+    {"kind": "voiceover", "q": "the idea came from a research paper", "relevant": {"DQtranspwd1": 2}},
     {"kind": "negative", "q": "knitting a sweater", "relevant": {}},
-    {"kind": "negative", "q": "car engine repair", "relevant": {}}
+    {"kind": "negative", "q": "car engine repair", "relevant": {}},
+    {"kind": "negative", "q": "fixing a flat bike tyre", "relevant": {}},
+    {"kind": "negative", "q": "stock market tips", "relevant": {}}
   ]
 }
