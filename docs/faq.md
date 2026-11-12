@@ -45,7 +45,11 @@ By default, only:
 If you turn on the map, place names from captions go to the geocoder you
 choose, and your browser loads map tiles; both can be self-hosted
 ([places and the map](using.md#places-and-the-map)). Transcription, on-screen
-text, tagging, recipes and search all run locally. Hikidashi itself sends no
+text, tagging, recipes and search all run locally, unless someone switches a
+hosted AI API on (Account → AI providers). Then, for the reels that API takes,
+the audio, a few frames and the reel's text go to the provider chosen for
+each stage ([what is sent where](operation.md#hosted-ai)). Every switch is off
+until someone turns it on, and search always stays local. Hikidashi itself sends no
 telemetry. [Architecture](architecture.md#context) lists every outside call.
 
 ## What hardware do I need?
@@ -62,7 +66,10 @@ guide:
 
 ## Do I need a GPU?
 
-No. Everything runs on the CPU, more slowly, with smaller models. An NVIDIA
+No. Everything runs on the CPU, more slowly, with smaller models. Or a hosted
+API can do the heavy stages instead, with no GPU and no Ollama: Groq's free
+tier transcribes with Whisper large
+([hosted AI](operation.md#hosted-ai)). An NVIDIA
 GPU speeds up transcription and tagging and lets Hikidashi use larger, more
 accurate models: on an RTX 3080, 4.4 hours of audio transcribed in 5 minutes
 ([hardware profiles](pipeline.md#hardware-profiles)). The GPU doesn't have to
@@ -79,9 +86,11 @@ The database itself stays small.
 
 The interface is in English and Japanese. Search by meaning is multilingual: a
 Japanese search finds English reels on the same subject, and the other way
-round. Transcription uses English-only Whisper models for now, so speech in
-other languages isn't transcribed well; captions and on-screen text in any
-language are still searched.
+round. The local Whisper models are English-only, so speech in other
+languages isn't transcribed well by them; a hosted API's Whisper large (or
+`gpt-transcribe`) is multilingual, and records the language it heard
+([hosted AI](operation.md#hosted-ai)). Captions and on-screen text in any
+language are searched either way.
 
 ## How do new saves get in?
 

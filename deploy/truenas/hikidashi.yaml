@@ -25,6 +25,12 @@ services:
       HIKIDASHI_ORIGIN: ""
       # Maps: a Nominatim to look places up on, or "public"; empty is off.
       HIKIDASHI_GEOCODER: ""
+      # Hosted AI (docs/operation.md#hosted-ai): optional, and off until the
+      # switch on Account → AI providers is turned on. Keys can be set there
+      # instead, encrypted. Set the same in server-worker below.
+      # OPENAI_API_KEY: ""
+      # GROQ_API_KEY: ""
+      # HIKIDASHI_HOSTED_BUDGET: ""
     ports:
       - "8080:8080"
     volumes:
@@ -51,6 +57,11 @@ services:
     hostname: hikidashi-server-worker
     environment:
       HIKIDASHI_LOCAL_STAGES: enrich,embed
+      # Runs the hosted APIs that are switched on: the same hosted AI
+      # settings as the app's, if any.
+      # OPENAI_API_KEY: ""
+      # GROQ_API_KEY: ""
+      # HIKIDASHI_HOSTED_BUDGET: ""
     volumes:
       - /mnt/tank/apps/hikidashi:/data
     cpus: 2

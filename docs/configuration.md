@@ -37,6 +37,14 @@ On Unraid and TrueNAS the same settings are fields in the template or the YAML
 | `HIKIDASHI_WORKER_TOKEN` | *(empty)* | A remote worker: the worker token it presents, made by an admin on the Pipeline page or with `hikidashi token make --worker`; unset, it asks at the terminal, hidden. The server takes none from its own environment, and warns if this is set there. See [remote workers](remote-workers.md) |
 | `HIKIDASHI_SERVER` | *(empty)* | A remote worker: the server it works for, as `http://nas.lan:8080`. Set, `transcribe`, `ocr`, `tag`, `recipe` and `pipeline` claim from that server too |
 | `HIKIDASHI_CACHE` | `data/cache` | A remote worker: where it keeps the media it downloads, up to 2 GB |
+| `HIKIDASHI_ASR_PROVIDER`, `HIKIDASHI_OCR_PROVIDER`, `HIKIDASHI_LLM_PROVIDER` | *(empty)* | Hosted AI: the server's API's provider per stage (`LLM` is tags, the game pass and recipes): `openai`, `groq`, `mistral`, `gemini`, `openrouter`, `cerebras`, `github`, `cloudflare`, `huggingface` or `compatible`. Wins over the settings page and locks the field there; never turns the switch on. See [hosted AI](operation.md#hosted-ai) |
+| `HIKIDASHI_ASR_MODEL`, `HIKIDASHI_OCR_MODEL`, `HIKIDASHI_LLM_MODEL` | the preset's default | Hosted AI: a model ID |
+| `HIKIDASHI_ASR_LANGUAGE` | *(empty)* | Hosted AI: force a transcription language, as `ja`; empty, the model detects it |
+| `OPENAI_API_KEY`, `GROQ_API_KEY`, `MISTRAL_API_KEY`, `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `CEREBRAS_API_KEY`, `GITHUB_MODELS_TOKEN`, `CLOUDFLARE_API_TOKEN`, `HF_TOKEN` | *(empty)* | Hosted AI: the server's key for each provider, or `<NAME>_FILE` naming a file that holds it. Never sent to a worker, and never shown |
+| `HIKIDASHI_OPENAI_BASE_URL`, `HIKIDASHI_OPENAI_API_KEY` | *(empty)* | Hosted AI: an OpenAI-compatible server of your own (Speaches, vLLM, LiteLLM, LocalAI), for the `compatible` provider |
+| `HIKIDASHI_HOSTED_BUDGET` | *(empty)* | Hosted AI: USD a month for the server's API (or a hosted worker's); required to turn it on |
+| `HIKIDASHI_SECRET_KEY` | *(empty)*: `data/secret.key` | Encrypts the API keys saved on the settings page. The same in every container on a library |
+| `HIKIDASHI_API_TOKEN` | *(empty)* | `hikidashi ai --server`: an API token with `read:ai` and `write:ai`; unset, it asks |
 | `COMPOSE_FILE` | `docker-compose.yml` | Docker: `docker-compose.yml:docker-compose.server-only.yml` leaves the worker container out, for a server whose heavy stages run on another machine. Not read by Unraid's Compose Manager: see [its stack folders](install-unraid.md#the-alternative-compose-manager) |
 | `HIKIDASHI_MODE` | *(auto)* | `uv` \| `docker` for `./hikidashi`. Unset, it detects |
 | `HIKIDASHI_STOP_TIMEOUT` | `10` | uv: seconds `./hikidashi stop` waits before it kills the server and worker |

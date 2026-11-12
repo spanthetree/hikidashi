@@ -1,6 +1,6 @@
 # 0009. Local models only
 
-- **Status:** Accepted
+- **Status:** Superseded by [0019](0019-hosted-ai-behind-a-switch.md): still the default, and the only way while no hosted API is switched on
 - **Date:** 2026-10-21
 - **Issue:** #2 (transcripts), #3 (tagging), #4 (embeddings)
 

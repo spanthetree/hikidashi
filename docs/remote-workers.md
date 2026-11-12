@@ -254,6 +254,23 @@ Which image runs where, for the setups this was built for. The images are in
 | Always-on box, everything heavy on a desktop | `app` and `server-worker` only: `COMPOSE_FILE=docker-compose.yml:docker-compose.server-only.yml` | enrich and embed |
 | GPU desktop | `docker-compose.worker.yml` (the cuda image by default) and its `deploy` block, and Ollama; left running, or run by hand | asr, ocr, tag and recipe for either server above |
 
+### A hosted worker
+
+A machine with no GPU can still be a worker, for a hosted API:
+
+```bash
+export HIKIDASHI_WORKER_TOKEN=hk_wkr_…      # as above
+export HIKIDASHI_ASR_PROVIDER=groq HIKIDASHI_OCR_PROVIDER=openai HIKIDASHI_LLM_PROVIDER=openai
+export GROQ_API_KEY=… OPENAI_API_KEY=… HIKIDASHI_HOSTED_BUDGET=5
+hikidashi worker --backend hosted --server http://nas.lan:8080 --for all
+```
+
+It is the server's API run on this machine, with this machine's key: the
+server never sends one. `--for me` takes the token owner's reels, `--for all`
+those whose savers rely on the server's API. It claims each reel for all its
+stages at once, reports what it used with each result, and stops at its
+budget. See [hosted AI](operation.md#a-hosted-worker-on-another-machine).
+
 ## Measured
 
 On a copy of the library, a server and a remote worker on the same desktop

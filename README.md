@@ -50,7 +50,9 @@ your own machine, with local models.
 - **Multiple users.** Each person gets a private library on one server, with
   API tokens for scripts.
 - **Automatic processing.** New saves are downloaded and analysed in the
-  background. The heavy stages can run on a separate machine with a GPU.
+  background. The heavy stages can run on a separate machine with a GPU, or,
+  if you switch it on, on a hosted AI API (OpenAI, Groq, Mistral, Gemini or
+  any OpenAI-compatible server), from the settings page or `hikidashi ai`.
 - **English and Japanese**, light and dark themes.
 
 | | | |
@@ -64,6 +66,12 @@ Your library stays on your machine. Hikidashi contacts Instagram only to
 download the posts you saved, and downloads model weights once. The map, if
 you turn it on, sends place names to a geocoder and loads map tiles; both can
 be self-hosted. It never asks for your Instagram password.
+
+Hosted AI is optional and off by default. If you, or the admin, switch an API
+on (OpenAI, Groq's free tier, or any OpenAI-compatible server of your own),
+the reels it processes have their audio, a few frames and their text sent to
+that provider. Keys are encrypted at rest and never shown again. See
+[what is sent where](docs/operation.md#hosted-ai).
 
 ## Getting started
 
@@ -109,7 +117,9 @@ COMPOSE_FILE=docker-compose.yml:docker-compose.server-only.yml
 The server still downloads new reels and makes them searchable by caption and
 by meaning. Transcripts, on-screen text, tags and recipes come from a worker
 on another machine, ideally one with a GPU, whenever it runs: see
-[Remote workers](docs/remote-workers.md).
+[Remote workers](docs/remote-workers.md). Or switch on a hosted API, on
+**Account → AI providers**, and the server's own worker sends them to it
+([hosted AI](docs/operation.md#hosted-ai)).
 
 ### Requirements
 

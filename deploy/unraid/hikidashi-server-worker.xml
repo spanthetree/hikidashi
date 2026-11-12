@@ -28,5 +28,9 @@
   <Requires>Hikidashi, on the same Data path.</Requires>
   <Config Name="Data" Target="/data" Default="/mnt/cache/appdata/hikidashi" Mode="rw" Description="Exactly Hikidashi's Data path. A pool, never /mnt/user." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/hikidashi</Config>
   <Config Name="Stages" Target="HIKIDASHI_LOCAL_STAGES" Default="enrich,embed" Mode="" Description="Of enrich and embed. The other stages need the worker image." Type="Variable" Display="advanced" Required="true" Mask="false">enrich,embed</Config>
+  <Config Name="Hosted AI: OpenAI key" Target="OPENAI_API_KEY" Default="" Mode="" Description="Optional. The server's own OpenAI key, for hosted AI (docs/operation.md#hosted-ai). Also settable, encrypted, on the server's Account → AI providers. Nothing is sent until the switch there is turned on." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="Hosted AI: Groq key" Target="GROQ_API_KEY" Default="" Mode="" Description="Optional. The server's own Groq key: free Whisper transcription." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="Hosted AI: monthly budget" Target="HIKIDASHI_HOSTED_BUDGET" Default="" Mode="" Description="USD a month for the server's API. Required before it can be turned on; it turns itself off when reached." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Hosted AI: secret key" Target="HIKIDASHI_SECRET_KEY" Default="" Mode="" Description="Encrypts the API keys saved in the database. Empty: a random one in /data/secret.key. The same here and in the server." Type="Variable" Display="advanced" Required="false" Mask="true"/>
   <Config Name="Unload after" Target="HIKIDASHI_UNLOAD_AFTER" Default="300" Mode="" Description="Seconds with no work before the embedder is unloaded." Type="Variable" Display="advanced" Required="false" Mask="false">300</Config>
 </Container>

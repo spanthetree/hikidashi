@@ -161,6 +161,25 @@ app/
     reader.py       ffmpeg frames, tesseract, confidence filter, line dedupe
     worker.py       resumable OCR loop for items with no speech
   ollama.py         the Ollama client the tagger and the recipe pass share
+  chat.py           ask(): the chat stages' one request, on Ollama or a hosted provider
+  providers/        hosted AI (#116): one OpenAI-compatible client, stdlib only
+    client.py       chat, transcription, models; errors by what they mean for reels
+    presets.py      each provider: URL, stages, default models, limits, data terms
+    limits.py       in flight, per minute, Retry-After and x-ratelimit-*
+    keys.py         keys that print masked, from env or _FILE
+    schema.py       the stages' schemas made strict, and every reply checked
+  ai/               the hosted switch (#125)
+    config.py       one API's settings: saved, env, presets
+    secrets.py      keys encrypted at rest (cryptography)
+    service.py      every change, for the routes and the CLI alike
+    eligible.py     the loose rule, the grace period, API errors
+    stages.py       the four stages on a provider, one reel at a time
+    runner.py       the switched-on APIs as claimers in the server's worker
+    remote.py       the server's side of a hosted worker (protocol 2)
+    hosted_worker.py  `hikidashi worker --backend hosted`
+    usage.py        usage, the dated price table, budgets, estimates
+    status.py       per-API status, a user's own view, requeue
+    __main__.py     `hikidashi ai`
   search/
     __init__.py     FTS5, vector and transcript-chunk hits, fused into one ranking
     eval.py         the graded query set, scored: recall@10, MRR, nDCG@10

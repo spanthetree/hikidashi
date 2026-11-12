@@ -9,6 +9,7 @@ stage's own detail is in [the pipeline](pipeline.md).
 - [Reel lifecycle](#reel-lifecycle)
 - [The worker loop](#the-worker-loop)
 - [The remote worker protocol](#the-remote-worker-protocol)
+- [Hosted AI](#hosted-ai)
 - [A search request](#a-search-request)
 - [Import](#import)
 - [Sign-in and requests](#sign-in-and-requests)
@@ -214,7 +215,7 @@ What is checked, and what happens when it fails:
 | a worker token (`hk_wkr_…`) made on the Pipeline page or with `hikidashi token make --worker`, by an admin who is still one. Not an API token, and not `HIKIDASHI_WORKER_TOKEN` from the server's own environment | `worker_auth` | 401 `invalid_token`, and the worker stops. With no worker token made, 404: remote workers are off |
 | the stage is one a remote worker may run (`asr`, `ocr`, `tag`, `recipe`) | `protocol.check` | 409, and the worker stops |
 | the same `PROTOCOL`, and the same version of each stage (`ASR_V`, `OCR_V`, `TAG_V`, `RECIPE_V`) | `protocol.check` | 409 naming both versions, and the worker stops: run one release on both |
-| the profile is `cpu` or `cuda` | `worker_results` | 422 |
+| the profile is `cpu` or `cuda`, or a hosted worker's `provider:model` | `worker_results` | 422 |
 | every result's shape: types, lengths, ranges; a tag the taxonomy lacks is no tag; a tag's game answer is the model's words (kind, title, confidence, others, the check's title), each bounded | `protocol.parse` | 422 for the whole batch, before anything is recorded |
 | the worker still holds the reel's lease | `protocol.record` | that result is dropped; another worker has the reel |
 | a game is applied only if the reel's text, as the server has it, names it | `tagging.worker.record` | it is kept as a guess to confirm instead: a worker cannot make a title sure |
@@ -251,6 +252,217 @@ reports as it ends. A result that arrives late, after another worker took the
 reel, is dropped, as the lease check in the table above says. While the server
 is unreachable, the worker waits, trying again from 5 s up to a minute, and
 its leases run out as if it had died.
+
+## Hosted AI
+
+A hosted API can do the four worker stages instead of a worker:
+transcription, on-screen text, tags with the game pass, and recipes. Each
+user can have their own, and the server can have one. Nothing is sent
+anywhere unless someone has switched one on
+([ADR 0019](adr/0019-hosted-ai-behind-a-switch.md)). Setting it up is on
+**Account → AI providers**, or with `hikidashi ai`.
+
+### The switch
+
+```mermaid
+stateDiagram-v2
+  [*] --> Off
+  Off --> On: turned on (all four stages set, keys, a budget)<br/>backlog: process it, or leave it to workers
+  On --> Off: turned off: in-flight requests finish, the rest go back to workers
+  On --> Off: by itself, with the reason:<br/>key rejected · quota used up · budget reached
+  On --> Waiting: a rate limit, a free tier's daily cap, an outage
+  Waiting --> On: the wait is over (Retry-After, or backoff to 15 min)
+```
+
+- **On**, the API claims new reels as soon as they are fetched. A worker that
+  checks in later finds none of them. **Off**, workers get everything, as
+  before.
+- **The server's API** is on for **just me** (the admin who turned it on) or
+  **all users**. On all users it takes a reel if at least one saver relies on
+  it: their choice is "the server's API" or "server default". A user's own API
+  is offered their reels first, and the server's waits a minute (`GRACE`)
+  after it first finds a reel ready.
+- **A user's choice**, on Account → AI providers: server default, my API, the
+  server's API (only while it is on for all users), or workers only.
+- Env (`HIKIDASHI_*_PROVIDER`, keys, `HIKIDASHI_HOSTED_BUDGET`) sets the
+  server's API and locks those fields on the page, but never turns it on.
+
+### A claim
+
+Each switched-on API is a claimer in the worker that runs `enrich`: the
+server's own (`server-worker` in Docker). Its name in the queue is
+`api:server` or `api:user:<id>`.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant H as server-worker (api:user:2)
+  participant DB as SQLite
+  participant P as provider
+  loop every round (10 s idle)
+    H->>DB: switch on? budget left? eligible reels (the loose rule)
+    H->>DB: lease asr, ocr, tag, recipe for each, at once
+    loop each reel, stages in pipeline order
+      H->>DB: still needed? (its own pending query)
+      H->>P: audio / frames / text
+      P-->>H: transcript / lines / JSON, checked against the schema
+      H->>DB: the stage's record(), stamped provider:model
+      H->>DB: hosted_usage: tokens or audio seconds, estimated cost
+    end
+    H->>DB: release every lease, uncounted
+  end
+```
+
+A reel a worker already transcribed gets only its remaining stages. OCR runs
+only where it does today (no transcript), and recipes only on candidates.
+Leases are renewed every 30 s while a reel runs, and a crash lets them expire,
+as for any worker: at most the requests in flight are sent again.
+
+### When something fails
+
+| What | Example | What happens |
+|---|---|---|
+| The provider can't be used | 401/403, `insufficient_quota`, a model the key can't use | The switch turns off, with the reason on Account, the Pipeline page and `hikidashi status`. Its reels go back to workers. Nothing is recorded against any reel. The owner turns it back on; a new month doesn't |
+| The monthly budget is reached | this month's estimated spend ≥ the budget | The same, reason "monthly budget reached" |
+| Not now | a 429 longer than 30 s, a free tier's daily cap (`per day`), a 5xx twice over, unreachable | Reels back to workers uncounted; the API waits `Retry-After`, or from 30 s doubling to 15 min |
+| This one reel | a 400 on this file, a reply that doesn't fit the schema, a refusal, a reply cut short, audio ffmpeg can't read | An API error in `api_reel`, never a worker attempt, never `fail_stage`. After three, that API leaves the reel to workers, and the Pipeline page counts it |
+
+Short 429s (≤ 30 s) are waited out inside the request, and a 5xx is tried
+twice more, so only what outlasts that reaches the table.
+
+### A hosted worker on another machine
+
+`hikidashi worker --backend hosted --server URL --for me|all` is the server's
+API run elsewhere, with **its own key** from its own env. It authenticates
+with a worker token, which is an admin's, so it takes what the server's API
+would: the token owner's reels (`me`) or every reel a saver relies on the
+server's API for (`all`), after the same grace period. It needs
+`HIKIDASHI_HOSTED_BUDGET`, and enforces it against the spend the server
+recorded from its reports.
+
+Protocol 2 ([remote worker protocol](#the-remote-worker-protocol)) adds:
+
+| Route | |
+|---|---|
+| `POST /api/worker/hosted/claim {scope, limit}` | leases reels for all their stages; returns `{reels, spent}` |
+| `POST /api/worker/hosted/rows {stage, shortcodes}` | each stage's row as the worker gets there, for reels it holds |
+| `POST /api/worker/results` | as before, with a `provider:model` profile, `languages` and `usage` |
+| `POST /api/worker/hosted/error {shortcode, reason}` | an API error: its stages back, uncounted |
+
+Running it is switching it on. Ctrl-C or `docker stop` finishes the reel in
+hand and gives the rest back.
+
+### From the command line
+
+Everything the page does, `hikidashi ai` does: on the server's host it opens
+the database (`--user NAME`, or `--server-api`), and from anywhere else it
+goes through the same routes with `--server URL` and an API token with
+`read:ai` and `write:ai` (from `HIKIDASHI_API_TOKEN`, or asked).
+
+```sh
+hikidashi ai show [--json]
+hikidashi ai set all --provider groq            # then tag/recipe/ocr: --provider openai
+hikidashi ai key set groq                       # a hidden prompt, or --stdin; never an argument
+hikidashi ai budget 5
+hikidashi ai test                               # one tiny request per stage
+hikidashi ai on --new-only                      # shows the backlog and estimate first
+hikidashi ai on --server-api --for all --backlog --yes
+hikidashi ai status --all
+hikidashi ai usage --month 2026-11
+hikidashi ai off
+```
+
+Exit codes: 0 OK, 1 failed (Test connection rejected the key), 2 usage, 3 not
+allowed (not an admin, a missing scope, a setting locked by env, stages not
+all set, no budget).
+
+### Keys and settings
+
+Settings are in the `setting` table, per user and (with `user_id` NULL) for
+the server. Keys are encrypted with Fernet under `HIKIDASHI_SECRET_KEY`, or
+`data/secret.key` (made on first use, mode 0600). A backup of all of `data/`
+holds both and can read the keys; a copy of the database alone can't. If
+`secret.key` is lost, saved keys read as "cannot be read; enter it again",
+and nothing else is lost. Every change, and every switch on or off, is in
+`ai_audit` (who, what, when, never a key).
+
+Env, for the server's API (and a hosted worker's):
+
+```env
+HIKIDASHI_ASR_PROVIDER=groq          # openai, groq, mistral, compatible, …; mixing allowed
+HIKIDASHI_ASR_MODEL=                 # optional; the preset's default
+HIKIDASHI_OCR_PROVIDER=openai
+HIKIDASHI_OCR_MODEL=
+HIKIDASHI_LLM_PROVIDER=openai        # tags, game pass, recipes
+HIKIDASHI_LLM_MODEL=
+HIKIDASHI_ASR_LANGUAGE=              # force one, as ja; else detected
+GROQ_API_KEY=                        # one per provider, or <NAME>_FILE for Docker secrets
+OPENAI_API_KEY=
+HIKIDASHI_OPENAI_BASE_URL=           # an OpenAI-compatible server: Speaches, vLLM, LiteLLM, …
+HIKIDASHI_OPENAI_API_KEY=
+HIKIDASHI_HOSTED_BUDGET=5            # USD a month; required to turn it on
+HIKIDASHI_SECRET_KEY=                # optional; else data/secret.key
+```
+
+### Providers
+
+Checked 2026-11-12, against each provider's own pages where they could be
+read. Free tiers, model names, prices and data terms change often: check
+before relying on one. Presets marked "chosen" have no default models, since
+their names couldn't all be checked; pick one from the provider's own list
+(the page's model box, or `hikidashi ai models <provider>`).
+
+| Preset | Stages | Default models | Free tier | What it does with what is sent |
+|---|---|---|---|---|
+| `openai` | all four | `gpt-transcribe` ($0.0045/min), `gpt-6-luna` ($0.10 / $0.01 cached / $0.50 per 1M tokens) | none | not used for training by default; kept up to 30 days for abuse monitoring |
+| `groq` | all four | `whisper-large-v3-turbo`, `openai/gpt-oss-20b` (strict schema), `meta-llama/llama-4-scout-17b-16e-instruct` (vision) | yes: Whisper at 20 a minute, 2,000 a day, 7,200 audio s an hour, 28,800 a day, 25 MB files | does not train on API data |
+| `mistral` | all four (Voxtral for speech) | chosen | Experiment plan | paid: no training; check the free plan's terms |
+| `gemini` | ocr, tag, recipe (no transcription endpoint) | chosen | yes, generous | **free tier: used to improve Google's products, and may be read by people**; paid: not |
+| `openrouter` | ocr, tag, recipe | chosen (`:free` models) | small daily limits | the upstream provider's; free models may log |
+| `cerebras` | tag, recipe | chosen | rate-limited per minute and day | Cerebras's terms |
+| `github` | ocr, tag, recipe | chosen | low per-minute and per-day limits, with a GitHub account | GitHub Models' terms |
+| `cloudflare` | tag, recipe (its Whisper is not on the OpenAI-compatible layer) | chosen; base URL `https://api.cloudflare.com/client/v4/accounts/<id>/ai/v1` | a daily allowance | does not train on inputs |
+| `huggingface` | ocr, tag, recipe | chosen | monthly credits | the routed provider's |
+| `compatible` | all four | chosen; your base URL | your server | your server |
+
+**OpenAI's older models shut down soon:** `whisper-1`, `gpt-4o-transcribe`
+and `gpt-4o-mini-transcribe` on 2027-02-26, and `gpt-4o-mini` and
+`gpt-4.1-mini` on 2027-01-14. `gpt-transcribe` returns no segment timings, so
+**the music guard is weaker on it**: only `is_noise` runs over the whole clip,
+and a music-only reel may get lyrics. Groq's Whisper models return segments,
+and the guard drops those with a `no_speech_prob` over 0.6. The settings page
+warns when the chosen transcription model gives no segments.
+
+Sources: OpenAI's [deprecations](https://developers.openai.com/api/docs/deprecations),
+[pricing](https://developers.openai.com/api/docs/pricing) and
+[gpt-transcribe](https://developers.openai.com/api/docs/models/gpt-transcribe);
+Groq's [rate limits](https://console.groq.com/docs/rate-limits) and
+[structured outputs](https://console.groq.com/docs/structured-outputs);
+Google's [Gemini API terms](https://ai.google.dev/gemini-api/terms) and
+[OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai);
+Cloudflare's [OpenAI compatibility](https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility);
+GitHub's [GitHub Models](https://github.blog/ai-and-ml/llms/solving-the-inference-problem-for-open-source-ai-projects-with-github-models/).
+
+### Cost
+
+Every request is recorded in `hosted_usage` with an estimated cost from the
+dated price table in `app/ai/usage.py`. A model not in it costs nothing there
+and is named as unpriced, so a budget can't be relied on for it. On all
+users, the server's spend is split between the savers of each reel who rely on
+it. The backlog estimate, shown when a switch goes on, comes from each reel's
+duration (transcription), six frames (on-screen text), its text so far
+(tags), and a range for recipes, which run only on candidates.
+
+### Not yet measured
+
+These need real keys and real reels, so they wait for the owner of a
+library ([#116](https://github.com/spanthetree/hikidashi/issues/116)): the
+music guard on the music-only reels, on Groq and on `gpt-transcribe`; the
+tag, recipe and game evaluations against `qwen2.5:3b`/`7b`; and hosted OCR
+against tesseract on recipe cards, Japanese text and stylised captions. To
+run them on a copy of a library, switch an API on for it with `hikidashi ai`,
+run `hikidashi worker` until the queue is empty, then the stages'
+`--eval`.
 
 ## A search request
 
