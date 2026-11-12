@@ -1,8 +1,8 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { setup } from "$lib/api";
-  import Credentials from "$lib/components/Credentials.svelte";
-  import { m } from "$lib/paraglide/messages";
+  import { setup } from "#lib/api.js";
+  import Credentials from "#lib/components/Credentials.svelte";
+  import { m } from "#lib/paraglide/messages.js";
 
   /* The link the server logs while nobody can sign in: /setup?token=… */
   const token = $derived(page.url.searchParams.get("token") ?? "");

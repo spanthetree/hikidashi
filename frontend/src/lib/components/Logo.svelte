@@ -3,7 +3,7 @@
      it through --logo-card, --logo-lit, --logo-body, --logo-slot and
      --logo-filter. With pixel art on it is redrawn on a 16-pixel grid, two
      screen pixels to each, as the icons are (Icon.svelte). */
-  import { look } from "$lib/theme.svelte";
+  import { look } from "#lib/theme.svelte.js";
 </script>
 
 {#if look.pixel}

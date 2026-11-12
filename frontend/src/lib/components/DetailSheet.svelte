@@ -1,20 +1,20 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
-  import { clearGame, clearTag, exportUrl, getItem, getNote, removeItem, retryFetch, setGame, setTag } from "$lib/api";
-  import ExportMenu from "$lib/components/ExportMenu.svelte";
-  import MiniMap from "$lib/components/MiniMap.svelte";
-  import RecipePanel from "$lib/components/RecipePanel.svelte";
-  import Rich from "$lib/components/Rich.svelte";
-  import { segments } from "$lib/caption";
-  import { copyFailure, copyText } from "$lib/clipboard";
-  import { paragraphs, readingTime } from "$lib/transcript";
-  import { duration, megabytes, nf, profileUrl, savedDate, tint } from "$lib/format";
-  import { tagLabel, tagName } from "$lib/i18n";
-  import { sidebar } from "$lib/library.svelte";
-  import { backdrop, motion, panel, receive, send } from "$lib/motion.svelte";
-  import { m } from "$lib/paraglide/messages";
+  import { clearGame, clearTag, exportUrl, getItem, getNote, removeItem, retryFetch, setGame, setTag } from "#lib/api.js";
+  import ExportMenu from "#lib/components/ExportMenu.svelte";
+  import MiniMap from "#lib/components/MiniMap.svelte";
+  import RecipePanel from "#lib/components/RecipePanel.svelte";
+  import Rich from "#lib/components/Rich.svelte";
+  import { segments } from "#lib/caption.js";
+  import { copyFailure, copyText } from "#lib/clipboard.js";
+  import { paragraphs, readingTime } from "#lib/transcript.js";
+  import { duration, megabytes, nf, profileUrl, savedDate, tint } from "#lib/format.js";
+  import { tagLabel, tagName } from "#lib/i18n.js";
+  import { sidebar } from "#lib/library.svelte.js";
+  import { backdrop, motion, panel, receive, send } from "#lib/motion.svelte.js";
+  import { m } from "#lib/paraglide/messages.js";
   import Icon from "./Icon.svelte";
-  import type { FilterKind, Item, ItemDetail, ItemGame, ItemTag, Recipe, TagChoice } from "$lib/types";
+  import type { FilterKind, Item, ItemDetail, ItemGame, ItemTag, Recipe, TagChoice } from "#lib/types.js";
 
   let { shortcode, preview, recipeFirst = false, onclose, onclosed, onfilter, ontagged,
         onerror, onchanged, onremoved }: {

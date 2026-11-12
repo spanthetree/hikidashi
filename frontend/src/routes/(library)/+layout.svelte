@@ -4,29 +4,29 @@
   import { SvelteSet } from "svelte/reactivity";
   import { afterNavigate, goto } from "$app/navigation";
   import { page } from "$app/state";
-  import Card from "$lib/components/Card.svelte";
-  import DetailSheet from "$lib/components/DetailSheet.svelte";
-  import ExportMenu from "$lib/components/ExportMenu.svelte";
-  import Icon from "$lib/components/Icon.svelte";
-  import ImportBox from "$lib/components/ImportBox.svelte";
-  import ImportDialog from "$lib/components/ImportDialog.svelte";
-  import MapView from "$lib/components/MapView.svelte";
-  import Notice from "$lib/components/Notice.svelte";
-  import Rich from "$lib/components/Rich.svelte";
-  import Sidebar from "$lib/components/Sidebar.svelte";
-  import Topbar from "$lib/components/Topbar.svelte";
-  import { addMatchingToList, addToList, exportUrl } from "$lib/api";
+  import Card from "#lib/components/Card.svelte";
+  import DetailSheet from "#lib/components/DetailSheet.svelte";
+  import ExportMenu from "#lib/components/ExportMenu.svelte";
+  import Icon from "#lib/components/Icon.svelte";
+  import ImportBox from "#lib/components/ImportBox.svelte";
+  import ImportDialog from "#lib/components/ImportDialog.svelte";
+  import MapView from "#lib/components/MapView.svelte";
+  import Notice from "#lib/components/Notice.svelte";
+  import Rich from "#lib/components/Rich.svelte";
+  import Sidebar from "#lib/components/Sidebar.svelte";
+  import Topbar from "#lib/components/Topbar.svelte";
+  import { addMatchingToList, addToList, exportUrl } from "#lib/api.js";
   import {
     activeFilters, filterUrl, mapParams, readFilters, recipeFiltered, toSearch, withLayout, withPick,
     withQuery, withMedia, withoutFilters, withTime, withView, type Filters,
-  } from "$lib/filters";
-  import { nf } from "$lib/format";
-  import { groupLabel, tagLabel } from "$lib/i18n";
-  import { draggingNonZip, hasFiles, imports, type Upload } from "$lib/imports.svelte";
-  import { library, pins, sidebar } from "$lib/library.svelte";
-  import { cardIn, flipDuration } from "$lib/motion.svelte";
-  import { m } from "$lib/paraglide/messages";
-  import type { FilterKind, Layout, Media, NoticeState, PickKind, Sort, View } from "$lib/types";
+  } from "#lib/filters.js";
+  import { nf } from "#lib/format.js";
+  import { groupLabel, tagLabel } from "#lib/i18n.js";
+  import { draggingNonZip, hasFiles, imports, type Upload } from "#lib/imports.svelte.js";
+  import { library, pins, sidebar } from "#lib/library.svelte.js";
+  import { cardIn, flipDuration } from "#lib/motion.svelte.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import type { FilterKind, Layout, Media, NoticeState, PickKind, Sort, View } from "#lib/types.js";
 
   let { children } = $props();
 
@@ -58,49 +58,56 @@
 
   const libraryUrl = (f: Filters) => `/${toSearch(f)}`;
 
+  /* Filtering keeps focus where it is (the search box, a sidebar button):
+     reset: false. A new set of results starts at the top unless `stay`. */
+  function go(url: string, { stay = false, replace = false } = {}) {
+    return goto(url, { reset: false, replace }).then(() => {
+      if (!stay) window.scrollTo(0, 0);
+    });
+  }
+
   function setFilter(kind: FilterKind, value: string) {
     drawer = false;
-    void goto(filterUrl(filters, kind, value), { keepFocus: true });
+    void go(filterUrl(filters, kind, value));
   }
 
   function clearFilters() {
     drawer = false;
-    void goto(libraryUrl(withView({ ...withoutFilters(filters), media: "" }, "library")),
-              { keepFocus: true });
+    void go(libraryUrl(withView({ ...withoutFilters(filters), media: "" }, "library")));
   }
 
   function setView(view: View) {
     drawer = false;
-    void goto(libraryUrl(withView(filters, view)), { keepFocus: true });
+    void go(libraryUrl(withView(filters, view)));
   }
 
   function setLayout(layout: Layout) {
-    void goto(libraryUrl(withLayout(filters, layout)), { keepFocus: true, noScroll: true });
+    void go(libraryUrl(withLayout(filters, layout)), { stay: true });
   }
 
   /* Panning the map replaces its history entry: Back leaves the map rather
      than walking back through every drag. */
   function mapMoved(at: string) {
-    void goto(libraryUrl({ ...filters, at }), { keepFocus: true, noScroll: true, replaceState: true });
+    void go(libraryUrl({ ...filters, at }), { stay: true, replace: true });
   }
 
   function setMedia(media: Media) {
     drawer = false;
-    void goto(libraryUrl(withMedia(filters, media)), { keepFocus: true });
+    void go(libraryUrl(withMedia(filters, media)));
   }
 
   // Several recipe filters stack, so the drawer stays open while you pick.
   function pick(kind: PickKind, value: string) {
-    void goto(libraryUrl(withPick(filters, kind, value)), { keepFocus: true, noScroll: true });
+    void go(libraryUrl(withPick(filters, kind, value)), { stay: true });
   }
 
   function setTime(minutes: number) {
-    void goto(libraryUrl(withTime(filters, minutes)), { keepFocus: true, noScroll: true });
+    void go(libraryUrl(withTime(filters, minutes)), { stay: true });
   }
 
   function setSort(e: Event) {
     const sort = (e.currentTarget as HTMLSelectElement).value as Sort;
-    void goto(libraryUrl({ ...filters, sort }), { keepFocus: true, noScroll: true });
+    void go(libraryUrl({ ...filters, sort }), { stay: true });
   }
 
   /* Typing searches as you go. Refining a search replaces its history entry,
@@ -122,7 +129,7 @@
       const next = q.trim();
       if (next === filters.q) return;
       sent = next;
-      void goto(libraryUrl(withQuery(filters, next)), { keepFocus: true, replaceState: !!filters.q });
+      void go(libraryUrl(withQuery(filters, next)), { replace: !!filters.q });
     }, 220);
   }
 
@@ -139,11 +146,11 @@
 
   function close() {
     if (openedFromGrid) history.back();
-    else void goto(libraryUrl(filters), { noScroll: true, replaceState: true });
+    else void go(libraryUrl(filters), { stay: true, replace: true });
   }
 
   function sheetFilter(kind: FilterKind, value: string) {
-    void goto(filterUrl(filters, kind, value), { replaceState: openedFromGrid });
+    void goto(filterUrl(filters, kind, value), { replace: openedFromGrid });
   }
 
   function tagged(code: string, tag: string | null) {
@@ -171,7 +178,7 @@
 
   function sheetError(message: string) {
     notice = { text: m.notice_open_failed({ error: message }), kind: "error" };
-    void goto(libraryUrl(filters), { noScroll: true, replaceState: true });
+    void go(libraryUrl(filters), { stay: true, replace: true });
   }
 
   /* While a reel is open the page behind it does not scroll (the modal

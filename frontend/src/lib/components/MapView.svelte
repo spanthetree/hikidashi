@@ -1,16 +1,16 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
   import type * as Leaflet from "leaflet";
-  import { geocode } from "$lib/api";
-  import { filterKey, type Filters } from "$lib/filters";
-  import { nf } from "$lib/format";
-  import { baseLayer, distance, km, leaflet, readAt, writeAt, type Point } from "$lib/geo";
-  import { tagLabel } from "$lib/i18n";
-  import { pins, sidebar } from "$lib/library.svelte";
-  import { m } from "$lib/paraglide/messages";
+  import { geocode } from "#lib/api.js";
+  import { filterKey, type Filters } from "#lib/filters.js";
+  import { nf } from "#lib/format.js";
+  import { baseLayer, distance, km, leaflet, readAt, writeAt, type Point } from "#lib/geo.js";
+  import { tagLabel } from "#lib/i18n.js";
+  import { pins, sidebar } from "#lib/library.svelte.js";
+  import { m } from "#lib/paraglide/messages.js";
   import Icon from "./Icon.svelte";
   import Rich from "./Rich.svelte";
-  import type { Pin, PlacedItem } from "$lib/types";
+  import type { Pin, PlacedItem } from "#lib/types.js";
 
   /* Places on a map, beside a list of their reels. The list follows the map:
      pan or zoom and it narrows to what is in view. Hovering a reel lights its

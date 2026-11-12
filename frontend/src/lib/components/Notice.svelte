@@ -1,8 +1,8 @@
 <script lang="ts">
   import { slide } from "svelte/transition";
-  import { motion } from "$lib/motion.svelte";
-  import { m } from "$lib/paraglide/messages";
-  import type { NoticeState } from "$lib/types";
+  import { motion } from "#lib/motion.svelte.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import type { NoticeState } from "#lib/types.js";
 
   let { notice = $bindable() }: { notice: NoticeState } = $props();
 </script>

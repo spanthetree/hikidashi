@@ -22,7 +22,7 @@ WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
-# svelte.config.js writes the build to ../app/web, i.e. /src/app/web.
+# vite.config.ts writes the build to ../app/web, i.e. /src/app/web.
 RUN npm run build
 
 

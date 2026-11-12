@@ -1,4 +1,4 @@
-import { m } from "$lib/paraglide/messages";
+import { m } from "#lib/paraglide/messages.js";
 
 /* Copying to the clipboard, wherever the app is opened (#107).
 

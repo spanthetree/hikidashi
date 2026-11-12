@@ -1,5 +1,5 @@
 {
-  "extends": "./.svelte-kit/tsconfig.json",
+  "extends": "$app/tsconfig",
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
@@ -10,5 +10,8 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "bundler"
-  }
+  },
+  // The app, the Playwright tests, and the config files at the root.
+  "include": ["src", "e2e", "*"],
+  "exclude": ["src/service-worker"]
 }

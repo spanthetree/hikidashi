@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { MessagePart } from "$lib/paraglide/runtime";
+  import type { MessagePart } from "#lib/paraglide/runtime.js";
 
   /* A message with a little markup in it, `{#b}Saved{/b}` or
      `{#code}./hikidashi tag{/code}`, drawn without {@html}: each run of text

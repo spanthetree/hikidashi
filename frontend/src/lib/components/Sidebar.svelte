@@ -1,16 +1,16 @@
 <script lang="ts">
   import { slide } from "svelte/transition";
-  import { nf } from "$lib/format";
-  import { chooseLocale, groupLabel, LANGUAGES, locale, stateLabel, tagLabel } from "$lib/i18n";
-  import { m } from "$lib/paraglide/messages";
-  import { locales } from "$lib/paraglide/runtime";
-  import { motion } from "$lib/motion.svelte";
-  import { sidebar } from "$lib/library.svelte";
-  import { session } from "$lib/session.svelte";
-  import { MEDIA, TIMES, type Filters } from "$lib/filters";
-  import type { IconName } from "$lib/icons";
+  import { nf } from "#lib/format.js";
+  import { chooseLocale, groupLabel, LANGUAGES, locale, stateLabel, tagLabel } from "#lib/i18n.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import { locales } from "#lib/paraglide/runtime.js";
+  import { motion } from "#lib/motion.svelte.js";
+  import { sidebar } from "#lib/library.svelte.js";
+  import { session } from "#lib/session.svelte.js";
+  import { MEDIA, TIMES, type Filters } from "#lib/filters.js";
+  import type { IconName } from "#lib/icons.js";
   import Icon from "./Icon.svelte";
-  import type { FilterKind, Media, PickKind, View } from "$lib/types";
+  import type { FilterKind, Media, PickKind, View } from "#lib/types.js";
 
   let { filters, open = false, onfilter, onall, onview, onmedia, onpick, ontime }: {
     filters: Filters;

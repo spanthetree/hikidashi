@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type * as Leaflet from "leaflet";
-  import { baseLayer, leaflet } from "$lib/geo";
-  import { sidebar } from "$lib/library.svelte";
-  import { m } from "$lib/paraglide/messages";
-  import type { Place } from "$lib/types";
+  import { baseLayer, leaflet } from "#lib/geo.js";
+  import { sidebar } from "#lib/library.svelte.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import type { Place } from "#lib/types.js";
 
   /* A reel's places, small, in the detail sheet. Only the ones that are on
      the map; the chips above still list every place the caption names. The

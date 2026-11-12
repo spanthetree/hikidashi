@@ -13,7 +13,7 @@
 </script>
 
 <script lang="ts">
-  import { m } from "$lib/paraglide/messages";
+  import { m } from "#lib/paraglide/messages.js";
   import Icon from "./Icon.svelte";
 
   let { groups, label = m.export_button(), align = "end", up = false, small = true }: {

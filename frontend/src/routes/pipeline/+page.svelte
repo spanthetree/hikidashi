@@ -2,15 +2,15 @@
   import { onMount } from "svelte";
   import {
     getAllTokens, getPipeline, getWorkerTokens, makeWorkerToken, retryStage, revokeAnyToken, revokeWorkerToken,
-  } from "$lib/api";
-  import Notice from "$lib/components/Notice.svelte";
-  import Rich from "$lib/components/Rich.svelte";
-  import Topbar from "$lib/components/Topbar.svelte";
-  import { copyFailure, copyText } from "$lib/clipboard";
-  import { ago, list, nf, savedDate } from "$lib/format";
-  import { stageLabel } from "$lib/i18n";
-  import { m } from "$lib/paraglide/messages";
-  import type { ApiToken, NoticeState, PipelineState, Stage, WorkerInfo, WorkerToken } from "$lib/types";
+  } from "#lib/api.js";
+  import Notice from "#lib/components/Notice.svelte";
+  import Rich from "#lib/components/Rich.svelte";
+  import Topbar from "#lib/components/Topbar.svelte";
+  import { copyFailure, copyText } from "#lib/clipboard.js";
+  import { ago, list, nf, savedDate } from "#lib/format.js";
+  import { stageLabel } from "#lib/i18n.js";
+  import { m } from "#lib/paraglide/messages.js";
+  import type { ApiToken, NoticeState, PipelineState, Stage, WorkerInfo, WorkerToken } from "#lib/types.js";
 
   const POLL_MS = 5000;
 

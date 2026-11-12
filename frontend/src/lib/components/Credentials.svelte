@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import Topbar from "$lib/components/Topbar.svelte";
-  import { m } from "$lib/paraglide/messages";
+  import Topbar from "#lib/components/Topbar.svelte";
+  import { m } from "#lib/paraglide/messages.js";
 
   /* The page for signing in, claiming the library, and accepting an invite:
      a title, a word on what this is, a username and a password. `fresh` is a
