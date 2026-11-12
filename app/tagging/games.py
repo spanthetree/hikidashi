@@ -355,16 +355,30 @@ def decide(
     return Decision(title, sure)
 
 
-class Ollama(ollama.Client):
-    """The `Model` on an Ollama server. The tagger's client is one."""
+class Asker:
+    """The `Model`'s two requests, on any chat backend that has `ask`
+    (app/chat.py): Ollama, or a hosted provider. The tagger's are one."""
+
+    def ask(
+        self, system: str, prompt: str, *, schema: dict[str, Any], max_tokens: int, name: str
+    ) -> str:
+        raise NotImplementedError
 
     def game(self, prompt: str) -> str:
-        return self.chat(SYSTEM, prompt, schema=_SCHEMA, num_predict=NUM_PREDICT)
+        return self.ask(SYSTEM, prompt, schema=_SCHEMA, max_tokens=NUM_PREDICT, name="game")
 
     def check(self, title: str) -> str:
-        return self.chat(
-            CHECK_SYSTEM, f"Title: {title}", schema=_CHECK_SCHEMA, num_predict=CHECK_PREDICT
+        return self.ask(
+            CHECK_SYSTEM,
+            f"Title: {title}",
+            schema=_CHECK_SCHEMA,
+            max_tokens=CHECK_PREDICT,
+            name="game_title",
         )
+
+
+class Ollama(ollama.Client, Asker):
+    """The `Model` on an Ollama server. The backend first, for its `ask`."""
 
 
 _SCHEMA, _CHECK_SCHEMA = schema(), check_schema()

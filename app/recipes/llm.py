@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from app import ollama
-from app.ollama import NUM_CTX
+from app.chat import Chat
 
 from .detect import sends_elsewhere
 from .groups import normalise
@@ -378,19 +378,31 @@ def read(
     return Found(recipe=recipe, confidence=confidence, source_fields=fields, dropped=dropped)
 
 
-class Ollama(ollama.Client):
-    """A `Model` backed by one model on an Ollama server."""
+class Reader:
+    """A `Model` on any chat backend with `ask` (app/chat.py)."""
+
+    def ask(
+        self, system: str, prompt: str, *, schema: dict[str, Any], max_tokens: int, name: str
+    ) -> str:
+        raise NotImplementedError
 
     def check(self, prompt: str) -> str:
-        return self.chat(
-            CHECK_SYSTEM, prompt, schema=check_schema(), num_predict=CHECK_PREDICT, num_ctx=NUM_CTX
+        return self.ask(
+            CHECK_SYSTEM, prompt, schema=_CHECK, max_tokens=CHECK_PREDICT, name="recipe_check"
         )
 
     def extract(self, prompt: str) -> str:
-        return self.chat(
-            EXTRACT_SYSTEM,
-            prompt,
-            schema=extract_schema(),
-            num_predict=EXTRACT_PREDICT,
-            num_ctx=NUM_CTX,
+        return self.ask(
+            EXTRACT_SYSTEM, prompt, schema=_EXTRACT, max_tokens=EXTRACT_PREDICT, name="recipe"
         )
+
+
+class Ollama(ollama.Client, Reader):
+    """The recipe pass on one model on an Ollama server."""
+
+
+class Hosted(Chat, Reader):
+    """The recipe pass on a hosted provider's model (#116)."""
+
+
+_CHECK, _EXTRACT = check_schema(), extract_schema()

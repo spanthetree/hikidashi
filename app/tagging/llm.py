@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app import ollama
-from app.ollama import NUM_CTX
+from app.chat import Chat
 from app.ollama import OllamaError as OllamaError  # re-exported
 
 from . import games
@@ -252,15 +252,20 @@ def tag(
     return result
 
 
-class Ollama(games.Ollama):
-    """A `Generate` backed by one model on an Ollama server. It asks about a
-    reel's game too (app/tagging/games.py), on the same model."""
-
-    def __init__(self, url: str, model: str, *, timeout: float = 300):
-        super().__init__(url, model, timeout=timeout)
-        self._schema = schema()
+class Tagger(games.Asker):
+    """A `Generate` on any chat backend with `ask` (app/chat.py). It asks
+    about a reel's game too (app/tagging/games.py), on the same model."""
 
     def __call__(self, prompt: str) -> str:
-        return self.chat(
-            SYSTEM, prompt, schema=self._schema, num_predict=NUM_PREDICT, num_ctx=NUM_CTX
-        )
+        return self.ask(SYSTEM, prompt, schema=_SCHEMA, max_tokens=NUM_PREDICT, name="tag")
+
+
+class Ollama(ollama.Client, Tagger):
+    """The tagger on one model on an Ollama server."""
+
+
+class Hosted(Chat, Tagger):
+    """The tagger on a hosted provider's model (#116)."""
+
+
+_SCHEMA = schema()
