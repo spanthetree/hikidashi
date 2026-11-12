@@ -89,7 +89,7 @@ class TestPrimary(unittest.TestCase):
         self.assertIsNone(primary(["zzzznothing"]))
         self.assertIsNone(primary([]))
 
-    def test_the_four_from_hand_labels(self):
+    def test_the_six_from_hand_labels(self):
         """#145: each new category, and the hashtags kept out of them."""
         self.assertEqual(primary(["animerecommendation", "cowboybebop"]), "Movies & TV")
         self.assertEqual(primary(["film"]), "Movies & TV")
@@ -99,6 +99,10 @@ class TestPrimary(unittest.TestCase):
         self.assertEqual(primary(["parenting", "toddler"]), "Family & wellbeing")
         self.assertEqual(primary(["fitnessmotivation"]), "Fitness")  # not wellbeing
         self.assertEqual(primary(["hairstyle", "braids"]), "Style & beauty")
+        self.assertEqual(primary(["austinrealtor", "austinlife"]), "Home & living")
+        self.assertEqual(primary(["realestate", "trust"]), "Finance")  # property as money
+        self.assertEqual(primary(["giftideas", "austintx"]), "Shopping")
+        self.assertEqual(primary(["workshop"]), "Home & DIY")  # not a shop
 
     def test_dropped_categories_are_gone(self):
         self.assertIsNone(primary(["dogsofinstagram", "guitar"]))

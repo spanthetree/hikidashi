@@ -39,7 +39,7 @@ from .taxonomy import names
 
 # Bumping this schedules every item for re-tagging by the model. Change it with
 # the prompt, the schema or the parsing below.
-TAG_V = 4  # 3: the game a gaming reel shows (#117); 4: four more categories (#145)
+TAG_V = 4  # 3: the game a gaming reel shows (#117); 4: six more categories (#145)
 
 # Self-reported, so a ranking more than a probability: words, because a 7B
 # model asked for a number answers 0.9 to nearly everything.
@@ -68,14 +68,21 @@ CATEGORY_NOTES: dict[str, str] = {
     "3D printing, home projects",
     "Sim racing": "car racing simulators only: rigs, wheels, pedals, racing "
     "games played on them; not flight simulators",
-    "Technology": "computing and software: programming, AI, gadgets, self-hosting",
-    "Travel": "places to go: trips, destinations, hotels, sights",
+    "Technology": "computing and software: programming, AI, gadgets, self-hosting, "
+    "useful websites and apps",
+    "Travel": "places to go: trips, destinations, hotels, sights, attractions, and the "
+    "outdoors: hikes, beaches, national parks, scenery and views",
     "Movies & TV": "films, series and anime: recommendations, reviews, scenes, how they were made",
-    "Nature & science": "the natural world and how things work: wildlife, the night sky, "
-    "weather, science explainers; not gardening, and not a trip somewhere",
+    "Nature & science": "animals, the sky and how things work: wildlife, the night sky, "
+    "weather, science explainers; never a view, a landscape or a place, which are Travel, "
+    "and not gardening, which is Home & DIY",
     "Family & wellbeing": "people and the inner life: parenting, relationships, "
     "mental health, mindfulness, encouragement",
     "Style & beauty": "how people look: fashion, outfits, hair, makeup, skincare, grooming",
+    "Home & living": "where people live: neighbourhoods, moving to a city, renting or "
+    "buying a home to live in; fixing a home is Home & DIY, property as money is Finance",
+    "Shopping": "shops, markets and things to buy: stores worth visiting, collectibles, "
+    "gift ideas, buying guides, hauls",
 }
 
 SYSTEM = """\

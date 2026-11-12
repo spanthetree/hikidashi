@@ -304,10 +304,10 @@ TAXONOMY: dict[str, tuple[frozenset[str], tuple[str, ...]]] = {
             "stockmarket",
         ),
     ),
-    # The four below came from hand labels (#6, #145): reels that fitted none
-    # of the ten. Plain #nature is left out, since travel reels use it as much
-    # as wildlife ones; #film matches only whole, so #filmphotography stays
-    # Design.
+    # The six below came from hand labels and the reels left untagged (#6,
+    # #145): reels that fitted none of the ten. Plain #nature is left out,
+    # since travel reels use it as much as wildlife ones; #film matches only
+    # whole, so #filmphotography stays Design.
     "Movies & TV": (
         frozenset(
             {
@@ -416,6 +416,17 @@ TAXONOMY: dict[str, tuple[frozenset[str], tuple[str, ...]]] = {
             "streetwear",
             "beauty",
         ),
+    ),
+    # #realestate stays Finance (property as money); a realtor showing a city
+    # to live in is here.
+    "Home & living": (
+        frozenset({"moving", "relocation", "neighborhood", "neighbourhood", "homebuying"}),
+        ("relocat", "movingto", "neighborhood", "neighbourhood", "realtor", "homebuying"),
+    ),
+    # #shop matches only whole, so #workshop stays Home & DIY.
+    "Shopping": (
+        frozenset({"shopping", "shop", "gifts", "giftideas", "giftguide", "haul", "thrifting"}),
+        ("shopping", "giftidea", "giftguide", "giftsfor", "buyersguide", "thrift"),
     ),
 }
 
