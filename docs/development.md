@@ -70,7 +70,7 @@ Each command is a module run with `python -m`, and the wrapper only picks how:
 The web UI is a Svelte 5 / SvelteKit app in `frontend/`, built to static files
 in `app/web` that FastAPI serves; there is no Node process at runtime. The
 server image builds it in a stage of its own; the worker image has none. Under uv, `./hikidashi start`
-builds it when it is missing or older than its sources, which needs Node 20
+builds it when it is missing or older than its sources, which needs Node 22.17
 or later on the host.
 
 While working on it, run the API and Vite's dev server side by side:

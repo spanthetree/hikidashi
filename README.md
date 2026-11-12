@@ -113,9 +113,9 @@ on another machine, ideally one with a GPU, whenever it runs: see
 
 ### Requirements
 
-Docker with Compose, or Python 3.12, uv, FFmpeg and Node 20 to run from
-source. A CPU is enough; an NVIDIA GPU makes transcription and tagging much
-faster ([hardware profiles](docs/pipeline.md#hardware-profiles)).
+Docker with Compose, or Python 3.12, uv, FFmpeg and Node 22.17 or later to
+run from source. A CPU is enough; an NVIDIA GPU makes transcription and
+tagging much faster ([hardware profiles](docs/pipeline.md#hardware-profiles)).
 
 ## Documentation
 

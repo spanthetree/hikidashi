@@ -63,7 +63,7 @@ transcribe and read on the device itself while that machine is off, leave
 
 ## With uv
 
-You need Python 3.12 with [uv](https://docs.astral.sh/uv/), FFmpeg, and Node 20
+You need Python 3.12 with [uv](https://docs.astral.sh/uv/), FFmpeg, and Node 22.17
 or later to build the web app. Tesseract (on-screen text) and
 [Ollama](https://ollama.com) (tags and recipes) are optional; without them,
 those stages wait.
