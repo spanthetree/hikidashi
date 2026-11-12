@@ -1,11 +1,11 @@
 {
-  "about": "Hand labels for the demo library (scripts/demo_library.py), for python -m app.tagging --eval --labels and scripts/evals.py (#6, #57): the one category each reel belongs in, read against the category notes in app/tagging/llm.py, or null where none fits. Judgement calls: DQcaminand1, a short film made in Blender, is Design (art), not Technology (computing); DQcoffeesr1, an industrial bean sorter, and DQblackhol1, astronomy, fit none; DQcalamari1 and DQkaohsiun1 are about the food more than the place; DQkyotost01 is a place to go more than a photograph.",
+  "about": "Hand labels for the demo library (scripts/demo_library.py), for python -m app.tagging --eval --labels and scripts/evals.py (#6, #57): the one category each reel belongs in, read against the category notes in app/tagging/llm.py, or null where none fits. Judgement calls: DQcaminand1, a short film made in Blender, is Design (art), not Technology (computing); DQcoffeesr1, an industrial bean sorter, fits none; DQblackhol1, astronomy, and DQsealion01 are Nature & science since #145; the two cat reels stay none, as pets; DQcalamari1 and DQkaohsiun1 are about the food more than the place; DQkyotost01 is a place to go more than a photograph.",
   "labels": {
     "DQbanhmi001": "Food",
     "DQbenchtl01": "Home & DIY",
     "DQberrycake": "Food",
     "DQblackhd01": "Travel",
-    "DQblackhol1": null,
+    "DQblackhol1": "Nature & science",
     "DQcafemenu1": "Food",
     "DQcalamari1": "Food",
     "DQcaminand1": "Design",
@@ -34,7 +34,7 @@
     "DQpitaland1": "Food",
     "DQporkbelly": "Food",
     "DQredvelvt1": "Food",
-    "DQsealion01": null,
+    "DQsealion01": "Nature & science",
     "DQshioramen": "Food",
     "DQsourdough": "Food",
     "DQspytrail1": "Travel",

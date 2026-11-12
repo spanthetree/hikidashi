@@ -1,4 +1,5 @@
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,7 +8,7 @@ from app import search
 from app.db import init, open_db
 from app.importer.service import import_export
 from app.tagging import evaluate, service
-from app.tagging.taxonomy import classify, clean, is_noise, normalise, primary
+from app.tagging.taxonomy import classify, clean, is_noise, names, normalise, primary
 from tests.fixtures import post_record, saved_posts, write_zip
 
 R = "https://www.instagram.com/reel/"
@@ -57,6 +58,22 @@ class TestClassify(unittest.TestCase):
         self.assertEqual(classify([]), set())
 
 
+class TestShownInEveryLanguage(unittest.TestCase):
+    def test_every_category_has_a_name_in_the_ui(self):
+        """A category the web app has no name for shows untranslated (#145)."""
+        root = Path(__file__).resolve().parent.parent / "frontend"
+        i18n = (root / "src" / "lib" / "i18n.ts").read_text()
+        tags = i18n[i18n.index("const TAGS") :]
+        tags = tags[: tags.index("};")]
+        for name in names():
+            with self.subTest(name):
+                self.assertIn(f'"{name}": m.', tags)
+        used = set(re.findall(r"m\.(\w+)", tags))
+        for lang in ("en", "ja"):
+            messages = json.loads((root / "messages" / f"{lang}.json").read_text())
+            self.assertLessEqual(used, set(messages), lang)
+
+
 class TestPrimary(unittest.TestCase):
     def test_the_category_with_the_most_hashtags_wins(self):
         self.assertEqual(primary(["recipe", "dinner", "pasta", "travel"]), "Food")
@@ -71,6 +88,21 @@ class TestPrimary(unittest.TestCase):
     def test_nothing_matching_is_none(self):
         self.assertIsNone(primary(["zzzznothing"]))
         self.assertIsNone(primary([]))
+
+    def test_the_six_from_hand_labels(self):
+        """#145: each new category, and the hashtags kept out of them."""
+        self.assertEqual(primary(["animerecommendation", "cowboybebop"]), "Movies & TV")
+        self.assertEqual(primary(["film"]), "Movies & TV")
+        self.assertEqual(primary(["filmphotography"]), "Design")  # not a film
+        self.assertEqual(primary(["astronomy", "milkyway"]), "Nature & science")
+        self.assertIsNone(primary(["nature"]))  # travel reels use it as much
+        self.assertEqual(primary(["parenting", "toddler"]), "Family & wellbeing")
+        self.assertEqual(primary(["fitnessmotivation"]), "Fitness")  # not wellbeing
+        self.assertEqual(primary(["hairstyle", "braids"]), "Style & beauty")
+        self.assertEqual(primary(["austinrealtor", "austinlife"]), "Home & living")
+        self.assertEqual(primary(["realestate", "trust"]), "Finance")  # property as money
+        self.assertEqual(primary(["giftideas", "austintx"]), "Shopping")
+        self.assertEqual(primary(["workshop"]), "Home & DIY")  # not a shop
 
     def test_dropped_categories_are_gone(self):
         self.assertIsNone(primary(["dogsofinstagram", "guitar"]))

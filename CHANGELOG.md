@@ -6,6 +6,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.22.0] — 2026-11-12
+
+### Added
+
+- **Six more categories** (#145): Movies & TV, Nature & science, Family &
+  wellbeing, Style & beauty, Home & living, and Shopping, for reels that
+  fitted none of the ten. On 50 hand-labelled reels the model now gets 36
+  right where it got 31, and leaves 5 reels of 411 without a category where
+  it left 36. Why these six is in
+  [ADR 0018](docs/adr/0018-categories-from-hand-labels.md) and
+  [docs/tags.md](docs/tags.md#six-more-categories).
+
+### Upgrading
+
+- Every reel is re-tagged with the new list: the hashtag pass at once, and
+  the model pass by your workers as they get to it, which on a CPU takes a
+  while for a large library. Tags you set yourself are kept.
+
 ## [0.21.0] — 2026-11-12
 
 ### Added

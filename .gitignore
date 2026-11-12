@@ -7,6 +7,7 @@ instagram-*.zip
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
+*.sqlite3-init.lock
 # Except the demo library CI scores (#57): made from freely licensed media,
 # with no sign-ins (scripts/demo_library.py fixture).
 !/tests/eval/demo.sqlite3
