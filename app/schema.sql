@@ -417,3 +417,66 @@ CREATE TABLE IF NOT EXISTS api_token (
   last_used_at INTEGER                  -- to the minute
 );
 CREATE INDEX IF NOT EXISTS api_token_user_idx ON api_token(user_id);
+
+-- Hosted AI (#116, #125; app/ai). Settings for each user's own API and, with
+-- user_id NULL, the server's: per stage a provider, model and base URL, keys
+-- (encrypted, app/ai/secrets.py), the monthly budget, the switch and why it
+-- went off, and how a user's reels are processed. value is JSON. Environment
+-- variables override the server's (app/ai/config.py), and never switch it on.
+CREATE TABLE IF NOT EXISTS setting (
+  user_id    INTEGER REFERENCES user(id) ON DELETE CASCADE,  -- NULL: the server's
+  key        TEXT NOT NULL,
+  value      TEXT NOT NULL,
+  updated_at INTEGER NOT NULL,
+  updated_by INTEGER                       -- user.id; NULL from the system
+);
+CREATE UNIQUE INDEX IF NOT EXISTS setting_key_idx ON setting(ifnull(user_id, 0), key);
+
+-- Every change to those settings and every switch on or off: who, what, when.
+-- Never a key: a key change says which provider's key, and nothing of it.
+CREATE TABLE IF NOT EXISTS ai_audit (
+  id       INTEGER PRIMARY KEY,
+  at       INTEGER NOT NULL,
+  actor_id INTEGER,                         -- NULL: the system (an automatic off)
+  user_id  INTEGER,                         -- whose API; NULL: the server's
+  action   TEXT NOT NULL,                   -- as "set asr", "key set openai", "on", "off"
+  detail   TEXT
+);
+CREATE INDEX IF NOT EXISTS ai_audit_at_idx ON ai_audit(at DESC);
+
+-- What each API (api:server, api:user:<id>) knows of a reel (#125): when it
+-- first found it ready, for the server's grace period; its API errors, counted
+-- apart from workers' attempts and never failing the reel; and whether it was
+-- left to workers, when a switch went on for new reels only.
+CREATE TABLE IF NOT EXISTS api_reel (
+  api       TEXT NOT NULL,
+  shortcode TEXT NOT NULL REFERENCES item(shortcode) ON DELETE CASCADE,
+  seen_at   INTEGER,
+  errors    INTEGER NOT NULL DEFAULT 0,
+  reason    TEXT,                          -- the last error's
+  last_at   INTEGER,
+  left      INTEGER NOT NULL DEFAULT 0,    -- 1: the backlog, left to workers
+  PRIMARY KEY (api, shortcode)
+);
+
+-- What every hosted request used, and an estimate of its cost (#125), against
+-- whoever's API made it: a user's, the server's, or a hosted worker on another
+-- machine (worker set), which reports its own. The monthly budget is checked
+-- against this.
+CREATE TABLE IF NOT EXISTS hosted_usage (
+  id            INTEGER PRIMARY KEY,
+  at            INTEGER NOT NULL,
+  api           TEXT NOT NULL,             -- api:server | api:user:<id> | hosted:<worker>
+  user_id       INTEGER,                   -- the API's owner; NULL for the server's
+  shortcode     TEXT,                      -- the reel it was for
+  stage         TEXT NOT NULL,
+  model         TEXT NOT NULL,             -- provider:model
+  requests      INTEGER NOT NULL DEFAULT 1,
+  input_tokens  INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cached_tokens INTEGER NOT NULL DEFAULT 0,
+  audio_seconds REAL NOT NULL DEFAULT 0,
+  images        INTEGER NOT NULL DEFAULT 0,
+  usd           REAL NOT NULL DEFAULT 0    -- estimated, from the price table in app/ai/usage.py
+);
+CREATE INDEX IF NOT EXISTS hosted_usage_api_idx ON hosted_usage(api, at);

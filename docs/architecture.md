@@ -210,7 +210,7 @@ their keys; the schema has every column, with a comment on each.
 ```mermaid
 erDiagram
   item {
-    text shortcode PK "and 40 more columns"
+    text shortcode PK "and 42 more columns"
     integer first_seen_in FK
   }
   item_slide {
@@ -277,6 +277,9 @@ erDiagram
   import_run {
     integer id PK
   }
+  hosted_usage {
+    integer id PK
+  }
   import_run |o--o{ item : "first_seen_in"
   item ||--o{ item_slide : "shortcode"
   item ||--o{ item_tag : "shortcode"
@@ -289,6 +292,7 @@ erDiagram
   item ||--|| item_fts : "content (FTS5)"
   recipe ||..o| recipe_fts : "indexed by app/recipes"
   geocode |o..o{ item_place : "text"
+  item |o..o{ hosted_usage : "shortcode"
 ```
 <!-- /make_diagrams -->
 
@@ -357,6 +361,12 @@ erDiagram
   tag {
     integer id PK
   }
+  ai_audit {
+    integer id PK
+  }
+  hosted_usage {
+    integer id PK
+  }
   user ||--o{ user_item : "user_id"
   item ||--o{ user_item : "shortcode"
   import_run |o--o{ user_item : "first_seen_in"
@@ -370,6 +380,8 @@ erDiagram
   user ||--o{ invite : "created_by"
   user |o--o{ invite : "used_by"
   user ||--o{ api_token : "user_id"
+  user |o..o{ ai_audit : "user_id"
+  user |o..o{ hosted_usage : "user_id"
 ```
 <!-- /make_diagrams -->
 
@@ -408,6 +420,57 @@ erDiagram
   item ||--o{ job_lease : "shortcode"
   item ||--o{ job_attempt : "shortcode"
   job_worker ||..o{ job_lease : "worker"
+```
+<!-- /make_diagrams -->
+
+### Hosted AI
+
+Settings for each user's own API and the server's, the audit log, what each
+API knows of a reel (the grace period, its API errors, the backlog it left to
+workers), and what every hosted request used. See
+[Hosted AI](#hosted-ai) below.
+
+<!-- make_diagrams: er-ai -->
+```mermaid
+erDiagram
+  setting {
+    integer user_id FK
+    text key
+    text value
+    integer updated_at
+    integer updated_by
+  }
+  ai_audit {
+    integer id PK
+    integer at
+    integer actor_id
+    integer user_id
+    text action
+    text detail
+  }
+  api_reel {
+    text api PK
+    text shortcode PK, FK
+    integer seen_at
+    integer errors
+    text reason
+    integer last_at
+    integer left
+  }
+  hosted_usage {
+    integer id PK "and 13 more columns"
+  }
+  user {
+    integer id PK
+  }
+  item {
+    text shortcode PK
+  }
+  user |o--o{ setting : "user_id"
+  item ||--o{ api_reel : "shortcode"
+  user |o..o{ ai_audit : "user_id"
+  user |o..o{ hosted_usage : "user_id"
+  item |o..o{ hosted_usage : "shortcode"
 ```
 <!-- /make_diagrams -->
 

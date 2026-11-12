@@ -368,7 +368,7 @@ def revoke_invite(conn: sqlite3.Connection, invite_id: int) -> None:
 # what a leaked one is, and the checksum turns a mistyped one away unlooked-up.
 
 API, WORKER = "api", "worker"
-SCOPES = ("read:library", "write:library", "read:admin", "write:admin")
+SCOPES = ("read:library", "write:library", "read:ai", "write:ai", "read:admin", "write:admin")
 ADMIN_SCOPES = frozenset({"read:admin", "write:admin"})
 TOKEN_NAME = 64  # characters
 TOKEN_DAYS = 30  # the longest an api token lives; there is no extending one

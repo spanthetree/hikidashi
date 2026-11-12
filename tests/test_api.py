@@ -938,7 +938,8 @@ class TestTokens(SignInCase):
         self.assertIn("write:admin", self.client.get("/api/me/tokens").json()["scopes"])
         bob = self.bob()
         self.assertEqual(
-            bob.get("/api/me/tokens").json()["scopes"], ["read:library", "write:library"]
+            bob.get("/api/me/tokens").json()["scopes"],
+            ["read:library", "write:library", "read:ai", "write:ai"],
         )
         r = bob.post("/api/me/tokens", json={"name": "x", "scopes": ["read:admin"]})
         self.assertEqual(r.status_code, 400)

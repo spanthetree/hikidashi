@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 
 from app import accounts, jobs, library, logs, search, spa
 from app.accounts import AccountError, User
+from app.api import ai_routes
 from app.config import settings
 from app.db import open_db
 from app.enrich import worker as fetches
@@ -279,6 +280,10 @@ def by_session(request: Request, user: Who) -> User:
 
 
 Signed = Annotated[User, Depends(by_session)]
+
+
+# Hosted AI settings (#125): /api/me/providers and /api/admin/settings/providers.
+ai_routes.install(app, db, current_user, _scoped, lambda: settings.db_path.parent)
 
 
 @app.exception_handler(AccountError)
