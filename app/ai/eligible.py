@@ -114,12 +114,12 @@ def given_up(conn: sqlite3.Connection, api: str, *, cap: int = MAX_ERRORS) -> se
     }
 
 
-def waiting(conn: sqlite3.Connection, api: Api) -> list[str]:
+def waiting(conn: sqlite3.Connection, api: Api, *, name: str | None = None) -> list[str]:
     """Reels `api` would take if its switch were on now: for the backlog
-    shown when it is turned on. Leased reels and its given-up ones are out;
-    the grace period is not applied."""
+    shown when it is turned on. Leased reels and its given-up ones (under
+    `name`, its own by default) are out; the grace period is not applied."""
     codes = covered(conn, api, ready(conn))
-    skip = given_up(conn, api.name) | leased(conn, codes)
+    skip = given_up(conn, name or api.name) | leased(conn, codes)
     return [c for c in codes if c not in skip]
 
 

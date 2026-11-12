@@ -83,6 +83,20 @@ def main(argv: list[str] | None = None) -> int:
         "rather than the database here (default from HIKIDASHI_SERVER)",
     )
     ap.add_argument(
+        "--backend",
+        choices=("local", "hosted"),
+        default="local",
+        help="local: the models on this machine. hosted: a provider's API, with this "
+        "machine's own key from its env (#125); needs --server and --for",
+    )
+    ap.add_argument(
+        "--for",
+        dest="for_",
+        choices=("me", "all"),
+        help="with --backend hosted: the worker token owner's reels (me), or every "
+        "reel a saver relies on the server's API for (all)",
+    )
+    ap.add_argument(
         "--profile",
         choices=CHOICES,
         default=settings.profile,
@@ -103,27 +117,16 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError as exc:
         print(f"  {exc}", file=sys.stderr)
         return 2
+    token = ""
     if args.server:
-        if args.retry_failed:
-            print("  --retry-failed is for the server: run it there", file=sys.stderr)
-            return 2
-        token = settings.worker_token or _ask_token(args.server) or ""
-        if not token:
-            print(
-                "  set HIKIDASHI_WORKER_TOKEN to a worker token from the server's Pipeline "
-                "page (or `hikidashi token make <name> --worker` there)",
-                file=sys.stderr,
-            )
-            return 2
-        server_only = [s for s in stages if s not in REMOTE]
-        if args.stages is not None and server_only:
-            print(
-                f"  {', '.join(server_only)} run on the server; a remote worker runs some "
-                f"of {', '.join(REMOTE)}",
-                file=sys.stderr,
-            )
-            return 2
-        stages = tuple(s for s in stages if s in REMOTE)
+        got = _for_server(args, stages)
+        if isinstance(got, int):
+            return got
+        token, stages = got
+
+    if why := _backend_misuse(args):
+        print(f"  {why}", file=sys.stderr)
+        return 2
 
     logging.basicConfig(level=logging.INFO, format=logs.FORMAT, stream=sys.stdout)
     # A line a request as models download, and two a reel about Whisper's VAD
@@ -132,6 +135,9 @@ def main(argv: list[str] | None = None) -> int:
         logging.getLogger(noisy).setLevel(logging.WARNING)
     settings.ensure_dirs()
     logs.install(settings.logs_dir, Path(args.log).name)
+
+    if args.backend == "hosted":
+        return _hosted(args.server, token, args.name, args.for_)
 
     try:
         if args.server:
@@ -188,6 +194,75 @@ def _ask_token(server: str) -> str | None:
     except (EOFError, KeyboardInterrupt):
         print(file=sys.stderr)
         return None
+
+
+def _for_server(
+    args: argparse.Namespace, stages: tuple[str, ...]
+) -> int | tuple[str, tuple[str, ...]]:
+    """A worker for another machine's server: its token, and the stages it
+    may run there; or the exit code when it cannot be one."""
+    if args.retry_failed:
+        print("  --retry-failed is for the server: run it there", file=sys.stderr)
+        return 2
+    token = settings.worker_token or _ask_token(args.server) or ""
+    if not token:
+        print(
+            "  set HIKIDASHI_WORKER_TOKEN to a worker token from the server's Pipeline "
+            "page (or `hikidashi token make <name> --worker` there)",
+            file=sys.stderr,
+        )
+        return 2
+    server_only = [s for s in stages if s not in REMOTE]
+    if args.stages is not None and server_only:
+        print(
+            f"  {', '.join(server_only)} run on the server; a remote worker runs some "
+            f"of {', '.join(REMOTE)}",
+            file=sys.stderr,
+        )
+        return 2
+    return token, tuple(s for s in stages if s in REMOTE)
+
+
+def _backend_misuse(args: argparse.Namespace) -> str | None:
+    if args.backend == "hosted":
+        if not args.server or not args.for_:
+            return "--backend hosted needs --server and --for me|all"
+        if args.stages is not None or args.once or args.retry_failed:
+            return "--backend hosted does every worker stage of a reel, and runs until stopped"
+    elif args.for_:
+        return "--for is for --backend hosted"
+    return None
+
+
+def _hosted(server: str, token: str, name: str, scope: str) -> int:
+    """`--backend hosted`: the server's API on this machine, with its own key."""
+    from app.ai.hosted_worker import HostedWorker, Stopped, from_env
+
+    try:
+        worker = HostedWorker(
+            HttpJobs(server, token, name), from_env(), settings.cache_dir, scope=scope
+        )
+    except (Stopped, ValueError) as exc:
+        print(f"  {exc}", file=sys.stderr)
+        print(
+            "  set HIKIDASHI_ASR_PROVIDER, HIKIDASHI_OCR_PROVIDER, HIKIDASHI_LLM_PROVIDER, the "
+            "provider's key (OPENAI_API_KEY, …) and HIKIDASHI_HOSTED_BUDGET in this "
+            "machine's env",
+            file=sys.stderr,
+        )
+        return 3
+    settings.cache_dir.mkdir(parents=True, exist_ok=True)
+    signal.signal(signal.SIGTERM, _stop)
+    try:
+        why = worker.run()
+    except Refused as exc:
+        print(f"  the server refused this worker: {exc}", file=sys.stderr)
+        return 1
+    except (KeyboardInterrupt, Stop):
+        logging.getLogger("hikidashi.worker").info("stopped; reels in hand given back")
+        return 0
+    print(f"  stopped: {why}", file=sys.stderr)
+    return 1
 
 
 def _hosted_apis(stages: tuple[str, ...]) -> Host | None:

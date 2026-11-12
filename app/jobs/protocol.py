@@ -13,6 +13,10 @@ leases as the local job source does.
     claim     {stage, limit}  ->  {jobs: [row, ...]}
     results   {stage, profile, results: [{shortcode, <what>} | {shortcode, error}]}
 
+A hosted worker (protocol 2, app/ai/remote.py) instead claims reels for all
+their remaining stages at once, asks for each stage's rows as it gets there,
+and sends its results with `languages` and `usage`.
+
 `what` is per stage: `transcript` (asr), `text` (ocr), `tag` (tag), `recipe`
 (recipe), each possibly null for "nothing there".
 
@@ -28,6 +32,7 @@ Stdlib only, like the stages' cores.
 from __future__ import annotations
 
 import math
+import re
 import sqlite3
 import threading
 from collections.abc import Callable
@@ -45,7 +50,7 @@ from app.tagging.taxonomy import names
 
 from .queue import REGISTRY
 
-PROTOCOL = 1
+PROTOCOL = 2  # 2: a hosted worker claims a reel for all its stages (#125)
 
 # The stages a remote worker may claim, in pipeline order.
 REMOTE = ("asr", "ocr", "tag", "recipe")
@@ -66,6 +71,10 @@ FIELD = {"asr": "transcript", "ocr": "text", "tag": "tag", "recipe": "recipe"}
 
 REASON = 200  # the most of a failure's reason kept, as the stages keep
 TEXT = 200_000  # the longest transcript or OCR text accepted, in characters
+
+
+# A hosted model's profile: provider:model, as groq:whisper-large-v3-turbo.
+HOSTED_PROFILE = re.compile(r"^[a-z0-9_-]{1,40}:[\w./:@-]{1,200}$")
 
 
 class Refused(ValueError):

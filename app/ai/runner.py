@@ -73,6 +73,39 @@ class Round:
     stopped: str | None = None  # why the round stopped early
 
 
+def lease_all(
+    conn: sqlite3.Connection, name: str, codes: list[str], limit: int, now: int, lease: float
+) -> list[str]:
+    """Lease every worker stage of up to `limit` of `codes`, under `name`:
+    all or nothing. A reel anyone holds a live lease on for one of them is
+    skipped. Returns the reels leased."""
+    got: list[str] = []
+    marks = ",".join("?" * len(REMOTE))
+    with _immediate(conn):
+        for code in codes:
+            if len(got) >= limit:
+                break
+            # Read again inside the transaction: a worker or another API may
+            # have just taken one of its stages.
+            if conn.execute(
+                f"""SELECT 1 FROM job_lease WHERE shortcode = ? AND expires_at > ?
+                    AND stage IN ({marks})""",
+                (code, now, *REMOTE),
+            ).fetchone():
+                continue
+            conn.execute(
+                f"DELETE FROM job_lease WHERE shortcode = ? AND stage IN ({marks})",
+                (code, *REMOTE),
+            )  # an expired lease, whoever's
+            conn.executemany(
+                """INSERT INTO job_lease (shortcode, stage, worker, expires_at)
+                   VALUES (?, ?, ?, ?)""",
+                [(code, s, name, now + int(lease)) for s in REMOTE],
+            )
+            got.append(code)
+    return got
+
+
 @dataclass
 class Claimer:
     """One API in the job queue."""
@@ -117,31 +150,7 @@ class Claimer:
         if self.owner is None and codes:
             eligible.mark_seen(conn, self.name, codes, now)
             codes = eligible.after_grace(conn, self.name, codes, now, self.grace)
-        got: list[str] = []
-        with _immediate(conn):
-            for code in codes:
-                if len(got) >= self.batch:
-                    break
-                # Read again inside the transaction: a worker or another API
-                # may have just taken one of its stages.
-                if conn.execute(
-                    f"""SELECT 1 FROM job_lease WHERE shortcode = ? AND expires_at > ?
-                        AND stage IN ({",".join("?" * len(REMOTE))})""",
-                    (code, now, *REMOTE),
-                ).fetchone():
-                    continue
-                conn.execute(
-                    f"""DELETE FROM job_lease WHERE shortcode = ?
-                        AND stage IN ({",".join("?" * len(REMOTE))})""",
-                    (code, *REMOTE),
-                )  # an expired lease, whoever's
-                conn.executemany(
-                    """INSERT INTO job_lease (shortcode, stage, worker, expires_at)
-                       VALUES (?, ?, ?, ?)""",
-                    [(code, s, self.name, now + int(self.lease)) for s in REMOTE],
-                )
-                got.append(code)
-        return got
+        return lease_all(conn, self.name, codes, self.batch, now, self.lease)
 
     # --- one round -------------------------------------------------------------
 
