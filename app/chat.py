@@ -54,8 +54,15 @@ class Chat:
         return f"{self.client.preset.name}:{self.model}"
 
     def ask(
-        self, system: str, prompt: str, *, schema: dict[str, Any], max_tokens: int, name: str
+        self,
+        system: str,
+        prompt: str | list[dict[str, Any]],
+        *,
+        schema: dict[str, Any],
+        max_tokens: int,
+        name: str,
     ) -> str:
+        """`prompt` may be a list of message parts, text and images (OCR)."""
         reply = self.client.chat(
             self.model,
             system,
