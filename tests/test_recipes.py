@@ -502,6 +502,26 @@ class TestProvenance(WorkerCase):
         ).fetchone()[0]
         self.assertEqual(model_title, "Model v2")
 
+    def test_the_web_recipe_stands_in_for_the_model_but_not_for_yours(self):
+        from app.recipes.llm import Ingredient, Recipe
+
+        web = Recipe(title="From the blog", ingredients=[Ingredient("flour")], steps=["mix"])
+        service.set_web(self.conn, "NOODLE", web, "https://blog.example/noodles/")
+        r = must(service.current(self.conn, "NOODLE"))
+        self.assertEqual(
+            (r["title"], r["web_url"]), ("From the blog", "https://blog.example/noodles/")
+        )
+        self.assertEqual(self.shown(), ["NOODLE"])
+        # A re-read keeps it; your correction still wins over it.
+        self.run_pass(force=True)
+        self.assertEqual(must(service.current(self.conn, "NOODLE"))["title"], "From the blog")
+        service.save_user(self.conn, "NOODLE", self.fixed)
+        self.assertEqual(must(service.current(self.conn, "NOODLE"))["title"], "Mine")
+        fts = self.conn.execute(
+            "SELECT title FROM recipe_fts WHERE shortcode = 'NOODLE' AND user_id = 0"
+        ).fetchone()[0]
+        self.assertEqual(fts, "From the blog")
+
     def test_reverting_brings_the_model_back(self):
         service.save_user(self.conn, "NOODLE", self.fixed)
         service.revert(self.conn, "NOODLE")

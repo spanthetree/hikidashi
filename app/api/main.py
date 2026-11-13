@@ -1127,7 +1127,7 @@ def item_detail(shortcode: str, user: Me, request: Request) -> dict[str, Any]:
         "tags": tags,
         "places": _places_of(conn, r["caption"]),
         "profile_url": f"https://www.instagram.com/{r['author']}/" if r["author"] else None,
-        "recipe": recipes.current(conn, shortcode, user_id=user.id),
+        "recipe": _recipe(conn, shortcode, user),
         # The recipe as schema.org JSON-LD, for the sheet to embed in the page,
         # where browser extensions and recipe managers look for it.
         "jsonld": _jsonld(conn, user, shortcode, base_url(request)),
@@ -1426,7 +1426,7 @@ def save_recipe(shortcode: str, body: RecipeIn, user: Me) -> dict[str, Any] | No
         conn,
         lambda: recipes.save_user(conn, shortcode, recipe, hidden=body.hidden, user_id=user.id),
     )
-    return recipes.current(conn, shortcode, user_id=user.id)
+    return _recipe(conn, shortcode, user)
 
 
 @app.delete("/api/items/{shortcode}/recipe")
@@ -1435,7 +1435,104 @@ def revert_recipe(shortcode: str, user: Me) -> dict[str, Any] | None:
     conn = db()
     _known_item(conn, user, shortcode)
     _in_transaction(conn, lambda: recipes.revert(conn, shortcode, user_id=user.id))
-    return recipes.current(conn, shortcode, user_id=user.id)
+    return _recipe(conn, shortcode, user)
+
+
+FETCH_AGAIN = 7 * 86400  # a page that had no recipe, or did not answer, is asked again after
+
+
+def _recipe(conn: sqlite3.Connection, shortcode: str, user: User) -> dict[str, Any] | None:
+    """The recipe this reel shows you, and for an incomplete one, where the
+    rest is (#114): `link`, and `fetchable` when the server will fetch it."""
+    from app.recipes import web
+
+    recipe = recipes.current(conn, shortcode, user_id=user.id)
+    if recipe is None or not recipe["incomplete"]:
+        return recipe
+    row = conn.execute(
+        """SELECT item.caption, f.fetched_at FROM item
+           LEFT JOIN recipe_fetch f ON f.shortcode = item.shortcode
+           WHERE item.shortcode = ?""",
+        (shortcode,),
+    ).fetchone()
+    link = web.link(row["caption"])
+    recipe["link"] = link
+    recipe["fetchable"] = bool(
+        settings.recipe_fetch
+        and link
+        and link["kind"] == "recipe"
+        and not recipe["edited"]
+        and (row["fetched_at"] is None or row["fetched_at"] < time.time() - FETCH_AGAIN)
+    )
+    return recipe
+
+
+@app.post("/api/items/{shortcode}/recipe/fetch")
+def fetch_recipe(shortcode: str, user: Me) -> dict[str, Any] | None:
+    """Fetch the rest of an incomplete recipe from the page its caption links
+    to, and show that instead (#114). One request to that site; see ADR 0020."""
+    from app.recipes import web
+
+    conn = db()
+    _known_item(conn, user, shortcode)
+    recipe = _recipe(conn, shortcode, user)
+    if not recipe or not recipe.get("fetchable"):
+        raise HTTPException(409, "There is nothing to fetch for this recipe.")
+    url = recipe["link"]["url"]
+    error = None
+    try:
+        found = web.parse(web.fetch(url))
+    except web.FetchError as exc:
+        error = str(exc)
+
+    def store() -> None:
+        conn.execute(
+            """INSERT OR REPLACE INTO recipe_fetch (shortcode, url, fetched_at, error)
+               VALUES (?, ?, ?, ?)""",
+            (shortcode, url, int(time.time()), error),
+        )
+        if error is None:
+            recipes.set_web(conn, shortcode, found, url)
+
+    _in_transaction(conn, store)
+    if error:
+        raise HTTPException(502, f"No recipe from {recipe['link']['site']}: {error}")
+    return _recipe(conn, shortcode, user)
+
+
+@app.get("/api/items/{shortcode}/recipe/translation")
+def translate_recipe(
+    shortcode: str, user: Me, lang: str = Query(..., pattern="^[a-z]{2}$")
+) -> dict[str, Any]:
+    """This reel's recipe in your language (#114), by your AI model, once;
+    `recipe` is null when it needs no translating."""
+    from app import assistant
+    from app.ollama import OllamaError
+    from app.recipes import translate
+
+    conn = db()
+    _known_item(conn, user, shortcode)
+    recipe = recipes.current(conn, shortcode, user_id=user.id)
+    if recipe is None or not translate.needed(recipe, lang):
+        return {"recipe": None, "model": None}
+    if hit := translate.cached(conn, recipe, lang):
+        return {"recipe": translate.merge(recipe, hit["body"]), "model": hit["model"]}
+    model = assistant.model_for(
+        conn,
+        user.id,
+        settings.db_path.parent,
+        ollama_url=settings.ollama_url,
+        profile=settings.profile,
+    )
+    try:
+        body = translate.translate(conn, recipe, lang, model.asks, model.label)
+    except OllamaError as exc:
+        raise HTTPException(503, f"No AI model to translate with: {exc}") from exc
+    except Exception as exc:
+        raise HTTPException(502, f"The translation failed: {exc}") from exc
+    finally:
+        assistant.record(conn, model, "translate", shortcode)
+    return {"recipe": translate.merge(recipe, body), "model": model.label}
 
 
 @app.get("/api/shopping")

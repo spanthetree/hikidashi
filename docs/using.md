@@ -73,6 +73,17 @@ checklist and numbered steps next to the video, with **Add to shopping list**,
 
 <img src="demo/recipe.webp" alt="A pork roast recipe open in light mode: the video beside serves 4, 20 minutes, a checklist of five ingredients and six numbered steps read from the voiceover, with Add to shopping list, Edit and Not a recipe." width="640">
 
+A recipe marked **incomplete** says where the rest is: the page its caption
+links to, the creator's profile, or the keyword to comment for it. When the
+caption links to the recipe's own page, Hikidashi fetches it from there the
+first time you open it, and shows that recipe instead, with a link to the
+page. `HIKIDASHI_RECIPE_FETCH=off` turns that off ([ADR 0020](adr/0020-fetch-incomplete-recipes.md)).
+
+Recipes are written in English whatever language the reel speaks. Read the
+app in another language and a recipe is translated into it when you open it,
+by your AI model (hosted, if it is yours; otherwise the local one), and kept.
+**Show the original** switches back.
+
 **Select** picks several recipes at once; with a filter on, **Add all** adds
 every recipe it shows. **Shopping list**, in the sidebar, merges their
 ingredients by aisle, folds away pantry staples, and can be shared or copied

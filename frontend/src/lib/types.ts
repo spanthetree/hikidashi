@@ -72,7 +72,17 @@ export interface Recipe {
   edited: boolean;
   /** The model has its own version, which reverting brings back. */
   has_model: boolean;
+  /** Fetched from the page the reel points to (#114). */
+  web_url: string | null;
+  /** An incomplete one: where the rest is, and whether the server fetches it. */
+  link?: RecipeLink | null;
+  fetchable?: boolean;
 }
+
+export type RecipeLink =
+  | { kind: "recipe" | "site"; url: string; site: string }
+  | { kind: "comment"; keyword: string | null }
+  | { kind: "bio" };
 
 /** The body of PUT /api/items/{shortcode}/recipe. */
 export interface RecipeIn {

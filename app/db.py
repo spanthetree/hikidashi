@@ -59,6 +59,7 @@ _ADDED_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("item", "phash", "TEXT"),
     ("item", "phash_v", "INTEGER NOT NULL DEFAULT 0"),
     ("item", "dup_of", "TEXT"),
+    ("recipe", "url", "TEXT"),
 )
 
 # Data that moves when a column first appears. Runs once, in the same call that

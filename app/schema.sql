@@ -207,11 +207,13 @@ END;
 -- Recipes read out of reels by app/recipes. Like item_tag.source, the model's
 -- output and your corrections are separate rows: a re-extract replaces only the
 -- 'model' row, and your 'user' row, when there is one, is the recipe you see.
+-- A 'web' row is the recipe from the page an incomplete one points to (#114),
+-- shown in place of the model's.
 -- Only reels found to be recipes have a row; item.recipe_v records that the
 -- rest were read.
 CREATE TABLE IF NOT EXISTS recipe (
   shortcode     TEXT NOT NULL REFERENCES item(shortcode) ON DELETE CASCADE,
-  source        TEXT NOT NULL,              -- model | user
+  source        TEXT NOT NULL,              -- model | web | user
   user_id       INTEGER NOT NULL DEFAULT 0, -- whose correction; 0 on the model's
   title         TEXT,
   servings      INTEGER,
@@ -223,7 +225,29 @@ CREATE TABLE IF NOT EXISTS recipe (
   source_fields TEXT,                       -- JSON: caption, transcript, ocr
   dropped       TEXT,                       -- JSON: ingredients no source names
   updated_at    INTEGER NOT NULL,
+  url           TEXT,                       -- the page a 'web' recipe came from
   PRIMARY KEY (shortcode, source, user_id)
+);
+
+-- Each time the page an incomplete recipe points to was fetched (#114), so a
+-- site that has no recipe, or does not answer, is not asked again and again.
+CREATE TABLE IF NOT EXISTS recipe_fetch (
+  shortcode  TEXT PRIMARY KEY REFERENCES item(shortcode) ON DELETE CASCADE,
+  url        TEXT NOT NULL,
+  fetched_at INTEGER NOT NULL,
+  error      TEXT                           -- NULL: a recipe was found
+);
+
+-- Recipes in the language someone reads the app in (#114), made by their AI
+-- model the first time, then kept. Keyed by a digest of the recipe as shown,
+-- so a corrected or re-read recipe is translated afresh.
+CREATE TABLE IF NOT EXISTS recipe_translation (
+  digest     TEXT NOT NULL,
+  lang       TEXT NOT NULL,
+  body       TEXT NOT NULL,                 -- JSON: title, steps, ingredient items and notes
+  model      TEXT NOT NULL,                 -- provider:model or ollama:<model>
+  made_at    INTEGER NOT NULL,
+  PRIMARY KEY (digest, lang)
 );
 
 CREATE TABLE IF NOT EXISTS recipe_ingredient (

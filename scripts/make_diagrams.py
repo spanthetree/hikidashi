@@ -64,6 +64,8 @@ GROUPS = {
         "recipe",
         "recipe_ingredient",
         "recipe_fts",
+        "recipe_fetch",
+        "recipe_translation",
         "item_place",
         "geocode",
         "item_vec",

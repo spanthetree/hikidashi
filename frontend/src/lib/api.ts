@@ -72,6 +72,15 @@ export const getRecipeFacets = () => api<RecipeFacets>("/api/recipes/facets");
 
 const recipeUrl = (shortcode: string) => `/api/items/${encodeURIComponent(shortcode)}/recipe`;
 
+/** Fetch the rest of an incomplete recipe from where the reel points (#114). */
+export const fetchRecipe = (shortcode: string) =>
+  api<Recipe>(`${recipeUrl(shortcode)}/fetch`, { method: "POST" });
+
+/** The recipe in this language; `recipe` is null when it needs no translating. */
+export const getRecipeTranslation = (shortcode: string, lang: string) =>
+  api<{ recipe: Recipe | null; model: string | null }>(
+    `${recipeUrl(shortcode)}/translation?lang=${encodeURIComponent(lang)}`);
+
 /** Save your version of a reel's recipe. Returns the recipe it now shows. */
 export const saveRecipe = (shortcode: string, body: RecipeIn) =>
   api<Recipe | null>(recipeUrl(shortcode), {

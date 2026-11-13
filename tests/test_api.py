@@ -216,6 +216,82 @@ class TestIsolation(ApiCase):
         r = self.client.post("/api/items/SHARED/not-copy/ALICE1")
         self.assertEqual(r.json(), {"copies": []})
 
+    def test_an_incomplete_recipe_is_fetched_from_its_page(self):
+        from app.recipes import service as recipes
+        from app.recipes import web
+        from app.recipes.llm import Found, Ingredient, Recipe
+
+        conn = open_db(self.settings.db_path)
+        conn.execute(
+            "UPDATE item SET caption = ? WHERE shortcode = 'ALICE1'",
+            ("Full recipe: https://blog.example/toast/",),
+        )
+        recipes.set_model(
+            conn, "ALICE1", Found(Recipe(title="Toast", incomplete=True), 0.9, [], [])
+        )
+        conn.close()
+        r = self.client.get("/api/items/ALICE1").json()["recipe"]
+        self.assertEqual(r["link"]["url"], "https://blog.example/toast/")
+        self.assertTrue(r["fetchable"])
+        page = Recipe(title="Toast from the blog", ingredients=[Ingredient("bread")], steps=["fry"])
+        with (
+            mock.patch.object(web, "fetch", return_value="<html>"),
+            mock.patch.object(web, "parse", return_value=page),
+        ):
+            r = self.client.post("/api/items/ALICE1/recipe/fetch").json()
+        self.assertEqual(
+            (r["title"], r["web_url"]), ("Toast from the blog", "https://blog.example/toast/")
+        )
+        # Done: not fetched again.
+        self.assertEqual(self.client.post("/api/items/ALICE1/recipe/fetch").status_code, 409)
+
+    def test_a_site_with_no_recipe_is_not_asked_again(self):
+        from app.recipes import service as recipes
+        from app.recipes import web
+        from app.recipes.llm import Found, Recipe
+
+        conn = open_db(self.settings.db_path)
+        conn.execute(
+            "UPDATE item SET caption = ? WHERE shortcode = 'ALICE1'",
+            ("Recipe https://blog.example/toast/",),
+        )
+        recipes.set_model(
+            conn, "ALICE1", Found(Recipe(title="Toast", incomplete=True), 0.9, [], [])
+        )
+        conn.close()
+        with mock.patch.object(web, "fetch", side_effect=web.FetchError("the site answered 404")):
+            r = self.client.post("/api/items/ALICE1/recipe/fetch")
+        self.assertEqual(r.status_code, 502)
+        self.assertFalse(self.client.get("/api/items/ALICE1").json()["recipe"]["fetchable"])
+
+    def test_a_recipe_in_your_language(self):
+        from app import assistant
+        from app.recipes import service as recipes
+        from app.recipes.llm import Found, Ingredient, Recipe
+        from tests.test_recipe_web import FakeAsks
+
+        conn = open_db(self.settings.db_path)
+        recipes.set_model(
+            conn,
+            "ALICE1",
+            Found(
+                Recipe(title="Toast", ingredients=[Ingredient("bread")], steps=["fry"]), 0.9, [], []
+            ),
+        )
+        conn.close()
+        url = "/api/items/ALICE1/recipe/translation"
+        self.assertEqual(self.client.get(url, params={"lang": "en"}).json()["recipe"], None)
+        fake = assistant.Model(FakeAsks(), "fake:model")
+        with mock.patch.object(assistant, "model_for", return_value=fake):
+            r = self.client.get(url, params={"lang": "ja"}).json()
+        self.assertEqual((r["recipe"]["title"], r["model"]), ("フレンチトースト", "fake:model"))
+        self.assertEqual(
+            self.client.get(
+                "/api/items/BOBBY1/recipe/translation", params={"lang": "ja"}
+            ).status_code,
+            404,
+        )
+
     def test_save_time_collections_and_tag_are_yours(self):
         self.client.put("/api/items/SHARED/tag", json={"name": "Weeknight"})
         mine = self.client.get("/api/items/SHARED").json()

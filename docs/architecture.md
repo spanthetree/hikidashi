@@ -17,7 +17,7 @@ the [decision records](adr/README.md).
 
 Hikidashi is one server with one SQLite file, and workers that make what
 search needs out of each reel. Everything heavy runs on your own hardware,
-unless someone switches a hosted AI API on. Four things leave the machine,
+unless someone switches a hosted AI API on. Five things leave the machine,
 and three of them only if you configure them.
 
 ```mermaid
@@ -32,6 +32,7 @@ flowchart LR
   geo[("Nominatim<br/>geocoder")]
   tiles[("map tiles<br/>OpenStreetMap")]
   hosted[("hosted AI<br/>OpenAI, Groq, …")]
+  blogs[("recipe pages<br/>a caption links to")]
 
   person -- "HTTPS: pages, API, media" --> server
   person -. "tiles, from the browser" .-> tiles
@@ -41,6 +42,8 @@ flowchart LR
   server -. "place names, if HIKIDASHI_GEOCODER is set" .-> geo
   server -. "audio, frames, text, while an API is switched on" .-> hosted
   workers -. "the same, from a hosted worker, with its own key" .-> hosted
+  server -. "one page, for an incomplete recipe" .-> blogs
+  server -. "a recipe to translate, a question, while you wait" .-> ollama
 ```
 
 | Outside | Who calls it | What goes out | Off by |
@@ -48,6 +51,7 @@ flowchart LR
 | Instagram, through yt-dlp | the server's enrich stage | a permalink. No login, no cookies: public posts only | not enriching (`HIKIDASHI_LOCAL_STAGES` without `enrich`) |
 | A Nominatim geocoder | the server's places locator | the place names read from captions | default: `HIKIDASHI_GEOCODER` is empty |
 | Map tiles | your browser, on the map view | the tile coordinates you look at | `HIKIDASHI_TILES` pointing at your own |
+| A recipe page a caption links to (#114) | the server, when an incomplete recipe is opened | a request for that one page: the server's address, and that someone saved a post linking to it | `HIKIDASHI_RECIPE_FETCH=off` ([ADR 0020](adr/0020-fetch-incomplete-recipes.md)) |
 | Hosted AI providers (#116, #125) | the server's worker, for each API that is switched on; or a hosted worker on another machine | a reel's audio (transcription), its cover and five frames (on-screen text), and its caption, hashtags, transcript and on-screen text (tags and recipes) | default: every switch is off, and env never turns one on ([ADR 0019](adr/0019-hosted-ai-behind-a-switch.md)) |
 
 Installing and updating under Docker pulls the images from GitHub's
@@ -57,7 +61,10 @@ from the checkout instead.
 
 Ollama is part of the system, not outside it: it runs on the server
 (`./hikidashi start --ai`) or on the machine of the worker that calls it. The
-server itself never calls Ollama ([#86](https://github.com/spanthetree/hikidashi/issues/86)).
+server calls Ollama only while someone waits for an answer: a recipe in their
+language, or a question to their library, and then only when hosted AI is not
+theirs ([ADR 0021](adr/0021-the-server-asks-a-model-while-you-wait.md)). The
+pipeline's model calls are the workers' ([#86](https://github.com/spanthetree/hikidashi/issues/86)).
 
 ## Containers and images
 
@@ -235,7 +242,7 @@ erDiagram
     text kind
   }
   recipe {
-    text shortcode PK, FK "and 10 more columns"
+    text shortcode PK, FK "and 11 more columns"
     text source PK
     integer user_id PK
   }
@@ -250,6 +257,19 @@ erDiagram
     text user_id
     text title
     text ingredients
+  }
+  recipe_fetch {
+    text shortcode PK, FK
+    text url
+    integer fetched_at
+    text error
+  }
+  recipe_translation {
+    text digest PK
+    text lang PK
+    text body
+    text model
+    integer made_at
   }
   item_place {
     text shortcode PK, FK
@@ -295,6 +315,7 @@ erDiagram
   tag ||--o{ item_tag : "tag_id"
   item ||--o{ recipe : "shortcode"
   recipe ||--o{ recipe_ingredient : "shortcode, source, user_id"
+  item ||--o| recipe_fetch : "shortcode"
   item ||--o{ item_place : "shortcode"
   item ||--o| item_vec : "shortcode"
   item ||--o{ item_chunk_vec : "shortcode"
@@ -306,6 +327,11 @@ erDiagram
   item |o..o{ hosted_usage : "shortcode"
 ```
 <!-- /make_diagrams -->
+
+A recipe fetched from the page its caption links to is a `web` row of
+`recipe`, shown in place of the model's (#114); `recipe_fetch` says when each
+page was asked for, and `recipe_translation` keeps recipes translated into a
+reader's language.
 
 A reel's reposts (#58) are grouped by `item.dup_of`, which points at the
 earliest saved copy of the same video; `item.phash` is the fingerprint they

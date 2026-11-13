@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
-  import { addToList, dropFromList, revertRecipe, saveRecipe } from "#lib/api.js";
+  import { addToList, dropFromList, fetchRecipe, getRecipeTranslation, revertRecipe, saveRecipe } from "#lib/api.js";
+  import { locale } from "#lib/i18n.js";
   import { list, nf } from "#lib/format.js";
   import { motion } from "#lib/motion.svelte.js";
   import { m } from "#lib/paraglide/messages.js";
@@ -23,6 +24,46 @@
   const SOURCES: Record<string, () => string> = {
     caption: m.recipe_source_caption, transcript: m.recipe_source_transcript, ocr: m.recipe_source_ocr,
   };
+
+  /* ---------- the rest, and your language (#114) ---------- */
+
+  const link = $derived(recipe.link ?? null);
+  const site = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; } };
+
+  // An incomplete recipe whose caption links to its page: fetch it once.
+  let fetching = $state(false);
+  let fetchError = $state<string | null>(null);
+  let triedFor = ""; // not state: one try per reel, however the recipe changes
+  $effect(() => {
+    if (!recipe.fetchable || triedFor === shortcode) return;
+    triedFor = shortcode;
+    fetching = true;
+    fetchError = null;
+    fetchRecipe(shortcode)
+      .then((next) => onsaved(next))
+      .catch((err) => { fetchError = (err as Error).message; })
+      .finally(() => { fetching = false; });
+  });
+
+  // In your language, by your AI model, unless you asked for the original.
+  let translated = $state<Recipe | null>(null);
+  let translatedBy = $state<string | null>(null);
+  let translating = $state(false);
+  let translateError = $state<string | null>(null);
+  let original = $state(false);
+  $effect(() => {
+    const code = shortcode;
+    void recipe;
+    let stale = false;
+    translated = translatedBy = translateError = null;
+    translating = true;
+    getRecipeTranslation(code, locale)
+      .then((r) => { if (!stale) { translated = r.recipe; translatedBy = r.model; } })
+      .catch((err) => { if (!stale) translateError = (err as Error).message; })
+      .finally(() => { if (!stale) translating = false; });
+    return () => { stale = true; };
+  });
+  const shown = $derived(translated && !original ? translated : recipe);
 
   const amount = (i: Ingredient) => [i.quantity, i.unit].filter(Boolean).join(" ");
 
@@ -177,7 +218,7 @@
   </form>
 {:else}
   <article class="r-view" in:fade={{ duration: motion.reduced ? 0 : 140 }}>
-    <h3 class="r-title">{recipe.title || m.recipe_untitled()}</h3>
+    <h3 class="r-title">{shown.title || m.recipe_untitled()}</h3>
 
     {#if facts.length}
       <div class="r-facts">
@@ -188,14 +229,21 @@
     {/if}
 
     {#if recipe.incomplete}
-      <p class="r-note">{m.recipe_incomplete_note()}</p>
+      <p class="r-note">
+        {m.recipe_incomplete_note()}
+        {#if fetching && link && "site" in link}{m.recipe_fetching({ site: link.site })}
+        {:else if link && "url" in link}<a href={link.url} target="_blank" rel="noopener noreferrer">{m.recipe_rest_at({ site: link.site })}</a>
+        {:else if link?.kind === "bio"}{m.recipe_rest_bio()}
+        {:else if link?.kind === "comment"}{link.keyword ? m.recipe_rest_comment({ keyword: link.keyword }) : m.recipe_rest_comment_any()}{/if}
+        {#if fetchError}<br>{m.recipe_fetch_failed({ error: fetchError })}{/if}
+      </p>
     {/if}
 
-    {#if recipe.ingredients.length}
+    {#if shown.ingredients.length}
       <section class="r-sec">
         <p class="r-label">{m.ingredients()}</p>
         <ul class="r-list">
-          {#each recipe.ingredients as ing, i (i)}
+          {#each shown.ingredients as ing, i (i)}
             <li>
               <label class:done={ticked[i]}>
                 <input type="checkbox" bind:checked={ticked[i]}>
@@ -210,17 +258,27 @@
       </section>
     {/if}
 
-    {#if recipe.steps.length}
+    {#if shown.steps.length}
       <section class="r-sec">
         <p class="r-label">{m.recipe_method()}</p>
         <ol class="r-steps">
-          {#each recipe.steps as step, i (i)}<li>{step}</li>{/each}
+          {#each shown.steps as step, i (i)}<li>{step}</li>{/each}
         </ol>
       </section>
     {/if}
 
+    {#if translating && !translated}<p class="r-prov">{m.recipe_translating()}</p>
+    {:else if translated}
+      <p class="r-prov">
+        {#if !original && translatedBy}{m.recipe_translated({ model: translatedBy })}{/if}
+        <button type="button" class="r-link" onclick={() => (original = !original)}>
+          {original ? m.recipe_show_translation() : m.recipe_show_original()}</button>
+      </p>
+    {:else if translateError}<p class="r-prov">{m.recipe_translate_failed({ error: translateError })}</p>{/if}
+
     <p class="r-prov">
-      {#if recipe.edited}{recipe.has_model ? m.recipe_yours_over_model() : m.recipe_yours()}
+      {#if recipe.web_url}<a href={recipe.web_url} target="_blank" rel="noopener noreferrer">{m.recipe_from_web({ site: site(recipe.web_url) })}</a>
+      {:else if recipe.edited}{recipe.has_model ? m.recipe_yours_over_model() : m.recipe_yours()}
       {:else if from.length}{m.recipe_read_from({ sources: list(from) })}
       {:else}{m.recipe_read()}{/if}
     </p>
@@ -243,6 +301,8 @@
 
 <style>
   .r-view, .r-edit { display: flex; flex-direction: column; gap: 16px; }
+  .r-link { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; margin-left: 4px; }
+  .r-note a, .r-prov a { color: var(--accent); }
 
   .r-title { margin: 0; font-size: 18px; line-height: 1.25; letter-spacing: -0.01em; }
 
