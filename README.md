@@ -61,6 +61,11 @@ remember. It runs on your own machine, with local models.
   background. The heavy stages can run on a separate machine with a GPU, or,
   if you switch it on, on a hosted AI API (OpenAI, Groq, Mistral, Gemini, any
   OpenAI-compatible server, or an Ollama of your own), from the settings page or `hikidashi ai`.
+- **Add from your phone.** Install it as an app and share a reel to it from
+  Instagram, or paste a link; an iOS Shortcut does the same on an iPhone.
+- **Monitoring, if you want it.** Prometheus metrics, health checks, and the
+  log to syslog or Loki, with a ready-made Grafana dashboard. All off by
+  default.
 - **English and Japanese**, light and dark themes.
 
 | | | |
