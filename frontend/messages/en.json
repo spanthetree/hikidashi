@@ -25,6 +25,7 @@
   "loading": "Loading…",
   "retry": "Retry",
   "close": "Close",
+  "about_section": "About {title}",
   "dismiss": "Dismiss",
   "edit": "Edit",
   "save": "Save",

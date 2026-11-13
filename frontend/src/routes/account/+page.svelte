@@ -6,6 +6,7 @@
   } from "#lib/api.js";
   import AiProviders from "#lib/components/AiProviders.svelte";
   import Notice from "#lib/components/Notice.svelte";
+  import InfoHead from "#lib/components/InfoHead.svelte";
   import Rich from "#lib/components/Rich.svelte";
   import Topbar from "#lib/components/Topbar.svelte";
   import { copyFailure, copyText, type Copied } from "#lib/clipboard.js";
@@ -240,8 +241,7 @@
     </section>
 
     <section class="a-sec">
-      <h2>{m.export_title()}</h2>
-      <p class="lede">{m.export_lede()}</p>
+      <InfoHead title={m.export_title()}>{m.export_lede()}</InfoHead>
       <div class="a-export">
         {#if people.length > 1}
           <label for="x-owner">{m.export_whose()}</label>
@@ -313,8 +313,7 @@
     </section>
 
     <section class="a-sec" id="ai">
-      <h2>{m.ai_title()}</h2>
-      <p class="lede">{m.ai_lede()}</p>
+      <InfoHead title={m.ai_title()}>{m.ai_lede()}</InfoHead>
       <!-- One choice each, for your own library. An admin sets the system
            default, which "System default" follows, on the Pipeline page. -->
       <AiProviders whose="mine" bind:notice />
@@ -322,8 +321,7 @@
 
     {#if mine}
       <section class="a-sec">
-        <h2>{m.tokens_title()}</h2>
-        <p class="lede"><Rich parts={m.tokens_lede.parts()} /></p>
+        <InfoHead title={m.tokens_title()}><Rich parts={m.tokens_lede.parts()} /></InfoHead>
         <form class="a-export" onsubmit={makeToken}>
           <label for="t-name">{m.tokens_name()}</label>
           <input id="t-name" type="text" maxlength="64" required autocomplete="off"
@@ -418,8 +416,7 @@
 
       {#if me.is_admin}
         <section class="a-sec">
-          <h2>{m.people_title()}</h2>
-          <p class="lede">{m.people_lede()}</p>
+          <InfoHead title={m.people_title()}>{m.people_lede()}</InfoHead>
           <div class="a-table">
             <table>
               <thead>
@@ -459,8 +456,7 @@
         </section>
 
         <section class="a-sec">
-          <h2>{m.invites_title()}</h2>
-          <p class="lede">{m.invites_lede()}</p>
+          <InfoHead title={m.invites_title()}>{m.invites_lede()}</InfoHead>
           <div class="a-buttons">
             <button class="btn primary" type="button" onclick={invite}>{m.invites_make()}</button>
           </div>
@@ -499,7 +495,7 @@
 <style>
   .account { max-width: 760px; }
 
-  h2 { margin: 0; font-size: 16px; }
+  .account :global(h2) { margin: 0; font-size: 16px; }
 
   /* The export form: a label beside each choice; stacked on a phone. */
   .a-export {

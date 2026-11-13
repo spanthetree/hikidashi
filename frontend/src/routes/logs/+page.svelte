@@ -3,6 +3,7 @@
   import { page } from "$app/state";
   import { getLogs, type LogName } from "#lib/api.js";
   import Notice from "#lib/components/Notice.svelte";
+  import InfoHead from "#lib/components/InfoHead.svelte";
   import Rich from "#lib/components/Rich.svelte";
   import Topbar from "#lib/components/Topbar.svelte";
   import { locale } from "#lib/i18n.js";
@@ -96,8 +97,7 @@
 <main class="page logs">
   <a class="back" href="/">{m.logs_back()}</a>
   <header>
-    <h1>{m.logs_title()}</h1>
-    <p class="lede"><Rich parts={m.logs_lede.parts()} /></p>
+    <InfoHead level={1} title={m.logs_title()}><Rich parts={m.logs_lede.parts()} /></InfoHead>
   </header>
 
   <Notice bind:notice />
