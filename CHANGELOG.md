@@ -6,6 +6,65 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.25.0] — 2026-11-13
+
+### Added
+
+- **More like this** (#53): the reels in your library closest in meaning to
+  the one open, in a row at the bottom of its sheet.
+- **Rediscover** (#50): above the grid, saves from this day in earlier years
+  and saves you have never opened, each strip hidden until tomorrow by its ×.
+  **Shuffle** opens a random reel from whatever the grid shows, and
+  **Another** picks again. Whether you opened a reel is yours alone.
+- **Jump to the moment a search matched** (#44): transcripts keep when each
+  line was said. A search that matches the voiceover shows the line on the
+  card and opens the reel there (`?t=`); the transcript reads line by line,
+  the one playing lit, and pressing a line plays from it. Remote workers send
+  the timings with the transcript.
+- **Reposts and duplicate saves** (#58): every reel is fingerprinted from its
+  frames, and copies of the same video are grouped. Cards say how many copies
+  you have, the sheet lists them under **Also saved as** with **Not the same**
+  to split a wrong match, and a setting on your Account page shows a reel and
+  its reposts as one card (off by default). 4 groups on a 420-reel library,
+  all right.
+- **Incomplete recipes say where the rest is** (#114): the page the caption
+  links to, the creator's profile, or the keyword to comment. When it links
+  to the recipe's page, the rest is fetched from there (schema.org JSON-LD)
+  the first time you open it, and shown in place of the incomplete one.
+  `HIKIDASHI_RECIPE_FETCH=off` turns that off (ADR 0020).
+- **Recipes in your language** (#114): the recipe stage translates each recipe
+  into the app's languages as it reads it, on the same model (a worker's
+  Ollama or your hosted API), so the server needs no model for it. Read the
+  app in Japanese and you see the translation; **Show the original**
+  switches back. `RECIPE_V` is 6: every recipe is read once more.
+- **Ollama as an AI provider** (#125): pick "Ollama (self-hosted)" under AI
+  providers for on-screen text, tags and recipes, with `qwen2.5:7b` (what the
+  GPU worker runs) and `qwen2.5vl:7b` as defaults and others suggested. No key.
+  It has no speech to text, so transcription needs another provider. Set for
+  the recipe stage, it also answers Ask and translates corrected recipes on
+  the server, even with the hosted switch off: nothing leaves your network.
+- **Ask your library** (#45): **Ask**, beside a search, answers the question
+  from your own saves, citing the reels it used; each citation opens the reel
+  at the moment it was said. It says so when nothing covers the question.
+- **API explorer** (#147) at `/api/docs`: every route by area, with what it
+  takes and returns and the scope it needs, to try with your session or an
+  API token. Signed-in only; no admin routes for non-admins; nothing loaded
+  from a CDN; changes off until **Allow changes**.
+
+### Changed
+
+- **The server asks a model while you wait, for Ask only** (ADR 0021): your
+  hosted API if your reels use one, else a self-hosted provider, else the
+  Ollama at `OLLAMA_URL`. The app container now gets `OLLAMA_URL`
+  (`HIKIDASHI_OLLAMA_URL` in Docker) and `HIKIDASHI_RECIPE_FETCH`, in the
+  compose file and the Unraid and TrueNAS templates.
+- `ASR_V` is 3: the next transcription pass transcribes every reel again, to
+  keep its timings. On a CPU that takes a while; with a hosted API it costs
+  what a transcription costs. The embed stage also fingerprints every reel
+  once (about a quarter of a second each).
+- `/api/openapi.json` needs a signed-in user, and is filtered for
+  non-admins.
+
 ## [0.24.1] — 2026-11-13
 
 ### Changed

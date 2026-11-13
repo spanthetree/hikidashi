@@ -1,6 +1,6 @@
 [project]
 name = "hikidashi"
-version = "0.24.1"
+version = "0.25.0"
 description = "A self-hosted, searchable library for Instagram saves"
 readme = "README.md"
 # Source-available, not open source: free for any noncommercial use (#122,

@@ -35,12 +35,20 @@ remember. It runs on your own machine, with local models.
 - **Search by meaning.** Captions, transcripts
   ([faster-whisper](https://github.com/SYSTRAN/faster-whisper)) and on-screen
   text (Tesseract) are searched by keyword and by meaning together: "a
-  vegetarian sandwich" finds a reel captioned *Portobello banh mi*.
+  vegetarian sandwich" finds a reel captioned *Portobello banh mi*. A match in
+  what was said opens the reel at that line.
+- **Ask your library.** Ask a question and get an answer from your own saves,
+  each claim citing the reel it came from.
+- **Rediscover.** Saves from this day in earlier years, ones you never opened,
+  a shuffle button, and "more like this" on every reel. Reposts of the same
+  video are found and listed together.
 - **Tags and summaries.** A local model ([Ollama](https://ollama.com)) files
   each reel under a category and summarises it. Gaming reels also get the
   game they show. Your own edits always take precedence.
 - **Recipes.** Recipe reels become ingredient lists and steps, filterable by
-  time and ingredient, with a shopping list that merges recipes by aisle.
+  time and ingredient, with a shopping list that merges recipes by aisle. A
+  recipe that says "full recipe on the blog" is fetched from there, and
+  recipes are translated into the language you read the app in.
 - **Places on a map.** Restaurants, shops and viewpoints named in captions are
   collected on a map, optionally geocoded.
 - **Your own copy.** Videos and thumbnails are downloaded, so a save outlasts
@@ -51,8 +59,8 @@ remember. It runs on your own machine, with local models.
   API tokens for scripts and a browsable API explorer at `/api/docs`.
 - **Automatic processing.** New saves are downloaded and analysed in the
   background. The heavy stages can run on a separate machine with a GPU, or,
-  if you switch it on, on a hosted AI API (OpenAI, Groq, Mistral, Gemini or
-  any OpenAI-compatible server), from the settings page or `hikidashi ai`.
+  if you switch it on, on a hosted AI API (OpenAI, Groq, Mistral, Gemini, any
+  OpenAI-compatible server, or an Ollama of your own), from the settings page or `hikidashi ai`.
 - **English and Japanese**, light and dark themes.
 
 | | | |
