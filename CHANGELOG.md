@@ -14,6 +14,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and Logs pages, the paragraph under a title now sits behind an "i" beside
   it: hover to read it, or click or tap to keep it open. Hints and status
   lines stay where they were.
+- **README pitch line:** Instagram's Saved tab "can't find a reel by what it
+  says or shows", rather than "has no search", in English and Japanese.
 
 ## [0.24.0] — 2026-11-13
 
