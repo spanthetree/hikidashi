@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.24.1] — 2026-11-13
+
+### Changed
+
+- **Section descriptions behind an info button.** On the Pipeline, Account
+  and Logs pages, the paragraph under a title now sits behind an "i" beside
+  it: hover to read it, or click or tap to keep it open. Hints and status
+  lines stay where they were.
+
 ## [0.24.0] — 2026-11-13
 
 ### Changed
