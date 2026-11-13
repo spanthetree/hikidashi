@@ -22,9 +22,9 @@
 </div>
 
 Instagram's Saved tab can't find a reel by what it says or shows. Hikidashi
-imports your data export, keeps a copy of every reel, and indexes what each one says, shows on
-screen and is about, so you can find the one you half remember. It runs on
-your own machine, with local models.
+imports your data export, keeps a copy of every reel, and indexes what each
+one says, shows on screen and is about, so you can find the one you half
+remember. It runs on your own machine, with local models.
 
 <img src="docs/demo/app.webp" alt="Hikidashi on a demo library, in dark mode: typing something with coconut finds a Southern Indian beef curry by meaning, and opening it plays the reel beside the recipe the local model read from its voiceover; then the recipes from the sidebar, narrowed to those ready in 30 minutes; then the places on a map, zoomed in on Japan to a ramen shop in Shinjuku; then back to the whole library." width="100%">
 
