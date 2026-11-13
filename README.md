@@ -21,8 +21,8 @@
 
 </div>
 
-Instagram's Saved tab is a grid with no search. Hikidashi imports your data
-export, keeps a copy of every reel, and indexes what each one says, shows on
+Instagram's Saved tab can't find a reel by what it says or shows. Hikidashi
+imports your data export, keeps a copy of every reel, and indexes what each one says, shows on
 screen and is about, so you can find the one you half remember. It runs on
 your own machine, with local models.
 
