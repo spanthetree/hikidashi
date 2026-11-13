@@ -434,6 +434,7 @@ their names couldn't all be checked; pick one from the provider's own list
 | `github` | ocr, tag, recipe | chosen | low per-minute and per-day limits, with a GitHub account | GitHub Models' terms |
 | `cloudflare` | tag, recipe (its Whisper is not on the OpenAI-compatible layer) | chosen; base URL `https://api.cloudflare.com/client/v4/accounts/<id>/ai/v1` | a daily allowance | does not train on inputs |
 | `huggingface` | ocr, tag, recipe | chosen | monthly credits | the routed provider's |
+| `ollama` | on-screen text, tags, recipes (no speech to text) | `qwen2.5:7b`, as the GPU worker runs, and `qwen2.5vl:7b` for on-screen text; others suggested in the model list; your base URL, as `http://host.docker.internal:11434/v1`. No key | your machine | nothing leaves your network. Also answers Ask, and translates corrected recipes, with the switch off (ADR 0021) |
 | `compatible` | all four | chosen; your base URL | your server | your server |
 
 **OpenAI's older models shut down soon:** `whisper-1`, `gpt-4o-transcribe`

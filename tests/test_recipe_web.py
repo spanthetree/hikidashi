@@ -112,6 +112,11 @@ class TestTranslate(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.conn: sqlite3.Connection = open_db(Path(self.tmp.name) / "t.sqlite3")
 
+    def test_the_apps_languages(self):
+        settings = Path(__file__).parents[1] / "frontend" / "project.inlang" / "settings.json"
+        locales = json.loads(settings.read_text(encoding="utf-8"))["locales"]
+        self.assertEqual(sorted(translate.UI), sorted(locales))
+
     def test_who_needs_it(self):
         self.assertTrue(translate.needed(self.RECIPE, "ja"))
         self.assertFalse(translate.needed(self.RECIPE, "en"))

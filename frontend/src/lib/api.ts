@@ -82,7 +82,7 @@ export const fetchRecipe = (shortcode: string) =>
 
 /** The recipe in this language; `recipe` is null when it needs no translating. */
 export const getRecipeTranslation = (shortcode: string, lang: string) =>
-  api<{ recipe: Recipe | null; model: string | null }>(
+  api<{ recipe: Recipe | null; model: string | null; pending: boolean }>(
     `${recipeUrl(shortcode)}/translation?lang=${encodeURIComponent(lang)}`);
 
 /** Save your version of a reel's recipe. Returns the recipe it now shows. */

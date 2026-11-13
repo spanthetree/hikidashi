@@ -519,6 +519,14 @@ export interface AiPreset {
   checked: string;
   needs_base_url: boolean;
   key_env: string;
+  /** False for a server of your own, which takes no key. */
+  needs_key: boolean;
+  /** What to type for its base URL, when that is yours to give. */
+  url_hint: string;
+  /** It runs on your own machine: nothing leaves your network. */
+  self_hosted: boolean;
+  /** Per stage, models worth trying, the default first. */
+  recommended: Partial<Record<AiStage, string[]>>;
 }
 
 export type AiUse = "mine" | "server" | "workers" | "default";

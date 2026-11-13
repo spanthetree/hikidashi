@@ -32,7 +32,8 @@ from .groups import normalise
 
 # Bumping this schedules every item for the recipe pass again, recipes or not.
 # Change it with a prompt, a schema, the parsing or the candidate filter.
-RECIPE_V = 5
+# 6: each recipe is translated into the app's languages as it is read (#114).
+RECIPE_V = 6
 
 # {"dish": "southern indian beef curry", "edible": true, "is_recipe": true, "confidence": "high"}
 CHECK_PREDICT = 60
@@ -157,6 +158,8 @@ class Found:
     confidence: float
     source_fields: list[str]
     dropped: list[str]  # ingredients whose words no source contains
+    # The recipe in the app's other languages (app/recipes/translate.py).
+    translations: dict[str, Any] = field(default_factory=dict)
 
 
 class Model(Protocol):

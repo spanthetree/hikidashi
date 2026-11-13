@@ -82,9 +82,8 @@ services:
       HIKIDASHI_LOCATE_EVERY: ${HIKIDASHI_LOCATE_EVERY:-300}
       HIKIDASHI_TILES: ${HIKIDASHI_TILES:-}
       HIKIDASHI_TILES_ATTRIBUTION: ${HIKIDASHI_TILES_ATTRIBUTION:-}
-      # Questions asked while someone waits (a recipe in their language, Ask
-      # your library) go to the Ollama the worker uses, unless hosted AI is
-      # theirs. And the rest of an incomplete recipe is fetched from the page
+      # Ask your library goes to the Ollama the worker uses, unless the
+      # person has a hosted API or an Ollama of their own under AI providers. And the rest of an incomplete recipe is fetched from the page
       # its caption links to; off to never fetch (docs/adr/0020).
       OLLAMA_URL: ${HIKIDASHI_OLLAMA_URL:-http://ollama:11434}
       HIKIDASHI_RECIPE_FETCH: ${HIKIDASHI_RECIPE_FETCH:-on}

@@ -151,6 +151,7 @@ class Me(Open):
 class Translation(Open):
     recipe: Recipe | None
     model: str | None
+    pending: bool
 
 
 # (method, path) -> what it returns

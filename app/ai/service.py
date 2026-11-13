@@ -28,7 +28,7 @@ from app.providers import Check
 from app.providers import test as test_connection
 from app.providers.client import Client, ProviderError
 from app.providers.keys import Key
-from app.providers.presets import PRESETS, STAGES
+from app.providers.presets import NEEDS, PRESETS, STAGES
 
 from . import config, eligible, secrets
 from .config import Api
@@ -137,6 +137,10 @@ def presets() -> list[dict[str, Any]]:
             "checked": p.checked,
             "needs_base_url": p.needs_base_url,
             "key_env": p.key_env,
+            "needs_key": p.needs_key,
+            "url_hint": p.url_hint,
+            "self_hosted": p.self_hosted,
+            "recommended": {s: list(p.recommended.get(NEEDS[s], ())) for s in STAGES if p.does(s)},
         }
         for p in PRESETS.values()
     ]

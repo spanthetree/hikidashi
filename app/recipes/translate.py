@@ -7,10 +7,12 @@ Any other language gets the whole recipe translated: title, steps, and each
 ingredient's name and note. Amounts and units stay as they are; the shopping
 list and scaling read those.
 
-The person's own AI model translates it (app/assistant.py), once per recipe as
-shown and language: `recipe_translation` keeps it by a digest of the recipe,
-so a correction is translated afresh and everyone reading the same recipe in
-the same language shares one translation.
+The recipe stage translates each recipe it reads into the app's languages, on
+the same model, worker or hosted API (`for_languages`), so the server needs no
+model of its own. `recipe_translation` keeps them by a digest of the recipe,
+so everyone reading the same recipe in the same language shares one. A
+recipe someone corrected has a new digest: it is translated on the spot only
+when their hosted API is on (app/api/main.py), and otherwise shown as written.
 
 Stdlib only.
 """
@@ -41,6 +43,10 @@ LANGUAGES = {
 FOREIGN = re.compile("[Ͱ-ϿЀ-ӿ֐-׿؀-ۿऀ-ॿ฀-๿぀-ヿ㐀-䶿一-鿿가-힯]")
 
 PREDICT = 3000
+
+# The languages the app is in: frontend/project.inlang/settings.json's locales
+# (tests/test_recipe_web.py checks they agree).
+UI = ("en", "ja")
 
 SYSTEM = """\
 You translate recipes. You are given a recipe as JSON and a language. Reply
@@ -93,6 +99,20 @@ def needed(recipe: dict[str, Any], lang: str) -> bool:
     return bool(FOREIGN.search(json.dumps(_texts(recipe), ensure_ascii=False)))
 
 
+def as_dict(recipe: Any) -> dict[str, Any]:
+    """An app.recipes.llm.Recipe as current() shows it, for its digest."""
+    return {
+        "title": recipe.title,
+        "ingredients": [{"item": i.item, "note": i.note} for i in recipe.ingredients],
+        "steps": list(recipe.steps),
+    }
+
+
+def wanted(recipe: dict[str, Any]) -> list[str]:
+    """The app's languages a reader would need this recipe translated into."""
+    return [lang for lang in UI if needed(recipe, lang)]
+
+
 def digest(recipe: dict[str, Any]) -> str:
     whole = json.dumps(_texts(recipe), ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(whole.encode("utf-8")).hexdigest()[:16]
@@ -131,6 +151,13 @@ def translate(
     Raises what the model raises."""
     if hit := cached(conn, recipe, lang):
         return dict(hit["body"])
+    body = ask_for(recipe, lang, asks)
+    store(conn, recipe, {lang: body}, label)
+    return body
+
+
+def ask_for(recipe: dict[str, Any], lang: str, asks: Asks) -> dict[str, Any]:
+    """One translation, from the model. Raises what the model raises."""
     texts = _texts(recipe)
     reply = asks.ask(
         SYSTEM,
@@ -142,9 +169,33 @@ def translate(
     body = json.loads(reply)
     if not isinstance(body, dict):
         raise ValueError("the translation is not a JSON object")
-    conn.execute(
+    return body
+
+
+def for_languages(recipe: dict[str, Any], asks: Asks) -> dict[str, dict[str, Any]]:
+    """Every translation a reader of the app may need, by language. One that
+    fails is left out: the recipe still shows, as written."""
+    from app.ollama import OllamaError
+
+    out = {}
+    for lang in wanted(recipe):
+        try:
+            out[lang] = ask_for(recipe, lang, asks)
+        except OllamaError:
+            raise  # Ollama went away: the stage stops, as it would anyway
+        except Exception:
+            continue
+    return out
+
+
+def store(
+    conn: sqlite3.Connection, recipe: dict[str, Any], bodies: dict[str, Any], label: str
+) -> None:
+    conn.executemany(
         """INSERT OR REPLACE INTO recipe_translation (digest, lang, body, model, made_at)
            VALUES (?, ?, ?, ?, ?)""",
-        (digest(recipe), lang, json.dumps(body, ensure_ascii=False), label, int(time.time())),
+        [
+            (digest(recipe), lang, json.dumps(body, ensure_ascii=False), label, int(time.time()))
+            for lang, body in bodies.items()
+        ],
     )
-    return body

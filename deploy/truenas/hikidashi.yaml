@@ -25,7 +25,7 @@ services:
       HIKIDASHI_ORIGIN: ""
       # Maps: a Nominatim to look places up on, or "public"; empty is off.
       HIKIDASHI_GEOCODER: ""
-      # The Ollama for questions asked while someone waits (the worker's), and
+      # The Ollama that answers Ask your library (the worker's), and
       # whether an incomplete recipe's page is fetched: on or off.
       OLLAMA_URL: http://host.docker.internal:30068
       HIKIDASHI_RECIPE_FETCH: "on"

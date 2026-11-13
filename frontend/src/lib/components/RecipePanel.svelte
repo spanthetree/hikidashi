@@ -49,6 +49,7 @@
   let translated = $state<Recipe | null>(null);
   let translatedBy = $state<string | null>(null);
   let translating = $state(false);
+  let pending = $state(false);
   let translateError = $state<string | null>(null);
   let original = $state(false);
   $effect(() => {
@@ -56,9 +57,10 @@
     void recipe;
     let stale = false;
     translated = translatedBy = translateError = null;
+    pending = false;
     translating = true;
     getRecipeTranslation(code, locale)
-      .then((r) => { if (!stale) { translated = r.recipe; translatedBy = r.model; } })
+      .then((r) => { if (!stale) { translated = r.recipe; translatedBy = r.model; pending = r.pending; } })
       .catch((err) => { if (!stale) translateError = (err as Error).message; })
       .finally(() => { if (!stale) translating = false; });
     return () => { stale = true; };
@@ -274,7 +276,8 @@
         <button type="button" class="r-link" onclick={() => (original = !original)}>
           {original ? m.recipe_show_translation() : m.recipe_show_original()}</button>
       </p>
-    {:else if translateError}<p class="r-prov">{m.recipe_translate_failed({ error: translateError })}</p>{/if}
+    {:else if translateError}<p class="r-prov">{m.recipe_translate_failed({ error: translateError })}</p>
+    {:else if pending}<p class="r-prov">{m.recipe_translate_pending()}</p>{/if}
 
     <p class="r-prov">
       {#if recipe.web_url}<a href={recipe.web_url} target="_blank" rel="noopener noreferrer">{m.recipe_from_web({ site: site(recipe.web_url) })}</a>

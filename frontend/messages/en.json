@@ -256,6 +256,8 @@
   "recipe_translate_failed": "Not translated: {error}",
   "recipe_show_original": "Show the original",
   "recipe_show_translation": "Show the translation",
+  "recipe_translate_pending": "Shown as written: recipes are translated as the worker reads them, or at once with your hosted AI.",
+  "ai_no_key": "No key: it runs on your own machine. Pull the model on it first: ollama pull <model>.",
   "recipe_method": "Method",
   "recipe_yours": "Your version.",
   "recipe_yours_over_model": "Your version, kept over the model's.",

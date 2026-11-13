@@ -267,24 +267,46 @@ class TestIsolation(ApiCase):
     def test_a_recipe_in_your_language(self):
         from app import assistant
         from app.recipes import service as recipes
+        from app.recipes import translate
         from app.recipes.llm import Found, Ingredient, Recipe
         from tests.test_recipe_web import FakeAsks
 
         conn = open_db(self.settings.db_path)
-        recipes.set_model(
-            conn,
-            "ALICE1",
-            Found(
-                Recipe(title="Toast", ingredients=[Ingredient("bread")], steps=["fry"]), 0.9, [], []
-            ),
-        )
+        made = Recipe(title="Toast", ingredients=[Ingredient("bread")], steps=["fry"])
+        recipes.set_model(conn, "ALICE1", Found(made, 0.9, [], []))
         conn.close()
         url = "/api/items/ALICE1/recipe/translation"
         self.assertEqual(self.client.get(url, params={"lang": "en"}).json()["recipe"], None)
-        fake = assistant.Model(FakeAsks(), "fake:model")
-        with mock.patch.object(assistant, "model_for", return_value=fake):
+        # Not translated yet, and no hosted API: shown as written until a pass.
+        with mock.patch.object(assistant, "hosted_for", return_value=None):
+            r = self.client.get(url, params={"lang": "ja"}).json()
+        self.assertEqual((r["recipe"], r["pending"]), (None, True))
+        # Your hosted API (or Ollama of your own) translates it at once, and keeps it.
+        asks = FakeAsks()
+        with mock.patch.object(
+            assistant, "hosted_for", return_value=assistant.Model(asks, "fake:model")
+        ):
             r = self.client.get(url, params={"lang": "ja"}).json()
         self.assertEqual((r["recipe"]["title"], r["model"]), ("フレンチトースト", "fake:model"))
+        # The worker's translation, when there is one, needs no model at all.
+        conn = open_db(self.settings.db_path)
+        conn.execute("DELETE FROM recipe_translation")
+        translate.store(
+            conn,
+            translate.as_dict(made),
+            {
+                "ja": {
+                    "title": "トースト",
+                    "ingredients": [{"item": "パン", "note": ""}],
+                    "steps": ["焼く"],
+                }
+            },
+            "cpu",
+        )
+        conn.close()
+        with mock.patch.object(assistant, "hosted_for", side_effect=AssertionError("asked")):
+            r = self.client.get(url, params={"lang": "ja"}).json()
+        self.assertEqual((r["recipe"]["title"], r["model"]), ("トースト", "cpu"))
         self.assertEqual(
             self.client.get(
                 "/api/items/BOBBY1/recipe/translation", params={"lang": "ja"}

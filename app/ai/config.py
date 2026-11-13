@@ -38,7 +38,7 @@ from typing import Any
 
 from app.providers.client import Client
 from app.providers.keys import Key, from_env
-from app.providers.presets import COMPATIBLE, PRESETS, STAGES, Preset
+from app.providers.presets import PRESETS, STAGES, Preset
 
 from . import secrets
 
@@ -152,11 +152,13 @@ class Api:
                 out.append(f"{name}: no model set")
             if p.needs_base_url and not st.base_url.value:
                 out.append(f"{name}: no base URL set")
-            if p.name != COMPATIBLE and self.key(p.name) is None:
+            if p.needs_key and self.key(p.name) is None:
                 problem = self.keys.get(p.name)
                 why = problem.problem if problem and problem.problem else "no key"
                 out.append(f"{name}: {why} for {p.label}")
-        if not self.budget.value:
+        # Nothing to pay for when every stage runs on your own machine.
+        paid = any(st.preset and not st.preset.self_hosted for st in self.stages.values())
+        if paid and not self.budget.value:
             out.append("no monthly budget set")
         return out
 

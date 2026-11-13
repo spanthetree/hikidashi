@@ -241,6 +241,8 @@
   "recipe_translate_failed": "翻訳できませんでした: {error}",
   "recipe_show_original": "原文を表示",
   "recipe_show_translation": "翻訳を表示",
+  "recipe_translate_pending": "原文のまま表示しています。レシピはワーカーが読み取るときに翻訳されます（ホスト型AIならすぐに翻訳されます）。",
+  "ai_no_key": "キーは不要です（自分のマシンで動きます）。先にそのマシンでモデルを取得してください: ollama pull <モデル>",
   "recipe_method": "作り方",
   "recipe_yours": "あなたが直した版です。",
   "recipe_yours_over_model": "あなたが直した版です（モデルの版より優先）。",

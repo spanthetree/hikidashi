@@ -215,7 +215,7 @@
                 </select>
                 {#if locked(st.provider.source)}<span class="hint">{m.ai_env({ name: envName(st.provider.source) })}</span>{/if}
                 {#if p?.needs_base_url}
-                  <input type="url" placeholder={URL_EXAMPLE} value={st.base_url.value ?? ""}
+                  <input type="url" placeholder={p.url_hint || URL_EXAMPLE} value={st.base_url.value ?? ""}
                          aria-label={m.ai_base_url()} disabled={locked(st.base_url.source)}
                          onchange={(e) => setStage(s, { base_url: e.currentTarget.value })}>
                 {/if}
@@ -226,7 +226,7 @@
                        onfocus={() => listModels(st.provider.value)}
                        onchange={(e) => setStage(s, { model: e.currentTarget.value })}>
                 <datalist id={`ai-models-${s}`}>
-                  {#each models[st.provider.value ?? ""] ?? [] as id (id)}<option value={id}></option>{/each}
+                  {#each [...new Set([...(p?.recommended[s] ?? []), ...(models[st.provider.value ?? ""] ?? [])])] as id (id)}<option value={id}></option>{/each}
                 </datalist>
                 {#if locked(st.model.source)}<span class="hint">{m.ai_env({ name: envName(st.model.source) })}</span>{/if}
                 {#if s === "asr" && p && !p.segments.includes(st.model.value ?? st.default_model ?? "")}
@@ -257,7 +257,9 @@
           {#if locked(k.source)}<span class="hint">{m.ai_env({ name: envName(k.source) })}</span>
           {:else}<button class="link" type="button" onclick={() => act(() => ai.removeKey(whose, name), m.ai_key_removed())}>{m.ai_key_remove()}</button>{/if}
         {/if}
-        {#if !locked(k?.source ?? "")}
+        {#if p?.self_hosted}
+          <span class="hint">{m.ai_no_key()}</span>
+        {:else if !locked(k?.source ?? "")}
           <form class="a-row" onsubmit={(e) => { e.preventDefault(); saveKey(name); }}>
             <input type="password" autocomplete="off" spellcheck="false" placeholder={k?.set ? m.ai_key_replace() : m.ai_key_paste()}
                    aria-label={m.ai_key_for({ provider: p?.label ?? name })} bind:value={keyDraft[name]}>

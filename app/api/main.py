@@ -1559,35 +1559,34 @@ def fetch_recipe(shortcode: str, user: Me) -> dict[str, Any] | None:
 def translate_recipe(
     shortcode: str, user: Me, lang: str = Query(..., pattern="^[a-z]{2}$")
 ) -> dict[str, Any]:
-    """This reel's recipe in your language (#114), by your AI model, once;
-    `recipe` is null when it needs no translating."""
+    """This reel's recipe in your language (#114). The recipe stage translated
+    it as it read it; a recipe with no translation yet (one you corrected, or
+    read before) is translated now only on your hosted API, which needs no
+    worker. `recipe` null: none needed, or `pending` until the next pass."""
     from app import assistant
-    from app.ollama import OllamaError
     from app.recipes import translate
 
     conn = db()
     _known_item(conn, user, shortcode)
     recipe = recipes.current(conn, shortcode, user_id=user.id)
     if recipe is None or not translate.needed(recipe, lang):
-        return {"recipe": None, "model": None}
+        return {"recipe": None, "model": None, "pending": False}
     if hit := translate.cached(conn, recipe, lang):
-        return {"recipe": translate.merge(recipe, hit["body"]), "model": hit["model"]}
-    model = assistant.model_for(
-        conn,
-        user.id,
-        settings.db_path.parent,
-        ollama_url=settings.ollama_url,
-        profile=settings.profile,
-    )
+        return {
+            "recipe": translate.merge(recipe, hit["body"]),
+            "model": hit["model"],
+            "pending": False,
+        }
+    model = assistant.hosted_for(conn, user.id, settings.db_path.parent)
+    if model is None:
+        return {"recipe": None, "model": None, "pending": True}
     try:
         body = translate.translate(conn, recipe, lang, model.asks, model.label)
-    except OllamaError as exc:
-        raise HTTPException(503, f"No AI model to translate with: {exc}") from exc
     except Exception as exc:
         raise HTTPException(502, f"The translation failed: {exc}") from exc
     finally:
         assistant.record(conn, model, "translate", shortcode)
-    return {"recipe": translate.merge(recipe, body), "model": model.label}
+    return {"recipe": translate.merge(recipe, body), "model": model.label, "pending": False}
 
 
 @app.get("/api/shopping")

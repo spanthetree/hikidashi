@@ -185,6 +185,7 @@ def _from_found(f: recipe_llm.Found) -> dict[str, Any]:
         "confidence": f.confidence,
         "source_fields": list(f.source_fields),
         "dropped": list(f.dropped),
+        "translations": f.translations,
     }
 
 
@@ -300,7 +301,36 @@ def _to_found(v: Any) -> recipe_llm.Found | None:
         confidence=_unit(d.get("confidence"), "recipe confidence", null=False) or 0.0,
         source_fields=_strs(d.get("source_fields", []), "recipe source fields", 50, 10),
         dropped=_strs(d.get("dropped", []), "recipe dropped", 500, recipe_llm.MAX_INGREDIENTS),
+        translations=_translations(d.get("translations") or {}),
     )
+
+
+def _translations(v: Any) -> dict[str, Any]:
+    """A recipe's translations (#114): {lang: {title, ingredients: [{item,
+    note}], steps}}, for the app's languages only."""
+    from app.recipes.translate import UI
+
+    d = _obj(v, "recipe translations")
+    out = {}
+    for lang, body in d.items():
+        if lang not in UI:
+            raise Refused(f"no translation into {lang!r}: not one of the app's languages")
+        b = _obj(body, "a translation")
+        ings = b.get("ingredients", [])
+        if not isinstance(ings, list) or len(ings) > recipe_llm.MAX_INGREDIENTS:
+            raise Refused("translated ingredients must be a list")
+        out[lang] = {
+            "title": _str(b.get("title"), "translated title", 500) or "",
+            "ingredients": [
+                {
+                    "item": _str(_obj(i, "a translated ingredient").get("item"), "item", 500) or "",
+                    "note": _str(i.get("note"), "note", 500) or "",
+                }
+                for i in ings
+            ],
+            "steps": _strs(b.get("steps", []), "translated steps", 5_000, recipe_llm.MAX_STEPS),
+        }
+    return out
 
 
 def _segments(v: Any) -> tuple[tuple[int, int, str], ...]:

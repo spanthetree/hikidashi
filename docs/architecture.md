@@ -43,7 +43,7 @@ flowchart LR
   server -. "audio, frames, text, while an API is switched on" .-> hosted
   workers -. "the same, from a hosted worker, with its own key" .-> hosted
   server -. "one page, for an incomplete recipe" .-> blogs
-  server -. "a recipe to translate, a question, while you wait" .-> ollama
+  server -. "a question to the library, while you wait" .-> ollama
 ```
 
 | Outside | Who calls it | What goes out | Off by |
@@ -61,9 +61,10 @@ from the checkout instead.
 
 Ollama is part of the system, not outside it: it runs on the server
 (`./hikidashi start --ai`) or on the machine of the worker that calls it. The
-server calls Ollama only while someone waits for an answer: a recipe in their
-language, or a question to their library, and then only when hosted AI is not
-theirs ([ADR 0021](adr/0021-the-server-asks-a-model-while-you-wait.md)). The
+server calls a model only while someone waits for an answer to a question to
+their library, and then their hosted API, a self-hosted provider, or Ollama
+at `OLLAMA_URL`. Recipes are translated by the recipe stage, wherever it runs
+([ADR 0021](adr/0021-the-server-asks-a-model-while-you-wait.md)). The
 pipeline's model calls are the workers' ([#86](https://github.com/spanthetree/hikidashi/issues/86)).
 
 ## Containers and images
@@ -330,8 +331,8 @@ erDiagram
 
 A recipe fetched from the page its caption links to is a `web` row of
 `recipe`, shown in place of the model's (#114); `recipe_fetch` says when each
-page was asked for, and `recipe_translation` keeps recipes translated into a
-reader's language.
+page was asked for, and `recipe_translation` keeps recipes translated into
+the app's languages, by the recipe stage as it reads them.
 
 A reel's reposts (#58) are grouped by `item.dup_of`, which points at the
 earliest saved copy of the same video; `item.phash` is the fingerprint they

@@ -35,8 +35,10 @@ citing the reel it came from as a numbered link that opens the reel, at the
 line that said it when that is known. When nothing you saved covers it, it
 says so rather than guess.
 
-Your AI model answers: your hosted API if your reels use one, otherwise the
-local Ollama, where an answer can take a minute on a CPU
+Your AI model answers: your hosted API if your reels use one, else an Ollama
+of your own set under **AI providers** (it needs no switch: nothing leaves
+your network), else the Ollama at `OLLAMA_URL`. On a CPU an answer can take a
+minute
 ([ADR 0021](adr/0021-the-server-asks-a-model-while-you-wait.md)). Check what
 it cites; a model can be wrong.
 
@@ -93,10 +95,12 @@ caption links to the recipe's own page, Hikidashi fetches it from there the
 first time you open it, and shows that recipe instead, with a link to the
 page. `HIKIDASHI_RECIPE_FETCH=off` turns that off ([ADR 0020](adr/0020-fetch-incomplete-recipes.md)).
 
-Recipes are written in English whatever language the reel speaks. Read the
-app in another language and a recipe is translated into it when you open it,
-by your AI model (hosted, if it is yours; otherwise the local one), and kept.
-**Show the original** switches back.
+Recipes are written in English whatever language the reel speaks, and
+translated into the app's other languages as they are read, by the same model.
+Read the app in Japanese and you see the translation; **Show the original**
+switches back. A recipe you corrected is translated at once if you have a
+hosted API or an Ollama of your own set up under **AI providers**, and
+otherwise shown as you wrote it.
 
 **Select** picks several recipes at once; with a filter on, **Add all** adds
 every recipe it shows. **Shopping list**, in the sidebar, merges their
