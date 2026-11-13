@@ -23,6 +23,10 @@ one client (client.py) covers them, and a preset says how each one differs:
                   reasoning model asked not to think at length, say
     upload        the largest audio file it takes, in bytes
     tokens_param  what it calls the output cap
+    recommended   per capability, models worth trying besides the default
+    needs_key     False for a server of your own, which takes none
+    url_hint      what to type for a base URL that is the setting's
+    self_hosted   it runs on your own machine: nothing leaves your network
 
 Free tiers, model names and data terms change often. Each preset carries the
 date it was checked; docs/operation.md has the table, with sources. A preset
@@ -41,6 +45,7 @@ STAGES = ("asr", "ocr", "tag", "recipe")
 NEEDS = {"asr": "asr", "ocr": "vision", "tag": "chat", "recipe": "chat"}
 
 COMPATIBLE = "compatible"  # any OpenAI-compatible URL: a LAN server, LiteLLM, a proxy
+OLLAMA = "ollama"  # an Ollama of your own, on its OpenAI-compatible /v1
 
 MB = 1 << 20
 
@@ -66,6 +71,10 @@ class Preset:
     free: str = ""  # one line: the free tier, if any
     terms: str = ""  # one line: what it does with what it is sent
     checked: str = ""  # YYYY-MM-DD
+    recommended: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    needs_key: bool = True
+    url_hint: str = ""
+    self_hosted: bool = False
 
     def does(self, stage: str) -> bool:
         return NEEDS[stage] in self.can
@@ -224,6 +233,36 @@ PRESETS: dict[str, Preset] = {
             checked=CHECKED,
         ),
         Preset(
+            name=OLLAMA,
+            label="Ollama (self-hosted)",
+            base_url="",  # the setting's own: where your Ollama is
+            url_hint="http://host.docker.internal:11434/v1",
+            key_env="HIKIDASHI_OLLAMA_API_KEY",
+            needs_key=False,
+            self_hosted=True,
+            # No speech to text: transcription needs another provider, or the
+            # workers. Vision for on-screen text needs a vision model.
+            can=frozenset({"chat", "vision"}),
+            # What the GPU worker's cuda profile runs (app/profiles.py), and a
+            # vision model of the same family.
+            models={"chat": "qwen2.5:7b", "vision": "qwen2.5vl:7b"},
+            recommended={
+                "chat": ("qwen2.5:7b", "qwen2.5:3b", "qwen2.5:14b", "llama3.1:8b"),
+                "vision": ("qwen2.5vl:7b", "qwen2.5vl:3b", "llama3.2-vision:11b", "gemma3:12b"),
+            },
+            # Its structured outputs constrain generation to the schema; the
+            # reply is checked here either way.
+            strict=False,
+            tokens_param="max_tokens",
+            # One GPU: one request at a time is the fastest it goes.
+            in_flight=1,
+            per_minute=600,
+            upload=100 * MB,
+            free="your own machine",
+            terms="nothing leaves your network",
+            checked=CHECKED,
+        ),
+        Preset(
             name=COMPATIBLE,
             label="OpenAI-compatible URL",
             base_url="",  # the setting's own
@@ -240,6 +279,7 @@ PRESETS: dict[str, Preset] = {
             per_minute=600,
             free="your own server",
             terms="whatever runs at that address",
+            needs_key=False,
             checked=CHECKED,
         ),
     )

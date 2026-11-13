@@ -58,6 +58,7 @@ used unmodified. The main ones:
 | FastAPI, Starlette, Pydantic | MIT, BSD-3-Clause, MIT |
 | Uvicorn | BSD-3-Clause |
 | fastembed, ONNX Runtime | Apache-2.0, MIT |
+| Swagger UI (`swagger-ui-dist`), the API explorer's page, bundled into the server image with its LICENSE at `/explorer/LICENSE` | Apache-2.0 |
 | faster-whisper, CTranslate2 | MIT |
 | sqlite-vec | MIT or Apache-2.0 |
 | argon2-cffi | MIT |

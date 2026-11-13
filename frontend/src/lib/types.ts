@@ -21,6 +21,8 @@ export interface Item {
   tag: string | null;
   /** What a card shows of the reel's recipe; null when it has none. */
   recipe: RecipeCard | null;
+  /** This reel and its reposts in your library (#58); 1 for most. */
+  copies: number;
   /** Why a search returned it; null without a query. */
   match: SearchMatch | null;
 }
@@ -29,7 +31,13 @@ export interface Item {
 export interface SearchMatch {
   match: ("phrase" | "keyword" | "semantic" | "transcript")[];
   similarity: number | null;
+  /** When in the reel the query was said, and the line (#44). */
+  at_ms?: number;
+  said?: string;
 }
+
+/** [start_ms, end_ms, text]: when a part of the transcript was said. */
+export type Segment = [number, number, string];
 
 export interface RecipeCard {
   title: string | null;
@@ -64,7 +72,17 @@ export interface Recipe {
   edited: boolean;
   /** The model has its own version, which reverting brings back. */
   has_model: boolean;
+  /** Fetched from the page the reel points to (#114). */
+  web_url: string | null;
+  /** An incomplete one: where the rest is, and whether the server fetches it. */
+  link?: RecipeLink | null;
+  fetchable?: boolean;
 }
+
+export type RecipeLink =
+  | { kind: "recipe" | "site"; url: string; site: string }
+  | { kind: "comment"; keyword: string | null }
+  | { kind: "bio" };
 
 /** The body of PUT /api/items/{shortcode}/recipe. */
 export interface RecipeIn {
@@ -159,7 +177,17 @@ export interface ItemGame {
   guess: string | null;
 }
 
-export interface ItemDetail extends Omit<Item, "recipe"> {
+/** The same video saved again from another post (#58). */
+export interface Copy {
+  shortcode: string;
+  author: string | null;
+  caption: string | null;
+  saved_at: number | null;
+  thumb: string | null;
+}
+
+export interface ItemDetail extends Omit<Item, "recipe" | "copies"> {
+  copies: Copy[];
   fbid: string | null;
   fail_stage: string | null;
   fail_reason: string | null;
@@ -178,6 +206,8 @@ export interface ItemDetail extends Omit<Item, "recipe"> {
   tag_profile: string | null;
   recipe_profile: string | null;
   transcript: string | null;
+  /** When each part of the transcript was said; null when not known. */
+  segments: Segment[] | null;
   ocr_text: string | null;
   summary: string | null;
   keywords: string[];
@@ -337,6 +367,8 @@ export interface Me {
   ig_handle: string | null;
   is_admin: boolean;
   auth: AuthState["mode"];
+  /** One card for a reel and its reposts (#58). */
+  collapse_copies: boolean;
 }
 
 /** An account, as an admin sees it: GET /api/users. */
@@ -398,7 +430,7 @@ export interface MyTokens {
 
 export type NoticeState = { text: string; kind: "ok" | "error" } | null;
 
-export type Sort ="relevance" | "saved_desc" | "saved_asc" | "author";
+export type Sort ="relevance" | "saved_desc" | "saved_asc" | "author" | "random";
 export type FilterKind = "collection" | "tag" | "game" | "hashtag";
 export type View = "library" | "recipes" | "places";
 /** How Places draws its reels. */
@@ -487,6 +519,14 @@ export interface AiPreset {
   checked: string;
   needs_base_url: boolean;
   key_env: string;
+  /** False for a server of your own, which takes no key. */
+  needs_key: boolean;
+  /** What to type for its base URL, when that is yours to give. */
+  url_hint: string;
+  /** It runs on your own machine: nothing leaves your network. */
+  self_hosted: boolean;
+  /** Per stage, models worth trying, the default first. */
+  recommended: Partial<Record<AiStage, string[]>>;
 }
 
 export type AiUse = "mine" | "server" | "workers" | "default";
@@ -557,4 +597,14 @@ export interface MyPipeline {
   applies: "mine" | "server" | "workers";
   api: { on: boolean; reason: string | null; in_flight: number; spent: number; budget: number | null; waiting: number };
   now: number;
+}
+
+/** GET /api/ask: an answer from your saves (#45). */
+export interface Answer {
+  found: boolean;
+  /** With [n] where it cites citations' n. */
+  answer: string;
+  citations: { n: number; shortcode: string; at_ms: number | null }[];
+  items: Item[];
+  model: string;
 }

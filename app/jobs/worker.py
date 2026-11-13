@@ -34,6 +34,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
+from app.asr.worker import Transcribe
 from app.db import Row
 from app.ollama import OllamaError
 from app.profiles import Profile, cpus, resolve
@@ -135,7 +136,7 @@ class Runners:
         """The profile, and Whisper loaded for it."""
         profile = self._profile()
 
-        def load() -> Callable[[bytes], str | None]:
+        def load() -> Transcribe:
             if self.whisper:
                 return self.whisper(profile, self.models_dir)
             from app.asr.transcriber import Whisper
@@ -246,9 +247,12 @@ class Runners:
             raise Unavailable(str(exc)) from exc
 
     def _embed(self, conn: sqlite3.Connection | None, codes: list[str]) -> Any:
+        from app import dupes
         from app.embed.worker import embed_all
 
         assert conn is not None
+        # First, and without the model: a fingerprint needs only ffmpeg.
+        dupes.hash_all(conn, self.media_dir, codes)
 
         def load() -> Embed:
             if self.embedder:

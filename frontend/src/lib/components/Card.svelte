@@ -109,6 +109,7 @@
     {:else if recipe && !recipeView}<span class="badge is-recipe">{m.badge_recipe()}</span>
     {:else if recipe?.incomplete && recipeView}<span class="badge" title={m.recipe_incomplete_check()}>{m.badge_incomplete()}</span>{/if}
     {#if why}<span class="why" title={m.card_why()}>{why}</span>{/if}
+    {#if item.copies > 1}<span class="copies">{m.copies_badge({ count: item.copies })}</span>{/if}
     {#if len}<span class="dur">{len}</span>{/if}
     {#if !showImage}<span class="code">{item.shortcode}</span>{/if}
   </a>
@@ -122,6 +123,11 @@
     <p class="ctitle">{recipe.title || caption || m.recipe_untitled()}</p>
     {#if recipeFacts}<span class="cdate">{recipeFacts}</span>{/if}
   {:else if caption}<p class="ccap">{caption}</p>{/if}
+  {#if item.match?.said && item.match.at_ms != null}
+    <a class="csaid" {href} data-sveltekit-noscroll tabindex="-1">
+      <time>{duration(Math.floor(item.match.at_ms / 1000)) || "0:00"}</time>“{item.match.said}”
+    </a>
+  {/if}
   <span class="cdate">{savedDate(item.saved_at)}</span>
   {#if item.tag || hashtags.length || item.collections.length}
     <div class="chips">
@@ -143,6 +149,19 @@
 </article>
 
 <style>
+  .copies {
+    position: absolute; right: 8px; top: 8px; font-size: 11px; font-weight: 600;
+    padding: 2px 7px; border-radius: var(--radius-pill); background: rgb(0 0 0 / 0.6); color: #fff;
+  }
+  /* The line a search matched in the voiceover, and when (#44). */
+  .csaid {
+    display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; font-size: 12px; font-style: italic; color: var(--ink-2); text-decoration: none;
+  }
+  .csaid time {
+    font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--accent);
+    margin-right: 5px;
+  }
   .card { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 
   .thumb {

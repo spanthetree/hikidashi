@@ -95,7 +95,11 @@ version, so a bump also starts every count again. The embedder adds a digest:
 `item_vec.digest` is a hash of the text it embedded, so a new summary,
 transcript or caption re-embeds that reel alone. That is also how a reel
 embedded from its caption alone is embedded again when its transcript and
-summary arrive.
+summary arrive. The embed stage also fingerprints each reel's frames for
+finding reposts (`phash_v < PHASH_V`, [app/dupes](../app/dupes/__init__.py)):
+three ffmpeg frames, about a quarter of a second a reel on CPU, then the
+library is regrouped. That needs only ffmpeg, so it runs before the embedder
+loads, and still runs when the embedder will not.
 
 **`item.state`** is coarser and older than the queue. It records how far a reel
 has come (`imported`, `fetched`, `transcribed`, `tagged`) and only moves
@@ -176,6 +180,12 @@ which does the same with its own `LocalJobs`. The server stays the only writer
 
 What the desktop's terminal shows during a real run is in
 [remote-workers.md](remote-workers.md#the-desktop-with-uv).
+
+An asr result is `{shortcode, transcript}`, and since `ASR_V` 3 may carry
+`segments` too: `[[start_ms, end_ms, text], ...]`, when the model timed what
+it heard, so a search can open a reel where the words were said
+([#44](https://github.com/spanthetree/hikidashi/issues/44)). The server checks
+each is two whole numbers and some text before recording any.
 
 ```mermaid
 sequenceDiagram
@@ -424,6 +434,7 @@ their names couldn't all be checked; pick one from the provider's own list
 | `github` | ocr, tag, recipe | chosen | low per-minute and per-day limits, with a GitHub account | GitHub Models' terms |
 | `cloudflare` | tag, recipe (its Whisper is not on the OpenAI-compatible layer) | chosen; base URL `https://api.cloudflare.com/client/v4/accounts/<id>/ai/v1` | a daily allowance | does not train on inputs |
 | `huggingface` | ocr, tag, recipe | chosen | monthly credits | the routed provider's |
+| `ollama` | on-screen text, tags, recipes (no speech to text) | `qwen2.5:7b`, as the GPU worker runs, and `qwen2.5vl:7b` for on-screen text; others suggested in the model list; your base URL, as `http://host.docker.internal:11434/v1`. No key | your machine | nothing leaves your network. Also answers Ask, and translates corrected recipes, with the switch off (ADR 0021) |
 | `compatible` | all four | chosen; your base URL | your server | your server |
 
 **OpenAI's older models shut down soon:** `whisper-1`, `gpt-4o-transcribe`

@@ -32,7 +32,7 @@ from pathlib import Path
 from app.db import Row
 from app.providers.client import Client, Transcript, Usage
 
-from .transcriber import AudioError, NoAudio, is_noise, join_segments
+from .transcriber import AudioError, NoAudio, Said, is_noise, join_segments, said
 
 NO_SPEECH = 0.6  # Whisper's own threshold for a silent window
 MIN_LOGPROB = -1.0  # below this, Whisper itself treats a window as a failed decode
@@ -110,30 +110,38 @@ def encode(path: Path, *, start: float | None = None, length: float | None = Non
     return proc.stdout
 
 
-def guard(t: Transcript, duration: float | None = None) -> str | None:
+def guard(t: Transcript, duration: float | None = None, *, offset: float = 0.0) -> Said | None:
     """The transcript worth keeping, or None: the music guard. `duration`,
-    the clip's, for a model that reports neither segments nor its own."""
+    the clip's, for a model that reports neither segments nor its own.
+    `offset`, in seconds, is where this part starts in the clip."""
     if t.segments is None:
         whole = t.text.strip()
         if not whole:
             return None
-        return None if is_noise(whole, t.duration or duration or 0.0) else whole
+        return None if is_noise(whole, t.duration or duration or 0.0) else Said(whole)
     kept = [
         s
         for s in t.segments
         if float(s.get("no_speech_prob") or 0.0) <= NO_SPEECH
         and float(s.get("avg_logprob") or 0.0) >= MIN_LOGPROB
     ]
-    text = join_segments([str(s.get("text") or "") for s in kept])
-    if text is None:
+    heard = said(
+        (
+            offset + float(s.get("start") or 0),
+            offset + float(s.get("end") or 0),
+            str(s.get("text") or ""),
+        )
+        for s in kept
+    )
+    if heard is None:
         return None
     speech = sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0)) for s in kept)
-    return None if is_noise(text, speech) else text
+    return None if is_noise(heard.text, speech) else heard
 
 
 @dataclass
 class Heard:
-    text: str | None
+    said: Said | None
     language: str | None = None
     usage: Usage = field(default_factory=Usage)
 
@@ -182,15 +190,24 @@ class Hosted:
             raise AudioError("too big to send in one part, and its length is unknown")
         parts = int(size / (limit * 0.9)) + 1
         step = duration / parts
-        texts, languages, usage = [], [], Usage()
+        heard: list[Said] = []
+        languages, usage = [], Usage()
         for i in range(parts):
             t = self._send(encode(path, start=i * step, length=step))
             usage.add(t.usage)
-            if (kept := guard(t, step)) is not None:
-                texts.append(kept)
+            if (kept := guard(t, step, offset=i * step)) is not None:
+                heard.append(kept)
                 languages.append(t.language)
-        said = next((lang for lang in languages if lang), None)
-        return Heard(join_segments(texts), language_code(self.language or said), usage)
+        spoken = next((lang for lang in languages if lang), None)
+        text = join_segments([h.text for h in heard])
+        # Timed only if every part was: a gap would put later lines in the wrong place.
+        timed = all(h.segments for h in heard)
+        whole = (
+            Said(text, tuple(s for h in heard for s in h.segments) if timed else ())
+            if text
+            else None
+        )
+        return Heard(whole, language_code(self.language or spoken), usage)
 
 
 def transcribe_one(row: Row, media_dir: Path, asr: Hosted) -> Heard:

@@ -58,6 +58,9 @@ class Settings:
     run_dir: Path
     profile: str
     ollama_url: str
+    # Fetch the rest of an incomplete recipe from the page its caption links
+    # to (#114). On unless HIKIDASHI_RECIPE_FETCH=off.
+    recipe_fetch: bool
     host: str
     port: int
     # none: everyone is the library's owner, as before accounts. local: sign
@@ -110,6 +113,8 @@ class Settings:
             run_dir=_path("HIKIDASHI_RUN", "data/run"),
             profile=os.environ.get("HIKIDASHI_PROFILE", "auto"),
             ollama_url=os.environ.get("OLLAMA_URL", "http://localhost:11434"),
+            recipe_fetch=os.environ.get("HIKIDASHI_RECIPE_FETCH", "on").lower()
+            not in ("off", "0", "false", "no"),
             host=os.environ.get("HIKIDASHI_HOST", "0.0.0.0"),
             port=int(os.environ.get("HIKIDASHI_PORT", "8080")),
             auth=_auth(os.environ.get("HIKIDASHI_AUTH", "none")),

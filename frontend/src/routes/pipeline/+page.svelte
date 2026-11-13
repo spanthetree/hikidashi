@@ -253,6 +253,7 @@
 
     <section class="p-sec" aria-labelledby="p-api-tokens">
       <InfoHead id="p-api-tokens" title={m.pl_api_tokens_title()}><Rich parts={m.pl_api_tokens_lede.parts()} /></InfoHead>
+      <p><a href="/api/docs" data-sveltekit-reload>{m.api_explore()} &rarr;</a></p>
       {#each apiTokens as t (t.id)}
         <div class="p-token">
           <div class="p-token-text">

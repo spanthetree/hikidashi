@@ -186,6 +186,56 @@ class TestSwitch(AiCase):
         self.assertTrue(service.turn_on(self.conn, BOB, 2, self.dir).switch.on)
         self.assertEqual(config.use(self.conn, 2), "mine")
 
+    def test_ollama_of_your_own_needs_no_key(self):
+        url = "http://desktop.lan:11434/v1"
+        service.set_stage(
+            self.conn,
+            BOB,
+            2,
+            "asr",
+            self.dir,
+            provider="compatible",
+            base_url="http://desktop.lan:8000/v1",
+            model="whisper",
+        )
+        for st in ("ocr", "tag", "recipe"):
+            service.set_stage(self.conn, BOB, 2, st, self.dir, provider="ollama", base_url=url)
+        api = service.load(self.conn, 2, self.dir)
+        # No key for either. Ollama has no speech to text, so transcription is
+        # on another server, which may cost: that still wants a budget.
+        self.assertEqual(api.problems(), ["no monthly budget set"])
+        self.assertEqual((api.model("tag"), api.model("ocr")), ("qwen2.5:7b", "qwen2.5vl:7b"))
+        service.set_budget(self.conn, BOB, 2, 1, self.dir)
+        self.assertTrue(service.turn_on(self.conn, BOB, 2, self.dir).switch.on)
+
+    def test_ollama_answers_your_questions_with_the_switch_off(self):
+        from app import assistant
+
+        self.assertIsNone(assistant.hosted_for(self.conn, 2, self.dir))
+        service.set_stage(
+            self.conn,
+            BOB,
+            2,
+            "recipe",
+            self.dir,
+            provider="ollama",
+            base_url="http://desktop.lan:11434/v1",
+        )
+        model = assistant.hosted_for(self.conn, 2, self.dir)
+        self.assertEqual(model.label if model else None, "ollama:qwen2.5:7b")
+        # Carol has none of her own: the server's, when an admin set one.
+        self.assertIsNone(assistant.hosted_for(self.conn, 3, self.dir))
+        service.set_stage(
+            self.conn,
+            ADMIN,
+            None,
+            "recipe",
+            self.dir,
+            provider="ollama",
+            base_url="http://nas:11434/v1",
+        )
+        self.assertIsNotNone(assistant.hosted_for(self.conn, 3, self.dir))
+
     def test_the_server_api_is_the_system_default_for_everyone(self):
         self.ready(ADMIN, None)
         api = service.turn_on(self.conn, ADMIN, None, self.dir)

@@ -48,8 +48,9 @@ On Unraid and TrueNAS the same settings are fields in the template or the YAML
 | `COMPOSE_FILE` | `docker-compose.yml` | Docker: `docker-compose.yml:docker-compose.server-only.yml` leaves the worker container out, for a server whose heavy stages run on another machine. Not read by Unraid's Compose Manager: see [its stack folders](install-unraid.md#the-alternative-compose-manager) |
 | `HIKIDASHI_MODE` | *(auto)* | `uv` \| `docker` for `./hikidashi`. Unset, it detects |
 | `HIKIDASHI_STOP_TIMEOUT` | `10` | uv: seconds `./hikidashi stop` waits before it kills the server and worker |
-| `OLLAMA_URL` | `http://localhost:11434` | uv: the Ollama the worker tags and finds recipes with. `hikidashi worker --ollama-url` overrides it |
-| `HIKIDASHI_OLLAMA_URL` | the `ollama` service | Docker: the same, for the `worker` container only. To tag with another machine's GPU, run a [remote worker](remote-workers.md) there |
+| `OLLAMA_URL` | `http://localhost:11434` | uv: the Ollama the worker tags and finds recipes with, and the server answers Ask with when neither a hosted API nor a self-hosted provider is set (ADR 0021). `hikidashi worker --ollama-url` overrides it for the worker |
+| `HIKIDASHI_OLLAMA_URL` | the `ollama` service | Docker: the same, for the `worker` and `app` containers. To tag with another machine's GPU, run a [remote worker](remote-workers.md) there |
+| `HIKIDASHI_RECIPE_FETCH` | `on` | `off`: never fetch the rest of an incomplete recipe from the page its caption links to ([ADR 0020](adr/0020-fetch-incomplete-recipes.md)) |
 | `HIKIDASHI_GEOCODER` | *(empty)* | A Nominatim server to look places up on, or `public` for OpenStreetMap's. Empty: nothing is looked up. See [the map](using.md#places-and-the-map) |
 | `HIKIDASHI_GEOCODER_DELAY` | `1` | Seconds between lookups. The public server asks for 1; your own can take 0 |
 | `HIKIDASHI_LOCATE_EVERY` | `300` | Seconds between the server's looks for new places to put on the map. `0`: only `./hikidashi places` looks |

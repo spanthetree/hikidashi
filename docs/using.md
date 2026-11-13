@@ -26,6 +26,32 @@ A tour of the web app. [Back to the README](../README.md)
 - **Export**, above the grid, downloads what the grid shows
   ([exports](export.md)).
 
+## Ask your library
+
+With something typed in the search box, **Ask** takes it as a question:
+"How long does that sourdough proof for?", "What were the ramen places in
+Tokyo I saved?". The answer comes from your own saves only, with each claim
+citing the reel it came from as a numbered link that opens the reel, at the
+line that said it when that is known. When nothing you saved covers it, it
+says so rather than guess.
+
+Your AI model answers: your hosted API if your reels use one, else an Ollama
+of your own set under **AI providers** (it needs no switch: nothing leaves
+your network), else the Ollama at `OLLAMA_URL`. On a CPU an answer can take a
+minute
+([ADR 0021](adr/0021-the-server-asks-a-model-while-you-wait.md)). Check what
+it cites; a model can be wrong.
+
+## Rediscover
+
+Above the grid, when nothing is chosen, two strips bring old saves back: **On
+this day**, saved on today's date in earlier years, and **Never opened**, the
+oldest saves you have not opened here yet. Each hides until tomorrow with its
+×. Whether you opened a reel is yours alone; nobody else sees it.
+
+**Shuffle** opens a random reel from whatever the grid is showing, so a
+filter or a search narrows it. **Another** in its sheet picks again.
+
 ## A reel
 
 Open a reel to watch it (muted and looped) beside its caption, transcript and
@@ -39,6 +65,15 @@ From its sheet you can:
   overwritten;
 - confirm or name the video game a gaming reel shows;
 - follow the addresses in its caption to Google Maps;
+- read the transcript line by line, once a reel has been transcribed since
+  0.25: the line playing lights up, and pressing one plays from there. A
+  search that matched what was said opens the reel at that line;
+- see where else you saved the same video, under **Also saved as**: a repost,
+  or the same reel from another account, whose caption may say more. **Not
+  the same** splits a wrong match for good. To show a reel and its reposts
+  as one card in the grid, tick it on your Account page;
+- open one of the reels **More like this**: the closest in meaning in your
+  library, from the same vectors as search;
 - export it, or copy it as Markdown;
 - **Try fetching again**, if its download failed;
 - **Remove** it from your library. Anyone else who saved it keeps it; once
@@ -53,6 +88,19 @@ checklist and numbered steps next to the video, with **Add to shopping list**,
 **Edit**, **Use the model's version** and **Not a recipe**.
 
 <img src="demo/recipe.webp" alt="A pork roast recipe open in light mode: the video beside serves 4, 20 minutes, a checklist of five ingredients and six numbered steps read from the voiceover, with Add to shopping list, Edit and Not a recipe." width="640">
+
+A recipe marked **incomplete** says where the rest is: the page its caption
+links to, the creator's profile, or the keyword to comment for it. When the
+caption links to the recipe's own page, Hikidashi fetches it from there the
+first time you open it, and shows that recipe instead, with a link to the
+page. `HIKIDASHI_RECIPE_FETCH=off` turns that off ([ADR 0020](adr/0020-fetch-incomplete-recipes.md)).
+
+Recipes are written in English whatever language the reel speaks, and
+translated into the app's other languages as they are read, by the same model.
+Read the app in Japanese and you see the translation; **Show the original**
+switches back. A recipe you corrected is translated at once if you have a
+hosted API or an Ollama of your own set up under **AI providers**, and
+otherwise shown as you wrote it.
 
 **Select** picks several recipes at once; with a filter on, **Add all** adds
 every recipe it shows. **Shopping list**, in the sidebar, merges their

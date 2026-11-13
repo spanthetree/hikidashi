@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS item (
   hashtags      TEXT,                    -- JSON array, as posted; never rewritten
   clean_hashtags TEXT,                   -- JSON array: normalised, noise dropped, deduped
   transcript    TEXT,
+  transcript_segments TEXT,              -- JSON [[start_ms, end_ms, text], ...], when known (#44)
   ocr_text      TEXT,
   summary       TEXT,                    -- one sentence, from the LLM tagger
   keywords      TEXT,                    -- JSON array, free text from the LLM tagger
@@ -64,7 +65,12 @@ CREATE TABLE IF NOT EXISTS item (
   ocr_profile   TEXT,                  -- NULL: tesseract; else provider:model
   -- The language a multilingual model heard, as an ISO 639-1 code. NULL for the
   -- local models, which are English-only and are told so.
-  asr_language  TEXT
+  asr_language  TEXT,
+  -- Reposts (#58, app/dupes): what it shows, as dHashes of three frames (one
+  -- for a photo), and the earliest saved copy of the same video, if another.
+  phash         TEXT,
+  phash_v       INTEGER NOT NULL DEFAULT 0,
+  dup_of        TEXT
 );
 
 CREATE INDEX IF NOT EXISTS item_state_idx    ON item(state);
@@ -75,6 +81,15 @@ CREATE INDEX IF NOT EXISTS item_primary_tag_idx ON item(primary_tag);
 -- /media/<path> looks its reel up by path, to check who may have it.
 CREATE INDEX IF NOT EXISTS item_thumb_path_idx ON item(thumb_path);
 CREATE INDEX IF NOT EXISTS item_media_path_idx ON item(media_path);
+CREATE INDEX IF NOT EXISTS item_dup_of_idx ON item(dup_of) WHERE dup_of IS NOT NULL;
+
+-- Two reels someone said are not copies of one video (#58): never grouped
+-- again. a < b.
+CREATE TABLE IF NOT EXISTS item_split (
+  a TEXT NOT NULL REFERENCES item(shortcode) ON DELETE CASCADE,
+  b TEXT NOT NULL REFERENCES item(shortcode) ON DELETE CASCADE,
+  PRIMARY KEY (a, b)
+);
 
 -- The photos of a carousel post, in order, when every slide is one. thumb_path
 -- is still the first slide's, for the grid; these are for paging through.
@@ -107,6 +122,8 @@ CREATE TABLE IF NOT EXISTS user_item (
   first_seen_in INTEGER REFERENCES import_run(id),
   tag_id        INTEGER REFERENCES tag(id) ON DELETE SET NULL,  -- the tag they chose
   game          TEXT,                    -- the game they say it shows; '' for none
+  opened_at     INTEGER,                 -- last opened in Hikidashi; NULL: never (#50)
+  open_count    INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (user_id, shortcode)
 );
 CREATE INDEX IF NOT EXISTS user_item_saved_idx ON user_item(user_id, saved_at DESC);
@@ -190,11 +207,13 @@ END;
 -- Recipes read out of reels by app/recipes. Like item_tag.source, the model's
 -- output and your corrections are separate rows: a re-extract replaces only the
 -- 'model' row, and your 'user' row, when there is one, is the recipe you see.
+-- A 'web' row is the recipe from the page an incomplete one points to (#114),
+-- shown in place of the model's.
 -- Only reels found to be recipes have a row; item.recipe_v records that the
 -- rest were read.
 CREATE TABLE IF NOT EXISTS recipe (
   shortcode     TEXT NOT NULL REFERENCES item(shortcode) ON DELETE CASCADE,
-  source        TEXT NOT NULL,              -- model | user
+  source        TEXT NOT NULL,              -- model | web | user
   user_id       INTEGER NOT NULL DEFAULT 0, -- whose correction; 0 on the model's
   title         TEXT,
   servings      INTEGER,
@@ -206,7 +225,29 @@ CREATE TABLE IF NOT EXISTS recipe (
   source_fields TEXT,                       -- JSON: caption, transcript, ocr
   dropped       TEXT,                       -- JSON: ingredients no source names
   updated_at    INTEGER NOT NULL,
+  url           TEXT,                       -- the page a 'web' recipe came from
   PRIMARY KEY (shortcode, source, user_id)
+);
+
+-- Each time the page an incomplete recipe points to was fetched (#114), so a
+-- site that has no recipe, or does not answer, is not asked again and again.
+CREATE TABLE IF NOT EXISTS recipe_fetch (
+  shortcode  TEXT PRIMARY KEY REFERENCES item(shortcode) ON DELETE CASCADE,
+  url        TEXT NOT NULL,
+  fetched_at INTEGER NOT NULL,
+  error      TEXT                           -- NULL: a recipe was found
+);
+
+-- Recipes in the language someone reads the app in (#114), made by their AI
+-- model the first time, then kept. Keyed by a digest of the recipe as shown,
+-- so a corrected or re-read recipe is translated afresh.
+CREATE TABLE IF NOT EXISTS recipe_translation (
+  digest     TEXT NOT NULL,
+  lang       TEXT NOT NULL,
+  body       TEXT NOT NULL,                 -- JSON: title, steps, ingredient items and notes
+  model      TEXT NOT NULL,                 -- provider:model or ollama:<model>
+  made_at    INTEGER NOT NULL,
+  PRIMARY KEY (digest, lang)
 );
 
 CREATE TABLE IF NOT EXISTS recipe_ingredient (

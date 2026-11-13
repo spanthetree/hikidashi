@@ -403,7 +403,39 @@ class WorkerCase(unittest.TestCase):
         ]
 
 
+class TranslatingModel(FakeModel):
+    """A chat model: it also translates, into Japanese."""
+
+    def ask(self, system, prompt, *, schema, max_tokens, name):
+        assert name == "recipe_translation", name
+        texts = json.loads(prompt.split("\n\n", 1)[1])
+        return json.dumps(
+            {
+                "title": "ラー油麺",
+                "ingredients": [{"item": "訳", "note": ""} for _ in texts["ingredients"]],
+                "steps": ["訳" for _ in texts["steps"]],
+            }
+        )
+
+
 class TestReadAll(WorkerCase):
+    def test_a_chat_model_translates_as_it_reads(self):
+        from app.recipes import translate
+
+        self.model = TranslatingModel(self.model.checks, self.model.extracts)
+        self.run_pass()
+        r = must(service.current(self.conn, "NOODLE"))
+        hit = must(translate.cached(self.conn, r, "ja"))
+        self.assertEqual((hit["body"]["title"], hit["model"]), ("ラー油麺", "cpu"))
+        self.assertIsNone(translate.cached(self.conn, r, "en"))  # English needs none
+
+    def test_a_model_that_cannot_chat_leaves_it_untranslated(self):
+        from app.recipes import translate
+
+        self.run_pass()
+        r = must(service.current(self.conn, "NOODLE"))
+        self.assertIsNone(translate.cached(self.conn, r, "ja"))
+
     def test_writes_the_recipe_and_stamps_everything(self):
         p = self.run_pass()
         self.assertEqual((p.total, p.recipes, p.not_recipes, p.skipped), (3, 1, 1, 1))
@@ -501,6 +533,26 @@ class TestProvenance(WorkerCase):
             "SELECT title FROM recipe WHERE shortcode = 'NOODLE' AND source = 'model'"
         ).fetchone()[0]
         self.assertEqual(model_title, "Model v2")
+
+    def test_the_web_recipe_stands_in_for_the_model_but_not_for_yours(self):
+        from app.recipes.llm import Ingredient, Recipe
+
+        web = Recipe(title="From the blog", ingredients=[Ingredient("flour")], steps=["mix"])
+        service.set_web(self.conn, "NOODLE", web, "https://blog.example/noodles/")
+        r = must(service.current(self.conn, "NOODLE"))
+        self.assertEqual(
+            (r["title"], r["web_url"]), ("From the blog", "https://blog.example/noodles/")
+        )
+        self.assertEqual(self.shown(), ["NOODLE"])
+        # A re-read keeps it; your correction still wins over it.
+        self.run_pass(force=True)
+        self.assertEqual(must(service.current(self.conn, "NOODLE"))["title"], "From the blog")
+        service.save_user(self.conn, "NOODLE", self.fixed)
+        self.assertEqual(must(service.current(self.conn, "NOODLE"))["title"], "Mine")
+        fts = self.conn.execute(
+            "SELECT title FROM recipe_fts WHERE shortcode = 'NOODLE' AND user_id = 0"
+        ).fetchone()[0]
+        self.assertEqual(fts, "From the blog")
 
     def test_reverting_brings_the_model_back(self):
         service.save_user(self.conn, "NOODLE", self.fixed)

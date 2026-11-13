@@ -26,18 +26,22 @@ from .llm import Found, Ingredient, Recipe
 
 MODEL = "model"
 USER = "user"
-NOBODY = 0  # recipe.user_id on the model's rows, which are everyone's
+WEB = "web"  # fetched from the page an incomplete recipe points to (#114)
+NOBODY = 0  # recipe.user_id on the model's and the web's rows, which are everyone's
 
 
 def now(user_id: int) -> str:
     """The recipe each reel shows this person, as a subquery: theirs if they
-    corrected it, else the model's."""
+    corrected it, else the one from the web, else the model's."""
     uid = int(user_id)
+    theirs = f"""EXISTS (SELECT 1 FROM recipe u WHERE u.shortcode = r.shortcode
+                           AND u.source = '{USER}' AND u.user_id = {uid})"""
     return f"""(SELECT * FROM recipe r
                 WHERE (r.source = '{USER}' AND r.user_id = {uid})
-                   OR (r.source = '{MODEL}' AND NOT EXISTS (
-                         SELECT 1 FROM recipe u WHERE u.shortcode = r.shortcode
-                           AND u.source = '{USER}' AND u.user_id = {uid})))"""
+                   OR (r.source = '{WEB}' AND NOT {theirs})
+                   OR (r.source = '{MODEL}' AND NOT {theirs} AND NOT EXISTS (
+                         SELECT 1 FROM recipe w WHERE w.shortcode = r.shortcode
+                           AND w.source = '{WEB}')))"""
 
 
 # Joins a recipe row (rn) to its ingredients (ri).
@@ -62,6 +66,7 @@ def _write(
     source_fields: list[str] | None = None,
     dropped: list[str] | None = None,
     hidden: bool = False,
+    url: str | None = None,
 ) -> None:
     conn.execute(
         "DELETE FROM recipe WHERE shortcode = ? AND source = ? AND user_id = ?",
@@ -70,8 +75,8 @@ def _write(
     conn.execute(
         """INSERT INTO recipe (shortcode, source, user_id, title, servings, time_minutes,
                                steps, incomplete, hidden, confidence, source_fields,
-                               dropped, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                               dropped, updated_at, url)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             shortcode,
             source,
@@ -86,6 +91,7 @@ def _write(
             json.dumps(source_fields) if source_fields is not None else None,
             json.dumps(dropped) if dropped else None,
             int(time.time()),
+            url,
         ),
     )
     conn.executemany(
@@ -127,6 +133,13 @@ def set_model(conn: sqlite3.Connection, shortcode: str, found: Found | None) -> 
     reindex(conn, shortcode, user_id=NOBODY)
 
 
+def set_web(conn: sqlite3.Connection, shortcode: str, recipe: Recipe, url: str) -> None:
+    """The recipe from the page the reel points to. It stands in for the
+    model's, for everyone who has not corrected theirs."""
+    _write(conn, shortcode, WEB, NOBODY, recipe, source_fields=["web"], url=url)
+    reindex(conn, shortcode, user_id=NOBODY)
+
+
 def save_user(
     conn: sqlite3.Connection,
     shortcode: str,
@@ -153,11 +166,14 @@ def reindex(conn: sqlite3.Connection, shortcode: str, *, user_id: int = NOBODY) 
     """Bring this person's row of recipe_fts in line with their recipe row:
     the model's for NOBODY, a correction for anyone else."""
     conn.execute("DELETE FROM recipe_fts WHERE shortcode = ? AND user_id = ?", (shortcode, user_id))
-    source = MODEL if user_id == NOBODY else USER
     row = conn.execute(
-        """SELECT title FROM recipe
-           WHERE shortcode = ? AND source = ? AND user_id = ? AND hidden = 0""",
-        (shortcode, source, user_id),
+        """SELECT title, source FROM recipe
+           WHERE shortcode = ? AND source IN (?, ?) AND user_id = ? AND hidden = 0
+           ORDER BY source = ? DESC LIMIT 1""",
+        (
+            shortcode,
+            *((WEB, MODEL, user_id, WEB) if user_id == NOBODY else (USER, USER, user_id, USER)),
+        ),
     ).fetchone()
     if row is None:
         return
@@ -166,7 +182,7 @@ def reindex(conn: sqlite3.Connection, shortcode: str, *, user_id: int = NOBODY) 
         for r in conn.execute(
             """SELECT item FROM recipe_ingredient
            WHERE shortcode = ? AND source = ? AND user_id = ? ORDER BY position""",
-            (shortcode, source, user_id),
+            (shortcode, row["source"], user_id),
         )
     ]
     conn.execute(
@@ -217,6 +233,8 @@ def current(
         "source_fields": json.loads(row["source_fields"] or "[]"),
         "edited": row["source"] == USER,
         "has_model": has_model,
+        # Fetched from the page the reel points to (#114), and which page.
+        "web_url": row["url"] if row["source"] == WEB else None,
     }
 
 

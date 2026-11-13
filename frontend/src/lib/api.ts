@@ -1,6 +1,6 @@
 import type {
   AiBacklog, AiPage, AiStage, AiTest, AiUse, AiUserRow, MyPipeline,
-  Account, ApiToken, AuthState, ExportOptions, ImportResult, Invite, ItemDetail, ItemGame, ItemPage,
+  Account, Answer, ApiToken, AuthState, ExportOptions, ImportResult, Invite, Item, ItemDetail, ItemGame, ItemPage,
   LogTail, Me,
   MyTokens, Named, WorkerToken,
   PipelineState, PlacePage, Recipe, RecipeFacets, RecipeIn, ShoppingList, Stage, Stats, Tag, TagChoice,
@@ -45,6 +45,26 @@ export const geocode = (q: string) =>
 export const getItem = (shortcode: string) =>
   api<ItemDetail>(`/api/items/${encodeURIComponent(shortcode)}`);
 
+/** The reels in your library closest to this one in meaning (#53). */
+export const getSimilar = (shortcode: string) =>
+  api<{ items: Item[] }>(`/api/items/${encodeURIComponent(shortcode)}/similar`);
+
+/** Ask your library (#45). Slow on a local model: seconds to a minute. */
+export const askLibrary = (q: string, signal?: AbortSignal) =>
+  api<Answer>(`/api/ask?q=${encodeURIComponent(q)}`, { signal });
+
+/** You opened it, for Rediscover's never-opened strip (#50). */
+export const markOpened = (shortcode: string) =>
+  fetch(`/api/items/${encodeURIComponent(shortcode)}/opened`, { method: "POST" });
+
+/** Old saves to bring back: saved on this day in earlier years, and never opened. */
+export function getRediscover() {
+  const now = new Date();
+  const md = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return api<{ on_this_day: Item[]; never_opened: Item[] }>(
+    `/api/rediscover?md=${md}&tz=${now.getTimezoneOffset()}`);
+}
+
 export const getStats = () => api<Stats>("/api/stats");
 export const getCollections = () => api<Named[]>("/api/collections");
 export const getTags = () => api<Tag[]>("/api/tags");
@@ -55,6 +75,15 @@ export const getPipeline = () => api<PipelineState>("/api/pipeline");
 export const getRecipeFacets = () => api<RecipeFacets>("/api/recipes/facets");
 
 const recipeUrl = (shortcode: string) => `/api/items/${encodeURIComponent(shortcode)}/recipe`;
+
+/** Fetch the rest of an incomplete recipe from where the reel points (#114). */
+export const fetchRecipe = (shortcode: string) =>
+  api<Recipe>(`${recipeUrl(shortcode)}/fetch`, { method: "POST" });
+
+/** The recipe in this language; `recipe` is null when it needs no translating. */
+export const getRecipeTranslation = (shortcode: string, lang: string) =>
+  api<{ recipe: Recipe | null; model: string | null; pending: boolean }>(
+    `${recipeUrl(shortcode)}/translation?lang=${encodeURIComponent(lang)}`);
 
 /** Save your version of a reel's recipe. Returns the recipe it now shows. */
 export const saveRecipe = (shortcode: string, body: RecipeIn) =>
@@ -210,6 +239,14 @@ export const acceptInvite = (token: string, username: string, password: string) 
   api<Me>(inviteUrl(token), send("POST", { username, password }));
 
 export const updateMe = (ig_handle: string) => api<Me>("/api/me", send("PUT", { ig_handle }));
+export const setCollapseCopies = (on: boolean) =>
+  api<Me>("/api/me", send("PUT", { collapse_copies: on }));
+
+/** Two reels are not the same video after all (#58). */
+export const notACopy = (shortcode: string, other: string) =>
+  api<{ copies: string[] }>(
+    `/api/items/${encodeURIComponent(shortcode)}/not-copy/${encodeURIComponent(other)}`,
+    { method: "POST" });
 export const changePassword = (current: string, next: string) =>
   api<object>("/api/me/password", send("PUT", { current, new: next }));
 export const signOutEverywhere = () => api<object>("/api/me/sign-out-everywhere", send("POST"));

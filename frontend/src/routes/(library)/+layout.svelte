@@ -12,12 +12,14 @@
   import ImportDialog from "#lib/components/ImportDialog.svelte";
   import MapView from "#lib/components/MapView.svelte";
   import Notice from "#lib/components/Notice.svelte";
+  import AskPanel from "#lib/components/AskPanel.svelte";
+  import Rediscover from "#lib/components/Rediscover.svelte";
   import Rich from "#lib/components/Rich.svelte";
   import Sidebar from "#lib/components/Sidebar.svelte";
   import Topbar from "#lib/components/Topbar.svelte";
-  import { addMatchingToList, addToList, exportUrl } from "#lib/api.js";
+  import { addMatchingToList, addToList, exportUrl, getItems } from "#lib/api.js";
   import {
-    activeFilters, filterUrl, mapParams, readFilters, recipeFiltered, toSearch, withLayout, withPick,
+    activeFilters, apiParams, filterUrl, mapParams, readFilters, recipeFiltered, toSearch, withLayout, withPick,
     withQuery, withMedia, withoutFilters, withTime, withView, type Filters,
   } from "#lib/filters.js";
   import { nf } from "#lib/format.js";
@@ -26,7 +28,7 @@
   import { library, pins, sidebar } from "#lib/library.svelte.js";
   import { cardIn, flipDuration } from "#lib/motion.svelte.js";
   import { m } from "#lib/paraglide/messages.js";
-  import type { FilterKind, Layout, Media, NoticeState, PickKind, Sort, View } from "#lib/types.js";
+  import type { FilterKind, Item, Layout, Media, NoticeState, PickKind, Sort, View } from "#lib/types.js";
 
   let { children } = $props();
 
@@ -147,6 +149,37 @@
   function close() {
     if (openedFromGrid) history.back();
     else void go(libraryUrl(filters), { stay: true, replace: true });
+  }
+
+  /* Ask your library (#45): the search, as a question, on request. A new
+     search closes the answer to the old one. */
+  let asking = $state<string | null>(null);
+  $effect(() => { if (asking !== null && asking !== filters.q) asking = null; });
+
+  /* A search hit whose voiceover matched opens at that moment (#44). */
+  function itemHref(item: Item) {
+    const s = new URLSearchParams(search);
+    if (item.match?.at_ms != null) s.set("t", (item.match.at_ms / 1000).toFixed(1));
+    const q = s.toString();
+    return `/item/${encodeURIComponent(item.shortcode)}${q ? `?${q}` : ""}`;
+  }
+
+  /* Shuffle (#50): a random reel from whatever the filters show. "Another"
+     in its sheet replaces it, so Back still leaves the shuffle in one step. */
+  const shuffling = $derived(page.url.searchParams.has("shuffle"));
+  async function shuffle() {
+    const p = apiParams(filters, 0, 1);
+    p.set("sort", "random");
+    try {
+      const [item] = (await getItems(p)).items;
+      if (!item) return;
+      const s = new URLSearchParams(search);
+      s.set("shuffle", "1");
+      await goto(`/item/${encodeURIComponent(item.shortcode)}?${s}`,
+                 { replace: shuffling, reset: false });
+    } catch (err) {
+      notice = { text: m.notice_open_failed({ error: (err as Error).message }), kind: "error" };
+    }
   }
 
   function sheetFilter(kind: FilterKind, value: string) {
@@ -288,6 +321,10 @@
       if (sentinelEl && sentinelEl.getBoundingClientRect().top < innerHeight + AHEAD) library.more();
     });
   });
+
+  // The library as it opens, nothing chosen: where Rediscover's strips go.
+  const home = $derived(filters.view === "library" && !chosen && !filters.q && !filters.media
+                        && library.total > 0 && !selecting);
 
   const countText = $derived.by(() => {
     if (library.pending && !library.items.length) return m.loading();
@@ -526,7 +563,17 @@
           </button>
         {/each}
         <span class="upload-slot">
-          {#if library.total}<ExportMenu groups={exports} />{/if}
+          {#if filters.q && asking === null}
+            <button type="button" class="btn sm" title={m.ask_title()} onclick={() => (asking = filters.q)}>
+              <Icon name="ask" size={14} /> {m.ask_button()}
+            </button>
+          {/if}
+          {#if library.total}
+            <button type="button" class="btn sm" title={m.shuffle_title()} onclick={shuffle}>
+              <Icon name="shuffle" size={14} /> {m.shuffle()}
+            </button>
+            <ExportMenu groups={exports} />
+          {/if}
           <button type="button" class="btn sm" aria-haspopup="dialog" onclick={openImport}>
             <Icon name="import" size={14} /> {imports.busy ? m.importing() : m.import_button()}
           </button>
@@ -535,13 +582,16 @@
 
       <Notice bind:notice />
 
+      {#if asking}<AskPanel q={asking} {search} onclose={() => (asking = null)} />{/if}
+      {#if home}<Rediscover {search} />{/if}
+
       {#if places && mapped}
         <MapView {filters} {search} active={shortcode} onmove={mapMoved} />
       {:else}
       <div class="grid" class:stale={library.pending && library.items.length > 0} bind:this={gridEl}>
         {#each library.items as item, i (item.shortcode)}
           <div class="cell" animate:flip={{ duration: flipDuration() }} in:cardIn={{ index: i % 60 }}>
-            <Card {item} {filters} href={`/item/${encodeURIComponent(item.shortcode)}${search}`}
+            <Card {item} {filters} href={itemHref(item)}
                   active={item.shortcode === shortcode} />
             {#if selecting}
               <button type="button" class="pick" aria-pressed={picked.has(item.shortcode)}
@@ -619,7 +669,8 @@
 {#if shortcode}
   <DetailSheet {shortcode} {preview} recipeFirst={recipes} onclose={close} onclosed={returnFocus}
                onfilter={sheetFilter} ontagged={tagged} onerror={sheetError}
-               onchanged={recipeChanged} onremoved={removed} />
+               onchanged={recipeChanged} onremoved={removed}
+               onanother={shuffling ? shuffle : undefined} />
 {/if}
 
 {@render children()}

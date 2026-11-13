@@ -25,6 +25,10 @@ services:
       HIKIDASHI_ORIGIN: ""
       # Maps: a Nominatim to look places up on, or "public"; empty is off.
       HIKIDASHI_GEOCODER: ""
+      # The Ollama that answers Ask your library (the worker's), and
+      # whether an incomplete recipe's page is fetched: on or off.
+      OLLAMA_URL: http://host.docker.internal:30068
+      HIKIDASHI_RECIPE_FETCH: "on"
       # Hosted AI (docs/operation.md#hosted-ai): optional, and off until the
       # switch on Account → AI providers is turned on. Keys can be set there
       # instead, encrypted. Set the same in server-worker below.

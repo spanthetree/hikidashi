@@ -415,6 +415,28 @@ class TestProtocol(unittest.TestCase):
         [(code, got, why)] = protocol.parse("recipe", [sent])
         self.assertEqual((code, got, why), ("X", found, None))
 
+    def test_a_timed_transcript_round_trips(self):
+        from app.asr.transcriber import Said
+
+        heard = Said("salt the water", ((0, 900, "salt"), (900, 2000, "the water")))
+        sent = json.loads(json.dumps(protocol.ok("asr", "X", heard)))
+        self.assertEqual(protocol.parse("asr", [sent]), [("X", heard, None)])
+        sent["segments"] = [[0, -1, "salt"]]
+        with self.assertRaises(protocol.Refused):
+            protocol.parse("asr", [sent])
+
+    def test_translations_travel_with_the_recipe(self):
+        from app.recipes.llm import Found, Recipe
+
+        body = {"title": "トースト", "ingredients": [], "steps": ["焼く"]}
+        found = Found(Recipe(title="Toast", steps=["fry"]), 0.9, [], [], {"ja": body})
+        sent = json.loads(json.dumps(protocol.ok("recipe", "X", found)))
+        [(_, got, _)] = protocol.parse("recipe", [sent])
+        self.assertEqual(got.translations, {"ja": body})
+        sent["recipe"]["translations"] = {"xx": body}
+        with self.assertRaises(protocol.Refused):
+            protocol.parse("recipe", [sent])
+
     def test_a_long_failure_reason_is_cut_short(self):
         [(_, _, why)] = protocol.parse("asr", [{"shortcode": "X", "error": "e" * 5000}])
         self.assertEqual(len(why or ""), protocol.REASON)

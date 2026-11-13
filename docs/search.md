@@ -137,7 +137,12 @@ no longer reproduced two days later: re-summarised reels move the numbers
 5. **Every hit says why it matched.** `/api/items?q=` returns `match` per item:
    `{"match": ["keyword", "semantic", "transcript"], "similarity": 0.52}`.
    Cards show it as a badge under `npm run dev`, or on the built app with
-   `localStorage.explain = "1"`.
+   `localStorage.explain = "1"`. A hit whose voiceover matched also gets
+   `at_ms` and `said` ([#44](https://github.com/spanthetree/hikidashi/issues/44)):
+   the transcript segment saying the most of the query's content words, or,
+   for a match in meaning, the segment where the closest chunk starts (chunk
+   `seq` is word `seq × 40` of the transcript). The card shows the line, and
+   opens the reel there with `?t=`. Ranking is unchanged.
 6. **A reel's game is indexed** ([#117](https://github.com/spanthetree/hikidashi/issues/117)). `item_fts` gained `game`, the title
    the tagger is sure a reel shows, so "gran turismo" finds a reel whose
    caption spells it "Grand Turismo". A game you named matches with your tags
@@ -276,3 +281,17 @@ in place of the LIKE tier for words of three characters or more (LIKE stays for
 
 No query moved in blended search, and trigram finds `京都` in `東京都` just the
 same. With LIKE, keyword search takes 2 ms at the median on the measured library.
+
+## Ask your library
+
+`GET /api/ask?q=` ([#45](https://github.com/spanthetree/hikidashi/issues/45),
+`app/ask.py`) answers from search: the question is ranked like any query, and
+the top 8 reels go to the person's model, numbered, each with its summary,
+caption, the voiceover line that matched (else the start of the voiceover),
+on-screen text, recipe and places. A question rarely has every word in one
+reel, so with fewer than 8 hits each of its content words is searched alone
+too, less words like "saved" that only say how it is asked. The model must
+cite with `[n]`; numbers it invents are dropped, and `found: false` says
+nothing covers it. `tests/ask_eval.json` checks retrieval on the demo library:
+every reel an answer needs is among the 8 (keyword-only; a question in
+another language than the reel needs the embedder).

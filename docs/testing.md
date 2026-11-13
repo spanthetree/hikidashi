@@ -118,6 +118,15 @@ When a test fails, Playwright keeps a trace, a screenshot and a video under
 `frontend/test-results/`; CI uploads them, with the HTML report, as the
 `playwright` artifact.
 
+## The API's shape
+
+`tests/test_explorer.py` checks the schema the API explorer serves (#147):
+every route tagged, summarised and authorised, the main routes' response
+models against real responses, and who sees what. `tests/openapi.snapshot.json`
+lists every route with its tag and scope, so a change to what the API offers
+shows up in review. After changing routes on purpose, write it again with
+`UPDATE_SNAPSHOT=1 python3 -m unittest tests.test_explorer`.
+
 ## Evals
 
 `scripts/evals.py --check` scores search and tagging on the demo library

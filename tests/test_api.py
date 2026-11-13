@@ -162,6 +162,177 @@ class TestIsolation(ApiCase):
         self.as_user(BOB)
         self.assertEqual(self.client.get("/api/items/BOBBY1").status_code, 200)
 
+    def test_more_like_this_is_of_your_reels_only(self):
+        self.assertEqual(self.client.get("/api/items/BOBBY1/similar").status_code, 404)
+        r = self.client.get("/api/items/SHARED/similar")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json(), {"items": []})  # no vectors yet
+
+    def test_rediscover(self):
+        conn = open_db(self.settings.db_path)
+        # ALICE1 saved on 13 Nov 2020, 23:30 UTC: the 14th in Tokyo.
+        conn.execute("UPDATE user_item SET saved_at = 1605310200 WHERE shortcode = 'ALICE1'")
+        conn.close()
+
+        def strips(md, tz=0):
+            r = self.client.get("/api/rediscover", params={"md": md, "tz": tz})
+            self.assertEqual(r.status_code, 200, r.text)
+            return {k: [i["shortcode"] for i in v] for k, v in r.json().items()}
+
+        self.assertEqual(strips("11-13")["on_this_day"], ["ALICE1"])
+        self.assertEqual(strips("11-13", -540)["on_this_day"], [])
+        self.assertEqual(strips("11-14", -540)["on_this_day"], ["ALICE1"])
+        # Never opened, oldest first; opening one is yours alone.
+        self.assertEqual(strips("01-01")["never_opened"], ["SHARED", "ALICE1"])
+        self.assertEqual(self.client.post("/api/items/SHARED/opened").status_code, 204)
+        self.assertEqual(strips("01-01")["never_opened"], ["ALICE1"])
+        self.assertEqual(self.client.post("/api/items/BOBBY1/opened").status_code, 404)
+        self.as_user(BOB)
+        self.assertEqual(strips("01-01")["never_opened"], ["SHARED", "BOBBY1"])
+
+    def test_shuffle_picks_from_the_filters(self):
+        r = self.client.get("/api/items", params={"sort": "random", "limit": 1, "q": "brake"})
+        self.assertEqual([i["shortcode"] for i in r.json()["items"]], ["ALICE1"])
+
+    def test_copies_and_collapsing_them(self):
+        conn = open_db(self.settings.db_path)
+        conn.execute("UPDATE item SET dup_of = 'ALICE1' WHERE shortcode = 'SHARED'")
+        conn.close()
+        cards = {i["shortcode"]: i["copies"] for i in self.client.get("/api/items").json()["items"]}
+        self.assertEqual(cards, {"SHARED": 2, "ALICE1": 2})
+        detail = self.client.get("/api/items/ALICE1").json()
+        self.assertEqual([c["shortcode"] for c in detail["copies"]], ["SHARED"])
+        # Off until you turn it on; then the first you saved stands for both.
+        self.assertFalse(self.client.get("/api/me").json()["collapse_copies"])
+        r = self.client.put("/api/me", json={"collapse_copies": True})
+        self.assertTrue(r.json()["collapse_copies"])
+        self.assertEqual(self.codes(), {"ALICE1"})
+        # Bob has only one of them: nothing to collapse, and no copies.
+        self.as_user(BOB)
+        self.assertEqual(self.client.get("/api/items/SHARED").json()["copies"], [])
+        self.assertEqual(self.codes(), {"SHARED", "BOBBY1"})
+        self.assertEqual(self.client.post("/api/items/SHARED/not-copy/ALICE1").status_code, 404)
+        self.as_user(ALICE)
+        r = self.client.post("/api/items/SHARED/not-copy/ALICE1")
+        self.assertEqual(r.json(), {"copies": []})
+
+    def test_an_incomplete_recipe_is_fetched_from_its_page(self):
+        from app.recipes import service as recipes
+        from app.recipes import web
+        from app.recipes.llm import Found, Ingredient, Recipe
+
+        conn = open_db(self.settings.db_path)
+        conn.execute(
+            "UPDATE item SET caption = ? WHERE shortcode = 'ALICE1'",
+            ("Full recipe: https://blog.example/toast/",),
+        )
+        recipes.set_model(
+            conn, "ALICE1", Found(Recipe(title="Toast", incomplete=True), 0.9, [], [])
+        )
+        conn.close()
+        r = self.client.get("/api/items/ALICE1").json()["recipe"]
+        self.assertEqual(r["link"]["url"], "https://blog.example/toast/")
+        self.assertTrue(r["fetchable"])
+        page = Recipe(title="Toast from the blog", ingredients=[Ingredient("bread")], steps=["fry"])
+        with (
+            mock.patch.object(web, "fetch", return_value="<html>"),
+            mock.patch.object(web, "parse", return_value=page),
+        ):
+            r = self.client.post("/api/items/ALICE1/recipe/fetch").json()
+        self.assertEqual(
+            (r["title"], r["web_url"]), ("Toast from the blog", "https://blog.example/toast/")
+        )
+        # Done: not fetched again.
+        self.assertEqual(self.client.post("/api/items/ALICE1/recipe/fetch").status_code, 409)
+
+    def test_a_site_with_no_recipe_is_not_asked_again(self):
+        from app.recipes import service as recipes
+        from app.recipes import web
+        from app.recipes.llm import Found, Recipe
+
+        conn = open_db(self.settings.db_path)
+        conn.execute(
+            "UPDATE item SET caption = ? WHERE shortcode = 'ALICE1'",
+            ("Recipe https://blog.example/toast/",),
+        )
+        recipes.set_model(
+            conn, "ALICE1", Found(Recipe(title="Toast", incomplete=True), 0.9, [], [])
+        )
+        conn.close()
+        with mock.patch.object(web, "fetch", side_effect=web.FetchError("the site answered 404")):
+            r = self.client.post("/api/items/ALICE1/recipe/fetch")
+        self.assertEqual(r.status_code, 502)
+        self.assertFalse(self.client.get("/api/items/ALICE1").json()["recipe"]["fetchable"])
+
+    def test_a_recipe_in_your_language(self):
+        from app import assistant
+        from app.recipes import service as recipes
+        from app.recipes import translate
+        from app.recipes.llm import Found, Ingredient, Recipe
+        from tests.test_recipe_web import FakeAsks
+
+        conn = open_db(self.settings.db_path)
+        made = Recipe(title="Toast", ingredients=[Ingredient("bread")], steps=["fry"])
+        recipes.set_model(conn, "ALICE1", Found(made, 0.9, [], []))
+        conn.close()
+        url = "/api/items/ALICE1/recipe/translation"
+        self.assertEqual(self.client.get(url, params={"lang": "en"}).json()["recipe"], None)
+        # Not translated yet, and no hosted API: shown as written until a pass.
+        with mock.patch.object(assistant, "hosted_for", return_value=None):
+            r = self.client.get(url, params={"lang": "ja"}).json()
+        self.assertEqual((r["recipe"], r["pending"]), (None, True))
+        # Your hosted API (or Ollama of your own) translates it at once, and keeps it.
+        asks = FakeAsks()
+        with mock.patch.object(
+            assistant, "hosted_for", return_value=assistant.Model(asks, "fake:model")
+        ):
+            r = self.client.get(url, params={"lang": "ja"}).json()
+        self.assertEqual((r["recipe"]["title"], r["model"]), ("フレンチトースト", "fake:model"))
+        # The worker's translation, when there is one, needs no model at all.
+        conn = open_db(self.settings.db_path)
+        conn.execute("DELETE FROM recipe_translation")
+        translate.store(
+            conn,
+            translate.as_dict(made),
+            {
+                "ja": {
+                    "title": "トースト",
+                    "ingredients": [{"item": "パン", "note": ""}],
+                    "steps": ["焼く"],
+                }
+            },
+            "cpu",
+        )
+        conn.close()
+        with mock.patch.object(assistant, "hosted_for", side_effect=AssertionError("asked")):
+            r = self.client.get(url, params={"lang": "ja"}).json()
+        self.assertEqual((r["recipe"]["title"], r["model"]), ("トースト", "cpu"))
+        self.assertEqual(
+            self.client.get(
+                "/api/items/BOBBY1/recipe/translation", params={"lang": "ja"}
+            ).status_code,
+            404,
+        )
+
+    def test_ask_your_library(self):
+        from app import assistant
+        from tests.test_ask import Fake
+
+        asks = Fake({"found": True, "answer": "Brake pads, in [1]."})
+        fake = assistant.Model(asks, "fake:model")
+        with mock.patch.object(assistant, "model_for", return_value=fake):
+            r = self.client.get("/api/ask", params={"q": "brake pads"}).json()
+        self.assertEqual(
+            (r["found"], r["answer"], r["model"]), (True, "Brake pads, in [1].", "fake:model")
+        )
+        self.assertEqual(r["citations"], [{"n": 1, "shortcode": "ALICE1", "at_ms": None}])
+        self.assertEqual([i["shortcode"] for i in r["items"]], ["ALICE1"])
+        # Only your library is asked about: Bob's ramen is not Alice's to cite.
+        with mock.patch.object(assistant, "model_for", return_value=fake):
+            r = self.client.get("/api/ask", params={"q": "secret ramen"}).json()
+        self.assertFalse(r["found"])
+        self.assertEqual(len(asks.prompts), 1)  # no reels found: the model is not asked
+
     def test_save_time_collections_and_tag_are_yours(self):
         self.client.put("/api/items/SHARED/tag", json={"name": "Weeknight"})
         mine = self.client.get("/api/items/SHARED").json()

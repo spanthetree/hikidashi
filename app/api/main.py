@@ -30,9 +30,9 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
-from app import accounts, jobs, library, logs, search, spa
+from app import accounts, dupes, jobs, library, logs, search, spa
 from app.accounts import AccountError, User
-from app.api import ai_routes
+from app.api import ai_routes, explorer
 from app.config import settings
 from app.db import open_db
 from app.enrich import worker as fetches
@@ -59,7 +59,9 @@ log = logging.getLogger("uvicorn.error")
 settings.ensure_dirs()
 LOG_FILE = logs.install(settings.logs_dir)
 
-app = FastAPI(title="Hikidashi", docs_url="/api/docs", openapi_url="/api/openapi.json")
+# The schema and the explorer are served by app/api/explorer.py, to signed-in
+# people only (#147).
+app = FastAPI(title="Hikidashi", docs_url=None, redoc_url=None, openapi_url=None)
 
 
 _embedder: Embedder | None = None
@@ -284,6 +286,7 @@ Signed = Annotated[User, Depends(by_session)]
 
 # Hosted AI settings (#125): /api/me/providers and /api/admin/settings/providers.
 ai_routes.install(app, db, current_user, _scoped, lambda: settings.db_path.parent)
+explorer.install(app, lambda request: current_user(request))
 
 
 @app.exception_handler(AccountError)
@@ -471,24 +474,38 @@ def accept_invite(
 # --- your account ---------------------------------------------------------------
 
 
+def _me(user: User) -> dict[str, Any]:
+    return {
+        **user.as_dict(),
+        "auth": settings.auth,
+        # One card for a reel and its reposts (#58); off until you turn it on.
+        "collapse_copies": dupes.collapsing(db(), user.id),
+    }
+
+
 @app.get("/api/me")
 def me(user: Me) -> dict[str, Any]:
-    return {**user.as_dict(), "auth": settings.auth}
+    return _me(user)
 
 
 class Profile(BaseModel):
     ig_handle: str | None = None
+    collapse_copies: bool | None = None
 
 
 @app.put("/api/me")
 def update_me(body: Profile, user: Me) -> dict[str, Any]:
-    """Your Instagram @handle: yours to say, never checked with Instagram."""
+    """Your Instagram @handle: yours to say, never checked with Instagram.
+    And whether the grid shows a reel's copies as one card."""
     conn = db()
-    accounts.set_handle(conn, user.id, body.ig_handle)
+    if "ig_handle" in body.model_fields_set or body.collapse_copies is None:
+        accounts.set_handle(conn, user.id, body.ig_handle)
+    if body.collapse_copies is not None:
+        dupes.set_collapsing(conn, user.id, body.collapse_copies)
     me = accounts.get(conn, user.id)
     if me is None:  # disabled a moment ago
         raise HTTPException(401, "Sign in again.")
-    return {**me.as_dict(), "auth": settings.auth}
+    return _me(me)
 
 
 class NewPassword(BaseModel):
@@ -807,6 +824,10 @@ def select(user: User, f: Filters) -> Selection:
         where.append(f"{SHOWN_GAME} = :game{i} COLLATE NOCASE")
         params[f"game{i}"] = g
 
+    if dupes.collapsing(conn, user.id):
+        # One card for a reel and its copies: the first you saved (#58).
+        where.append(f"NOT {dupes.LATER_COPY}")
+
     if f.media:
         # The link says which: /reel/ is a video, /p/ a photo or carousel.
         # The same rule as the reels count in /api/stats.
@@ -829,13 +850,13 @@ def select(user: User, f: Filters) -> Selection:
 
 Selected = Annotated[Selection, Depends(selection)]
 
-SORT = Query("saved_desc", pattern="^(relevance|saved_desc|saved_asc|author)$")
+SORT = Query("saved_desc", pattern="^(relevance|saved_desc|saved_asc|author|random)$")
 # Your library: only your reels, with your save times and tags.
 SOURCE = "item JOIN user_item ui ON ui.shortcode = item.shortcode AND ui.user_id = :me"
 CARD_COLUMNS = f"""item.shortcode, item.permalink, item.author, item.author_name,
                    ui.saved_at, item.state, item.thumb_path, item.caption,
                    item.clean_hashtags, item.duration, item.like_count,
-                   item.media_path, {SHOWN_TAG} AS tag,
+                   item.media_path, {SHOWN_TAG} AS tag, {dupes.COPIES} AS copies,
                    (SELECT json_group_array(name) FROM collection
                      WHERE shortcode = item.shortcode AND user_id = :me) AS collections"""
 
@@ -845,6 +866,8 @@ def _order(sel: Selection, sort: str) -> str:
         "saved_desc": "ui.saved_at IS NULL, ui.saved_at DESC",
         "saved_asc": "ui.saved_at IS NULL, ui.saved_at ASC",
         "author": "item.author IS NULL, item.author COLLATE NOCASE",
+        # Shuffle (#50): one at random from whatever the filters chose.
+        "random": "RANDOM()",
         # Best match first. Without a query there is nothing to match, so newest.
         "relevance": (
             "(SELECT key FROM json_each(:hits) WHERE value = item.shortcode)"
@@ -859,6 +882,7 @@ def _cards(
 ) -> list[dict[str, Any]]:
     """What the grid shows of each reel."""
     cards = recipes.card(conn, [r["shortcode"] for r in rows], user_id=user.id)
+    _moments(conn, sel, [r["shortcode"] for r in rows])
     return [
         {
             **{
@@ -881,6 +905,8 @@ def _cards(
             "hashtags": json.loads(r["clean_hashtags"] or "[]"),
             "collections": json.loads(r["collections"] or "[]"),
             "tag": r["tag"],
+            # This reel and its reposts in your library (#58): 1 for most.
+            "copies": r["copies"],
             "recipe": cards.get(r["shortcode"]),
             # Why a search returned it: which of phrase, keyword and
             # semantic matched, and the similarity. None without a query.
@@ -888,6 +914,22 @@ def _cards(
         }
         for r in rows
     ]
+
+
+def _moments(conn: sqlite3.Connection, sel: Selection, shortcodes: list[str]) -> None:
+    """Add to each search hit whose voiceover matched when it was said (#44):
+    `at_ms` and `said`, for the sheet to start there."""
+    if not sel.q:
+        return
+    for sc, segs in conn.execute(
+        """SELECT shortcode, transcript_segments FROM item
+           WHERE shortcode IN (SELECT value FROM json_each(?))
+             AND transcript_segments IS NOT NULL""",
+        (json.dumps([sc for sc in shortcodes if sc in sel.why]),),
+    ):
+        why = sel.why[sc]
+        if at := search.moment(json.loads(segs), sel.q, why.get("chunk")):
+            why.update(at)
 
 
 @app.get("/api/items")
@@ -1066,6 +1108,8 @@ def item_detail(shortcode: str, user: Me, request: Request) -> dict[str, Any]:
                 "summary",
             )
         },
+        # When each part of the transcript was said, when known (#44).
+        "segments": json.loads(r["transcript_segments"] or "null"),
         "saved_at": r["my_saved_at"],
         "keywords": json.loads(r["keywords"] or "[]"),
         "thumb": f"/media/{r['thumb_path']}" if r["thumb_path"] else None,
@@ -1086,12 +1130,161 @@ def item_detail(shortcode: str, user: Me, request: Request) -> dict[str, Any]:
         "tags": tags,
         "places": _places_of(conn, r["caption"]),
         "profile_url": f"https://www.instagram.com/{r['author']}/" if r["author"] else None,
-        "recipe": recipes.current(conn, shortcode, user_id=user.id),
+        "recipe": _recipe(conn, shortcode, user),
         # The recipe as schema.org JSON-LD, for the sheet to embed in the page,
         # where browser extensions and recipe managers look for it.
         "jsonld": _jsonld(conn, user, shortcode, base_url(request)),
         "listed": shortcode in shopping.listed(conn, user_id=user.id),
+        # The same video saved again in your library, as another post (#58).
+        "copies": [
+            {
+                "shortcode": c["shortcode"],
+                "author": c["author"],
+                "caption": c["caption"],
+                "saved_at": c["saved_at"],
+                "thumb": f"/media/{c['thumb_path']}" if c["thumb_path"] else None,
+            }
+            for c in conn.execute(
+                """SELECT item.shortcode, item.author, item.caption, item.thumb_path,
+                          ui.saved_at FROM item
+                   JOIN user_item ui ON ui.shortcode = item.shortcode AND ui.user_id = :me
+                   WHERE item.shortcode IN (SELECT value FROM json_each(:codes))
+                   ORDER BY ui.saved_at""",
+                {"me": user.id, "codes": json.dumps(dupes.copies(conn, shortcode, user.id))},
+            )
+        ],
     }
+
+
+@app.post("/api/items/{shortcode}/not-copy/{other}")
+def not_a_copy(shortcode: str, other: str, user: Me) -> dict[str, Any]:
+    """Two reels you have are not the same video after all: they are never
+    grouped again (#58)."""
+    conn = db()
+    if shortcode == other or not (
+        library.has(conn, user.id, shortcode) and library.has(conn, user.id, other)
+    ):
+        raise HTTPException(404, NOT_HERE)
+    dupes.split(conn, shortcode, other)
+    return {"copies": dupes.copies(conn, shortcode, user.id)}
+
+
+@app.post("/api/items/{shortcode}/opened", status_code=204)
+def item_opened(shortcode: str, user: Me) -> Response:
+    """You opened it: for Rediscover's never-opened strip (#50). Yours only."""
+    conn = db()
+    done = conn.execute(
+        """UPDATE user_item SET opened_at = ?, open_count = open_count + 1
+           WHERE user_id = ? AND shortcode = ?""",
+        (int(time.time()), user.id, shortcode),
+    ).rowcount
+    if not done:
+        raise HTTPException(404, NOT_HERE)
+    return Response(status_code=204)
+
+
+REDISCOVER = 12
+
+
+@app.get("/api/rediscover")
+def rediscover(
+    user: Me,
+    md: str = Query(..., pattern=r"^\d\d-\d\d$"),
+    tz: int = Query(0, ge=-840, le=840),
+) -> dict[str, Any]:
+    """Old saves to bring back (#50): those saved on this day (`md`, MM-DD,
+    in the browser's time zone, `tz` minutes behind UTC as getTimezoneOffset
+    says) in earlier years, and those never opened here, oldest first."""
+    conn = db()
+    sel = Selection(conn, [], {"me": user.id}, None, {})
+    local = "ui.saved_at - :tz * 60, 'unixepoch'"
+    on_day = conn.execute(
+        f"""SELECT {CARD_COLUMNS} FROM {SOURCE}
+            WHERE strftime('%m-%d', {local}) = :md
+              AND strftime('%Y', {local}) < strftime('%Y', 'now', :shift)
+            ORDER BY ui.saved_at DESC LIMIT :n""",
+        {"me": user.id, "md": md, "tz": tz, "shift": f"{-tz} minutes", "n": REDISCOVER},
+    ).fetchall()
+    unopened = conn.execute(
+        f"""SELECT {CARD_COLUMNS} FROM {SOURCE}
+            WHERE ui.opened_at IS NULL AND ui.saved_at IS NOT NULL AND item.state != 'failed'
+            ORDER BY ui.saved_at ASC LIMIT :n""",
+        {"me": user.id, "n": REDISCOVER},
+    ).fetchall()
+    return {
+        "on_this_day": _cards(conn, user, sel, on_day),
+        "never_opened": _cards(conn, user, sel, unopened),
+    }
+
+
+@app.get("/api/ask")
+def ask_library(user: Me, q: str = Query(..., min_length=2, max_length=500)) -> dict[str, Any]:
+    """Ask your library (#45): an answer from your own saves, by your AI model,
+    citing the reels it used, each at the moment it was said when known.
+    `found` false: nothing in your library covers it."""
+    from app import ask, assistant
+    from app.ollama import OllamaError
+
+    conn = db()
+    query_vec = None
+    if conn.execute("SELECT 1 FROM item_vec LIMIT 1").fetchone() and search.load_vec(conn):
+        query_vec = query_vector(q)
+    found = ask.sources(conn, q, query_vec, user.id)
+    model = assistant.model_for(
+        conn,
+        user.id,
+        settings.db_path.parent,
+        ollama_url=settings.ollama_url,
+        profile=settings.profile,
+    )
+    try:
+        said = ask.answer(q, found, model.asks)
+    except OllamaError as exc:
+        raise HTTPException(503, f"No AI model to answer with: {exc}") from exc
+    except Exception as exc:
+        raise HTTPException(502, f"The model did not answer: {exc}") from exc
+    finally:
+        assistant.record(conn, model, "ask", None)
+    cited = [found[n - 1] for n in said["cited"]]
+    sel = Selection(conn, [], {"me": user.id}, None, {})
+    rows = {
+        r["shortcode"]: r
+        for r in conn.execute(
+            f"""SELECT {CARD_COLUMNS} FROM {SOURCE}
+                WHERE item.shortcode IN (SELECT value FROM json_each(:codes))""",
+            {"me": user.id, "codes": json.dumps([c["shortcode"] for c in cited])},
+        )
+    }
+    cards = _cards(conn, user, sel, [rows[c["shortcode"]] for c in cited if c["shortcode"] in rows])
+    return {
+        "found": said["found"],
+        "answer": said["answer"],
+        # Each [n] in the answer, by the number the model saw.
+        "citations": [
+            {"n": n, "shortcode": c["shortcode"], "at_ms": c["at_ms"]}
+            for n, c in zip(said["cited"], cited, strict=True)
+        ],
+        "items": cards,
+        "model": model.label,
+    }
+
+
+@app.get("/api/items/{shortcode}/similar")
+def item_similar(shortcode: str, user: Me, limit: int = Query(12, ge=1, le=48)) -> dict[str, Any]:
+    """The reels in your library closest to this one in meaning: more like
+    this (#53). Empty without vectors."""
+    conn = db()
+    if not library.has(conn, user.id, shortcode):
+        raise HTTPException(404, NOT_HERE)
+    hits = search.similar(conn, shortcode, user.id, limit) if search.load_vec(conn) else []
+    sel = Selection(conn, [], {"me": user.id}, None, {})
+    rows = conn.execute(
+        f"""SELECT {CARD_COLUMNS} FROM {SOURCE}
+            WHERE item.shortcode IN (SELECT value FROM json_each(:hits))
+            ORDER BY (SELECT key FROM json_each(:hits) WHERE value = item.shortcode)""",
+        {"me": user.id, "hits": json.dumps(hits)},
+    ).fetchall()
+    return {"items": _cards(conn, user, sel, rows)}
 
 
 def _jsonld(
@@ -1288,7 +1481,7 @@ def save_recipe(shortcode: str, body: RecipeIn, user: Me) -> dict[str, Any] | No
         conn,
         lambda: recipes.save_user(conn, shortcode, recipe, hidden=body.hidden, user_id=user.id),
     )
-    return recipes.current(conn, shortcode, user_id=user.id)
+    return _recipe(conn, shortcode, user)
 
 
 @app.delete("/api/items/{shortcode}/recipe")
@@ -1297,7 +1490,103 @@ def revert_recipe(shortcode: str, user: Me) -> dict[str, Any] | None:
     conn = db()
     _known_item(conn, user, shortcode)
     _in_transaction(conn, lambda: recipes.revert(conn, shortcode, user_id=user.id))
-    return recipes.current(conn, shortcode, user_id=user.id)
+    return _recipe(conn, shortcode, user)
+
+
+FETCH_AGAIN = 7 * 86400  # a page that had no recipe, or did not answer, is asked again after
+
+
+def _recipe(conn: sqlite3.Connection, shortcode: str, user: User) -> dict[str, Any] | None:
+    """The recipe this reel shows you, and for an incomplete one, where the
+    rest is (#114): `link`, and `fetchable` when the server will fetch it."""
+    from app.recipes import web
+
+    recipe = recipes.current(conn, shortcode, user_id=user.id)
+    if recipe is None or not recipe["incomplete"]:
+        return recipe
+    row = conn.execute(
+        """SELECT item.caption, f.fetched_at FROM item
+           LEFT JOIN recipe_fetch f ON f.shortcode = item.shortcode
+           WHERE item.shortcode = ?""",
+        (shortcode,),
+    ).fetchone()
+    link = web.link(row["caption"])
+    recipe["link"] = link
+    recipe["fetchable"] = bool(
+        settings.recipe_fetch
+        and link
+        and link["kind"] == "recipe"
+        and not recipe["edited"]
+        and (row["fetched_at"] is None or row["fetched_at"] < time.time() - FETCH_AGAIN)
+    )
+    return recipe
+
+
+@app.post("/api/items/{shortcode}/recipe/fetch")
+def fetch_recipe(shortcode: str, user: Me) -> dict[str, Any] | None:
+    """Fetch the rest of an incomplete recipe from the page its caption links
+    to, and show that instead (#114). One request to that site; see ADR 0020."""
+    from app.recipes import web
+
+    conn = db()
+    _known_item(conn, user, shortcode)
+    recipe = _recipe(conn, shortcode, user)
+    if not recipe or not recipe.get("fetchable"):
+        raise HTTPException(409, "There is nothing to fetch for this recipe.")
+    url = recipe["link"]["url"]
+    error = None
+    try:
+        found = web.parse(web.fetch(url))
+    except web.FetchError as exc:
+        error = str(exc)
+
+    def store() -> None:
+        conn.execute(
+            """INSERT OR REPLACE INTO recipe_fetch (shortcode, url, fetched_at, error)
+               VALUES (?, ?, ?, ?)""",
+            (shortcode, url, int(time.time()), error),
+        )
+        if error is None:
+            recipes.set_web(conn, shortcode, found, url)
+
+    _in_transaction(conn, store)
+    if error:
+        raise HTTPException(502, f"No recipe from {recipe['link']['site']}: {error}")
+    return _recipe(conn, shortcode, user)
+
+
+@app.get("/api/items/{shortcode}/recipe/translation")
+def translate_recipe(
+    shortcode: str, user: Me, lang: str = Query(..., pattern="^[a-z]{2}$")
+) -> dict[str, Any]:
+    """This reel's recipe in your language (#114). The recipe stage translated
+    it as it read it; a recipe with no translation yet (one you corrected, or
+    read before) is translated now only on your hosted API, which needs no
+    worker. `recipe` null: none needed, or `pending` until the next pass."""
+    from app import assistant
+    from app.recipes import translate
+
+    conn = db()
+    _known_item(conn, user, shortcode)
+    recipe = recipes.current(conn, shortcode, user_id=user.id)
+    if recipe is None or not translate.needed(recipe, lang):
+        return {"recipe": None, "model": None, "pending": False}
+    if hit := translate.cached(conn, recipe, lang):
+        return {
+            "recipe": translate.merge(recipe, hit["body"]),
+            "model": hit["model"],
+            "pending": False,
+        }
+    model = assistant.hosted_for(conn, user.id, settings.db_path.parent)
+    if model is None:
+        return {"recipe": None, "model": None, "pending": True}
+    try:
+        body = translate.translate(conn, recipe, lang, model.asks, model.label)
+    except Exception as exc:
+        raise HTTPException(502, f"The translation failed: {exc}") from exc
+    finally:
+        assistant.record(conn, model, "translate", shortcode)
+    return {"recipe": translate.merge(recipe, body), "model": model.label, "pending": False}
 
 
 @app.get("/api/shopping")

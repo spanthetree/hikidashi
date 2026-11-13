@@ -33,10 +33,12 @@ from pathlib import Path
 
 from app.db import Row
 
-from .transcriber import ASR_V, AudioError, NoAudio, extract_audio
+from .transcriber import ASR_V, AudioError, NoAudio, Said, extract_audio
 
-# Takes 16 kHz mono s16le PCM, returns the transcript or None for no speech.
-Transcribe = Callable[[bytes], "str | None"]
+# Takes 16 kHz mono s16le PCM, returns the transcript or None for no speech:
+# a Said when the model says when each part was said, else the text.
+Transcribe = Callable[[bytes], "Said | str | None"]
+Heard = Said | str | None
 
 
 @dataclass
@@ -80,12 +82,19 @@ def record(
     conn: sqlite3.Connection,
     lock: threading.Lock,
     shortcode: str,
-    transcript: str | None,
+    heard: Heard,
     profile: str,
     language: str | None = None,
 ) -> None:
     """`language`: what a multilingual hosted model heard (#116); None from
-    the local English-only models."""
+    the local English-only models. A Said's segments are kept, for jumping to
+    the moment a search matched (#44)."""
+    transcript = heard.text if isinstance(heard, Said) else heard
+    segments = (
+        json.dumps(heard.segments, ensure_ascii=False)
+        if isinstance(heard, Said) and heard.segments
+        else None
+    )
     with lock:
         conn.execute(
             """UPDATE item SET
@@ -98,6 +107,7 @@ def record(
                  recipe_v    = CASE WHEN :transcript IS NOT transcript
                                     THEN 0 ELSE recipe_v END,
                  transcript  = :transcript,
+                 transcript_segments = :segments,
                  asr_v       = :v,
                  asr_profile = :profile,
                  asr_language = :language,
@@ -109,6 +119,7 @@ def record(
                WHERE shortcode = :shortcode""",
             {
                 "transcript": transcript,
+                "segments": segments,
                 "v": ASR_V,
                 "profile": profile,
                 "language": language,
@@ -128,9 +139,7 @@ def record_failure(
         )
 
 
-def transcribe_one(
-    row: Row, media_dir: Path, transcribe: Transcribe
-) -> tuple[str | None, str | None]:
+def transcribe_one(row: Row, media_dir: Path, transcribe: Transcribe) -> tuple[Heard, str | None]:
     """One reel's transcript, or None for no speech; or the reason it failed.
     Reads only the media file and `row`, and writes nothing, so a worker on
     another machine runs it on a downloaded copy (#35)."""

@@ -17,7 +17,7 @@ the [decision records](adr/README.md).
 
 Hikidashi is one server with one SQLite file, and workers that make what
 search needs out of each reel. Everything heavy runs on your own hardware,
-unless someone switches a hosted AI API on. Four things leave the machine,
+unless someone switches a hosted AI API on. Five things leave the machine,
 and three of them only if you configure them.
 
 ```mermaid
@@ -32,6 +32,7 @@ flowchart LR
   geo[("Nominatim<br/>geocoder")]
   tiles[("map tiles<br/>OpenStreetMap")]
   hosted[("hosted AI<br/>OpenAI, Groq, …")]
+  blogs[("recipe pages<br/>a caption links to")]
 
   person -- "HTTPS: pages, API, media" --> server
   person -. "tiles, from the browser" .-> tiles
@@ -41,6 +42,8 @@ flowchart LR
   server -. "place names, if HIKIDASHI_GEOCODER is set" .-> geo
   server -. "audio, frames, text, while an API is switched on" .-> hosted
   workers -. "the same, from a hosted worker, with its own key" .-> hosted
+  server -. "one page, for an incomplete recipe" .-> blogs
+  server -. "a question to the library, while you wait" .-> ollama
 ```
 
 | Outside | Who calls it | What goes out | Off by |
@@ -48,6 +51,7 @@ flowchart LR
 | Instagram, through yt-dlp | the server's enrich stage | a permalink. No login, no cookies: public posts only | not enriching (`HIKIDASHI_LOCAL_STAGES` without `enrich`) |
 | A Nominatim geocoder | the server's places locator | the place names read from captions | default: `HIKIDASHI_GEOCODER` is empty |
 | Map tiles | your browser, on the map view | the tile coordinates you look at | `HIKIDASHI_TILES` pointing at your own |
+| A recipe page a caption links to (#114) | the server, when an incomplete recipe is opened | a request for that one page: the server's address, and that someone saved a post linking to it | `HIKIDASHI_RECIPE_FETCH=off` ([ADR 0020](adr/0020-fetch-incomplete-recipes.md)) |
 | Hosted AI providers (#116, #125) | the server's worker, for each API that is switched on; or a hosted worker on another machine | a reel's audio (transcription), its cover and five frames (on-screen text), and its caption, hashtags, transcript and on-screen text (tags and recipes) | default: every switch is off, and env never turns one on ([ADR 0019](adr/0019-hosted-ai-behind-a-switch.md)) |
 
 Installing and updating under Docker pulls the images from GitHub's
@@ -57,7 +61,11 @@ from the checkout instead.
 
 Ollama is part of the system, not outside it: it runs on the server
 (`./hikidashi start --ai`) or on the machine of the worker that calls it. The
-server itself never calls Ollama ([#86](https://github.com/spanthetree/hikidashi/issues/86)).
+server calls a model only while someone waits for an answer to a question to
+their library, and then their hosted API, a self-hosted provider, or Ollama
+at `OLLAMA_URL`. Recipes are translated by the recipe stage, wherever it runs
+([ADR 0021](adr/0021-the-server-asks-a-model-while-you-wait.md)). The
+pipeline's model calls are the workers' ([#86](https://github.com/spanthetree/hikidashi/issues/86)).
 
 ## Containers and images
 
@@ -215,7 +223,7 @@ their keys; the schema has every column, with a comment on each.
 ```mermaid
 erDiagram
   item {
-    text shortcode PK "and 42 more columns"
+    text shortcode PK "and 46 more columns"
     integer first_seen_in FK
   }
   item_slide {
@@ -235,7 +243,7 @@ erDiagram
     text kind
   }
   recipe {
-    text shortcode PK, FK "and 10 more columns"
+    text shortcode PK, FK "and 11 more columns"
     text source PK
     integer user_id PK
   }
@@ -250,6 +258,19 @@ erDiagram
     text user_id
     text title
     text ingredients
+  }
+  recipe_fetch {
+    text shortcode PK, FK
+    text url
+    integer fetched_at
+    text error
+  }
+  recipe_translation {
+    text digest PK
+    text lang PK
+    text body
+    text model
+    integer made_at
   }
   item_place {
     text shortcode PK, FK
@@ -279,6 +300,10 @@ erDiagram
     text keywords
     text game
   }
+  item_split {
+    text a PK, FK
+    text b PK, FK
+  }
   import_run {
     integer id PK
   }
@@ -291,15 +316,29 @@ erDiagram
   tag ||--o{ item_tag : "tag_id"
   item ||--o{ recipe : "shortcode"
   recipe ||--o{ recipe_ingredient : "shortcode, source, user_id"
+  item ||--o| recipe_fetch : "shortcode"
   item ||--o{ item_place : "shortcode"
   item ||--o| item_vec : "shortcode"
   item ||--o{ item_chunk_vec : "shortcode"
   item ||--|| item_fts : "content (FTS5)"
+  item ||--o{ item_split : "a"
+  item ||--o{ item_split : "b"
   recipe ||..o| recipe_fts : "indexed by app/recipes"
   geocode |o..o{ item_place : "text"
   item |o..o{ hosted_usage : "shortcode"
 ```
 <!-- /make_diagrams -->
+
+A recipe fetched from the page its caption links to is a `web` row of
+`recipe`, shown in place of the model's (#114); `recipe_fetch` says when each
+page was asked for, and `recipe_translation` keeps recipes translated into
+the app's languages, by the recipe stage as it reads them.
+
+A reel's reposts (#58) are grouped by `item.dup_of`, which points at the
+earliest saved copy of the same video; `item.phash` is the fingerprint they
+were matched by, and `item_split` the pairs someone said are not the same.
+The embed stage makes the fingerprints, since it runs on the server with the
+media ([app/dupes](../app/dupes/__init__.py)).
 
 ### People and their libraries
 
@@ -322,6 +361,8 @@ erDiagram
     integer first_seen_in FK
     integer tag_id FK
     text game
+    integer opened_at
+    integer open_count
   }
   collection {
     integer user_id PK, FK
@@ -583,6 +624,19 @@ off), but never read or set it. Keys are encrypted at rest, write-only (a
 response by `app/providers/keys.py`. The server never sends a key to a
 worker: a hosted worker brings its own. API tokens need the `read:ai` or
 `write:ai` scope for these routes, and a worker token can't reach them.
+
+**The API explorer** (#147, `app/api/explorer.py`). `/api/docs` and
+`/api/openapi.json` answer only someone signed in, and a non-admin's schema
+has no admin or worker routes or the worker token scheme. Its Swagger UI is
+built into the front end, so the page loads nothing from outside the server.
+A token given to its Authorize stays in the page's memory
+(`persistAuthorization` off), and routes that change something can't be tried
+until **Allow changes** is ticked. It changes no rule: every route still
+checks the session or the token's scope itself.
+
+**Fetching a recipe page** (#114) refuses any address that is not on the
+public internet, redirects included, so a caption can't make the server reach
+into its own network ([ADR 0020](adr/0020-fetch-incomplete-recipes.md)).
 
 **What a remote worker can make true.** It sends what its model said; the
 server records it with the stage's own `record`. For a reel's game that means

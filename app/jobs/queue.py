@@ -37,6 +37,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from app import dupes
 from app.asr import worker as asr
 from app.asr.transcriber import ASR_V
 from app.embed import worker as embed
@@ -136,7 +137,11 @@ REGISTRY: dict[str, Stage] = {
             ("enrich", "asr", "ocr", "tag"),
             None,
             "embed_v",
-            lambda c, only: _codes(embed.pending(c, shortcodes=only)),
+            # And what each reel shows, for finding reposts (#58): the
+            # server has the media, as it has the model.
+            lambda c, only: list(
+                dict.fromkeys(_codes(embed.pending(c, shortcodes=only)) + dupes.pending(c, only))
+            ),
             skippable=("asr", "ocr", "tag"),
         ),
     )

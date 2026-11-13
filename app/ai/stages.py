@@ -54,7 +54,7 @@ def run(stage: str, row: Row, make: Made, media_dir: Path, *, language: str | No
         asr = asr_hosted.Hosted(client, model, language=language)
         heard = asr_hosted.transcribe_one(row, media_dir, asr)
         return Done(
-            heard.text,
+            heard.said,
             asr.label,
             heard.usage,
             1 if heard.usage.audio_seconds else 0,

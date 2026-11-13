@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import {
     changeAccount, changePassword, exportUrl, getAccounts, getExportOptions, getInvites, getMyTokens,
-    logout, makeInvite, makeMyToken, revokeInvite, revokeMyToken, signOutEverywhere, updateMe,
+    logout, makeInvite, makeMyToken, revokeInvite, revokeMyToken, signOutEverywhere, updateMe, setCollapseCopies,
   } from "#lib/api.js";
   import AiProviders from "#lib/components/AiProviders.svelte";
   import Notice from "#lib/components/Notice.svelte";
@@ -238,6 +238,12 @@
         <button class="btn" type="submit">{m.save()}</button>
       </form>
       <p class="hint">{m.handle_hint()}</p>
+      <label class="a-check">
+        <input type="checkbox" checked={me.collapse_copies}
+               onchange={(e) => act(async () => session.set(await setCollapseCopies(e.currentTarget.checked)), m.saved())}>
+        {m.copies_collapse()}
+      </label>
+      <p class="hint">{m.copies_collapse_hint()}</p>
     </section>
 
     <section class="a-sec">
@@ -322,6 +328,7 @@
     {#if mine}
       <section class="a-sec">
         <InfoHead title={m.tokens_title()}><Rich parts={m.tokens_lede.parts()} /></InfoHead>
+        <p id="tokens"><a href="/api/docs" data-sveltekit-reload>{m.api_explore()} &rarr;</a></p>
         <form class="a-export" onsubmit={makeToken}>
           <label for="t-name">{m.tokens_name()}</label>
           <input id="t-name" type="text" maxlength="64" required autocomplete="off"
@@ -493,6 +500,7 @@
 </main>
 
 <style>
+  .a-check { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; }
   .account { max-width: 760px; }
 
   .account :global(h2) { margin: 0; font-size: 16px; }

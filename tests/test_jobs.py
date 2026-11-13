@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from app import jobs, profiles
+from app import dupes, jobs, profiles
 from app.asr.transcriber import ASR_V
 from app.config import Settings
 from app.db import connect, open_db
@@ -388,6 +388,8 @@ class TestReadiness(JobsCase):
         self.transcribed("AAA111")
         got = a.claim("embed", 3)
         embed_all(self.conn, lambda texts: [b"\0" * 4] * len(texts), shortcodes=got)
+        # The stage fingerprints it too, for finding reposts (#58).
+        dupes.hash_all(self.conn, Path("."), got, hasher=lambda *_: [0])
         a.release("embed", got)
         self.assertEqual(a.claim("embed", 3), [])
         # The desktop comes on and tags it: the summary is new text to embed.

@@ -1,3 +1,4 @@
+import json
 import shutil
 import sqlite3
 import subprocess
@@ -20,7 +21,7 @@ from app.importer.service import import_export
 from app.profiles import resolve
 from app.recipes.llm import RECIPE_V
 from app.tagging.llm import TAG_V
-from tests.fixtures import post_record, saved_posts, write_zip
+from tests.fixtures import must, post_record, saved_posts, write_zip
 
 R = "https://www.instagram.com/reel/"
 
@@ -178,6 +179,18 @@ class TestExtractAudioForReal(unittest.TestCase):
         self.assertAlmostEqual(len(pcm) / 2 / 16_000, 1.0, delta=0.1)
 
 
+class TestSaid(unittest.TestCase):
+    def test_segments_in_milliseconds_and_their_words_joined(self):
+        from app.asr.transcriber import said
+
+        heard = must(
+            said([(0.0, 1.25, " salt the "), (1.25, 2.5, ""), (2.5, 4.0, "pasta water. ")])
+        )
+        self.assertEqual(heard.text, "salt the pasta water.")
+        self.assertEqual(heard.segments, ((0, 1250, "salt the"), (2500, 4000, "pasta water.")))
+        self.assertIsNone(said([(0.0, 1.0, "  ")]))
+
+
 class AsrCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -250,6 +263,18 @@ class TestTranscribe(AsrCase):
         self.assertEqual(row["asr_v"], ASR_V)
         self.assertEqual(row["asr_profile"], "cpu")
         self.assertEqual(row["state"], "transcribed")
+
+    def test_segments_are_kept_when_the_model_times_them(self):
+        from app.asr.transcriber import Said
+
+        timed = Said("salt the water", ((0, 900, "salt"), (900, 2000, "the water")))
+        self.run_asr(lambda pcm: timed if pcm == b"AAA111" else fake(pcm))
+        self.assertEqual(self.row()["transcript"], "salt the water")
+        self.assertEqual(
+            json.loads(self.row()["transcript_segments"]),
+            [[0, 900, "salt"], [900, 2000, "the water"]],
+        )
+        self.assertIsNone(self.row("BBB222")["transcript_segments"])
 
     def test_a_phrase_only_spoken_in_a_reel_finds_that_reel(self):
         self.assertEqual(self.search("eighteen hours"), [])

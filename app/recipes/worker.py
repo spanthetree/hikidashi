@@ -26,12 +26,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from app.asr.transcriber import ASR_V
+from app.chat import Asks
 from app.db import Row
 from app.ocr.reader import OCR_V
 from app.tagging.llm import TAG_V
 from app.tagging.worker import WAITING
 
-from . import llm, service
+from . import llm, service, translate
 from .detect import FOOD, is_candidate
 
 
@@ -81,6 +82,8 @@ def record(conn: sqlite3.Connection, shortcode: str, found: llm.Found | None, pr
     conn.execute("BEGIN")
     try:
         service.set_model(conn, shortcode, found)
+        if found is not None and found.translations:
+            translate.store(conn, translate.as_dict(found.recipe), found.translations, profile)
         conn.execute(
             """UPDATE item SET
                  recipe_v       = :v,
@@ -112,8 +115,9 @@ def candidate(row: Row) -> bool:
 def read_one(row: Row, model: llm.Model) -> llm.Found | None:
     """One candidate's recipe, or None, from `row` alone; writes nothing, so a
     worker on another machine runs it (#35). Raises llm.RecipeError, or
-    OllamaError when the server cannot be used."""
-    return llm.read(
+    OllamaError when the server cannot be used. A recipe comes translated into
+    the app's languages, on the same model, when it is a chat model."""
+    found = llm.read(
         model,
         row["caption"],
         json.loads(row["hashtags"] or "[]"),
@@ -121,6 +125,9 @@ def read_one(row: Row, model: llm.Model) -> llm.Found | None:
         row["ocr_text"],
         food=row["primary_tag"] == FOOD,
     )
+    if found is not None and isinstance(model, Asks):
+        found.translations = translate.for_languages(translate.as_dict(found.recipe), model)
+    return found
 
 
 def read_all(

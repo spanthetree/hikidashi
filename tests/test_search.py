@@ -4,7 +4,7 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from app import search
 from app.db import open_db
@@ -368,11 +368,43 @@ class TestSemanticSearch(LibraryCase):
         self.assertIn("OVEN01", hits)
         self.assertIn("transcript", why["OVEN01"]["match"])
 
+    def test_more_like_this(self):
+        # Two pizza reels are near each other, and the car reel is near neither.
+        near = search.similar(self.conn, "DOUGH1")
+        self.assertIn("OVEN01", near)
+        self.assertNotIn("DOUGH1", near)
+        self.assertNotIn("AE8600", near)
+
     def test_vectors_of_another_size_are_skipped_not_an_error(self):
         self.conn.execute(
             "UPDATE item_vec SET embedding = ? WHERE shortcode = 'AE8600'", (pack([1.0] * 8),)
         )
         self.assertNotIn("AE8600", self.rank("corolla"))
+
+
+class TestMoment(unittest.TestCase):
+    SEGS: ClassVar[list[list[Any]]] = [
+        [0, 4000, "today we make carbonara"],
+        [4000, 9000, "first you salt the pasta water"],
+        [9000, 12000, "then the eggs and the cheese"],
+    ]
+
+    def test_the_line_saying_most_of_the_query(self):
+        self.assertEqual(
+            search.moment(self.SEGS, "the guy who says to salt the pasta water"),
+            {"at_ms": 4000, "said": "first you salt the pasta water"},
+        )
+
+    def test_a_chunk_that_matched_in_meaning(self):
+        segs = [[i * 1000, i * 1000 + 900, " ".join(["word"] * 10)] for i in range(12)]
+        # Chunk 1 starts at word 40: the fifth segment, at 4 s.
+        self.assertEqual(must(search.moment(segs, "unrelated", chunk=1))["at_ms"], 4000)
+        # Past the transcript's chunks: on-screen text, no time.
+        self.assertIsNone(search.moment(segs, "unrelated", chunk=9))
+
+    def test_nothing_timed(self):
+        self.assertIsNone(search.moment([], "pasta"))
+        self.assertIsNone(search.moment(self.SEGS, "brake pads"))
 
 
 class TestEval(LibraryCase):
