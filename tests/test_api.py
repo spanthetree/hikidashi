@@ -162,6 +162,12 @@ class TestIsolation(ApiCase):
         self.as_user(BOB)
         self.assertEqual(self.client.get("/api/items/BOBBY1").status_code, 200)
 
+    def test_more_like_this_is_of_your_reels_only(self):
+        self.assertEqual(self.client.get("/api/items/BOBBY1/similar").status_code, 404)
+        r = self.client.get("/api/items/SHARED/similar")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json(), {"items": []})  # no vectors yet
+
     def test_save_time_collections_and_tag_are_yours(self):
         self.client.put("/api/items/SHARED/tag", json={"name": "Weeknight"})
         mine = self.client.get("/api/items/SHARED").json()

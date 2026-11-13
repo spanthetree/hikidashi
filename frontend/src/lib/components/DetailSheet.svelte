@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
-  import { clearGame, clearTag, exportUrl, getItem, getNote, removeItem, retryFetch, setGame, setTag } from "#lib/api.js";
+  import { page } from "$app/state";
+  import { clearGame, clearTag, exportUrl, getItem, getNote, getSimilar, removeItem, retryFetch, setGame, setTag } from "#lib/api.js";
   import ExportMenu from "#lib/components/ExportMenu.svelte";
   import MiniMap from "#lib/components/MiniMap.svelte";
   import RecipePanel from "#lib/components/RecipePanel.svelte";
@@ -40,6 +41,7 @@
   } = $props();
 
   let detail = $state<ItemDetail | null>(null);
+  let similar = $state<Item[]>([]);
   let tab = $state<"recipe" | "details">("details");
   let panelEl = $state<HTMLElement>();
   let closeEl = $state<HTMLButtonElement>();
@@ -58,6 +60,9 @@
         detail = d;
       })
       .catch((err) => { if (!stale) onerror(err.message); });
+    similar = [];
+    // Extra, not the reel itself: no error shown when it fails.
+    getSimilar(code).then((r) => { if (!stale) similar = r.items; }).catch(() => {});
     return () => { stale = true; };
   });
 
@@ -674,6 +679,22 @@
                 </section>
               {/if}
 
+              {#if similar.length}
+                <section class="d-sec">
+                  <p class="d-label">{m.more_like_this()}</p>
+                  <div class="d-similar">
+                    {#each similar as s (s.shortcode)}
+                      <a href={`/item/${encodeURIComponent(s.shortcode)}${page.url.search}`}
+                         data-sveltekit-noscroll title={s.caption ?? s.shortcode}
+                         style:--tint={tint(s.shortcode)}>
+                        {#if s.thumb}<img src={s.thumb} alt="" loading="lazy">{/if}
+                        <span>{s.author_name || (s.author ? `@${s.author}` : s.shortcode)}</span>
+                      </a>
+                    {/each}
+                  </div>
+                </section>
+              {/if}
+
               <section class="d-sec">
                 <p class="d-label">{m.pipeline()}</p>
                 <div class="d-body mono" translate="no">fetch_v {detail.fetch_v} · asr_v {detail.asr_v} · ocr_v {detail.ocr_v}
@@ -1003,6 +1024,19 @@
   .d-fact span { font-size: 12px; color: var(--muted); }
 
   .d-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  /* More like this (#53): a row of small cards that scrolls sideways. */
+  .d-similar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x proximity; }
+  .d-similar a {
+    flex: 0 0 96px; display: flex; flex-direction: column; gap: 4px;
+    color: var(--ink-2); text-decoration: none; font-size: 11.5px; scroll-snap-align: start;
+  }
+  .d-similar img, .d-similar a::before {
+    width: 96px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: var(--radius-sm, 6px);
+    background: var(--tint, var(--surface-2));
+  }
+  .d-similar a:not(:has(img))::before { content: ""; display: block; }
+  .d-similar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .d-similar a:hover span { color: var(--accent); }
   .d-chips span, .d-chips button {
     font-size: 12px;
     padding: 3px 10px;

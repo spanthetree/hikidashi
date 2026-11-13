@@ -365,6 +365,23 @@ def chunk_hits(
     return [(r[0], r[1]) for r in rows if r[1] >= MIN_CHUNK_SIMILARITY]
 
 
+def similar(
+    conn: sqlite3.Connection, shortcode: str, user_id: int = LOCAL, limit: int = 12
+) -> list[str]:
+    """The reels in this person's library closest in meaning to `shortcode`,
+    most similar first, without it (#53). Its own summary vector is the query,
+    so the same floor as a typed query keeps unrelated reels out."""
+    rows = conn.execute(
+        f"""SELECT o.shortcode, 1 - vec_distance_cosine(o.embedding, me.embedding) AS sim
+            FROM item_vec me JOIN item_vec o
+              ON o.shortcode != me.shortcode AND length(o.embedding) = length(me.embedding)
+            WHERE me.shortcode = :sc AND {mine(user_id, "o.shortcode")}
+            ORDER BY sim DESC LIMIT :n""",
+        {"sc": shortcode, "n": limit},
+    ).fetchall()
+    return [r[0] for r in rows if r[1] >= MIN_SIMILARITY]
+
+
 def semantic_hits(
     conn: sqlite3.Connection, query_vec: bytes, user_id: int = LOCAL
 ) -> tuple[list[str], dict[str, Any], dict[str, Any]]:

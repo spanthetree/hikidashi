@@ -39,6 +39,8 @@ From its sheet you can:
   overwritten;
 - confirm or name the video game a gaming reel shows;
 - follow the addresses in its caption to Google Maps;
+- open one of the reels **More like this**: the closest in meaning in your
+  library, from the same vectors as search;
 - export it, or copy it as Markdown;
 - **Try fetching again**, if its download failed;
 - **Remove** it from your library. Anyone else who saved it keeps it; once

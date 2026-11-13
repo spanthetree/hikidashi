@@ -368,6 +368,13 @@ class TestSemanticSearch(LibraryCase):
         self.assertIn("OVEN01", hits)
         self.assertIn("transcript", why["OVEN01"]["match"])
 
+    def test_more_like_this(self):
+        # Two pizza reels are near each other, and the car reel is near neither.
+        near = search.similar(self.conn, "DOUGH1")
+        self.assertIn("OVEN01", near)
+        self.assertNotIn("DOUGH1", near)
+        self.assertNotIn("AE8600", near)
+
     def test_vectors_of_another_size_are_skipped_not_an_error(self):
         self.conn.execute(
             "UPDATE item_vec SET embedding = ? WHERE shortcode = 'AE8600'", (pack([1.0] * 8),)

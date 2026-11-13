@@ -1094,6 +1094,24 @@ def item_detail(shortcode: str, user: Me, request: Request) -> dict[str, Any]:
     }
 
 
+@app.get("/api/items/{shortcode}/similar")
+def item_similar(shortcode: str, user: Me, limit: int = Query(12, ge=1, le=48)) -> dict[str, Any]:
+    """The reels in your library closest to this one in meaning: more like
+    this (#53). Empty without vectors."""
+    conn = db()
+    if not library.has(conn, user.id, shortcode):
+        raise HTTPException(404, NOT_HERE)
+    hits = search.similar(conn, shortcode, user.id, limit) if search.load_vec(conn) else []
+    sel = Selection(conn, [], {"me": user.id}, None, {})
+    rows = conn.execute(
+        f"""SELECT {CARD_COLUMNS} FROM {SOURCE}
+            WHERE item.shortcode IN (SELECT value FROM json_each(:hits))
+            ORDER BY (SELECT key FROM json_each(:hits) WHERE value = item.shortcode)""",
+        {"me": user.id, "hits": json.dumps(hits)},
+    ).fetchall()
+    return {"items": _cards(conn, user, sel, rows)}
+
+
 def _jsonld(
     conn: sqlite3.Connection, user: User, shortcode: str, base: str
 ) -> dict[str, Any] | None:

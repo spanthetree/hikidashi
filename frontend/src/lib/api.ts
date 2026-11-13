@@ -1,6 +1,6 @@
 import type {
   AiBacklog, AiPage, AiStage, AiTest, AiUse, AiUserRow, MyPipeline,
-  Account, ApiToken, AuthState, ExportOptions, ImportResult, Invite, ItemDetail, ItemGame, ItemPage,
+  Account, ApiToken, AuthState, ExportOptions, ImportResult, Invite, Item, ItemDetail, ItemGame, ItemPage,
   LogTail, Me,
   MyTokens, Named, WorkerToken,
   PipelineState, PlacePage, Recipe, RecipeFacets, RecipeIn, ShoppingList, Stage, Stats, Tag, TagChoice,
@@ -44,6 +44,10 @@ export const geocode = (q: string) =>
 
 export const getItem = (shortcode: string) =>
   api<ItemDetail>(`/api/items/${encodeURIComponent(shortcode)}`);
+
+/** The reels in your library closest to this one in meaning (#53). */
+export const getSimilar = (shortcode: string) =>
+  api<{ items: Item[] }>(`/api/items/${encodeURIComponent(shortcode)}/similar`);
 
 export const getStats = () => api<Stats>("/api/stats");
 export const getCollections = () => api<Named[]>("/api/collections");
