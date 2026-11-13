@@ -1,0 +1,11 @@
+{
+  "note": "Ask your library (#45): questions on the demo library (tests/eval/demo.sqlite3), and the reels an answer must be able to cite. Scored on retrieval, keyword-only, so it runs with no model: each expected reel must be among the ones the model is given. A question in another language than the reel needs the embedder (\"needs\": \"vectors\"), and is skipped without it.",
+  "questions": [
+    {"q": "How long does the sourdough need to proof?", "cite": ["DQsourdough"]},
+    {"q": "What goes in the crab dip?", "cite": ["DQcrabdip01"]},
+    {"q": "Where was the ramen lunch set?", "cite": ["DQshioramen"]},
+    {"q": "Which reel showed how to make transparent wood?", "cite": ["DQtranspwd1"]},
+    {"q": "What did I save about Kyoto?", "cite": ["DQfushimi01", "DQkyotost01"]},
+    {"q": "おにぎりの作り方は？", "cite": ["DQonigiri01"], "needs": "vectors"}
+  ]
+}

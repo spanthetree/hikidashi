@@ -281,3 +281,17 @@ in place of the LIKE tier for words of three characters or more (LIKE stays for
 
 No query moved in blended search, and trigram finds `京都` in `東京都` just the
 same. With LIKE, keyword search takes 2 ms at the median on the measured library.
+
+## Ask your library
+
+`GET /api/ask?q=` ([#45](https://github.com/spanthetree/hikidashi/issues/45),
+`app/ask.py`) answers from search: the question is ranked like any query, and
+the top 8 reels go to the person's model, numbered, each with its summary,
+caption, the voiceover line that matched (else the start of the voiceover),
+on-screen text, recipe and places. A question rarely has every word in one
+reel, so with fewer than 8 hits each of its content words is searched alone
+too, less words like "saved" that only say how it is asked. The model must
+cite with `[n]`; numbers it invents are dropped, and `found: false` says
+nothing covers it. `tests/ask_eval.json` checks retrieval on the demo library:
+every reel an answer needs is among the 8 (keyword-only; a question in
+another language than the reel needs the embedder).

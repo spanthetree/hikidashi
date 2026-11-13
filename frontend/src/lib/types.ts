@@ -590,3 +590,13 @@ export interface MyPipeline {
   api: { on: boolean; reason: string | null; in_flight: number; spent: number; budget: number | null; waiting: number };
   now: number;
 }
+
+/** GET /api/ask: an answer from your saves (#45). */
+export interface Answer {
+  found: boolean;
+  /** With [n] where it cites citations' n. */
+  answer: string;
+  citations: { n: number; shortcode: string; at_ms: number | null }[];
+  items: Item[];
+  model: string;
+}

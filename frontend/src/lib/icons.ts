@@ -192,6 +192,15 @@ XXXXXXXX`,
 X..XX..X
 X......X
 XXXXXXXX`,
+  ask: `
+XXXXXXXX
+X......X
+X.XXXX.X
+X......X
+X.XXX..X
+XXXXXXXX
+.XX.....
+.X......`,
   shuffle: `
 .....XX.
 XX..XXXX
@@ -230,6 +239,7 @@ const LINES: Record<IconName, string> = {
   basket: "M5.5 2.5 3.5 6M10.5 2.5l2 3.5M1.5 6h13l-1.5 7.5H3zM6 8.5v3M10 8.5v3",
   export: "M8 10V2M5 5l3-3 3 3M2.5 9.5v3a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-3",
   import: "M8 2v8M5 7l3 3 3-3M2.5 9.5v3a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-3",
+  ask: "M2.5 3h11v7.5H6l-3.5 3v-3H2.5zM5 5.8h6M5 8h4",
   shuffle: "M1.5 4.5h3c3 0 4 7 7 7h3M1.5 11.5h3c1.2 0 2-1 2.7-2.3M9 6.8c.7-1.3 1.5-2.3 2.5-2.3h3"
     + "M12.5 2.5l2 2-2 2M12.5 9.5l2 2-2 2",
 };

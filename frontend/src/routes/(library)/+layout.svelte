@@ -12,6 +12,7 @@
   import ImportDialog from "#lib/components/ImportDialog.svelte";
   import MapView from "#lib/components/MapView.svelte";
   import Notice from "#lib/components/Notice.svelte";
+  import AskPanel from "#lib/components/AskPanel.svelte";
   import Rediscover from "#lib/components/Rediscover.svelte";
   import Rich from "#lib/components/Rich.svelte";
   import Sidebar from "#lib/components/Sidebar.svelte";
@@ -149,6 +150,11 @@
     if (openedFromGrid) history.back();
     else void go(libraryUrl(filters), { stay: true, replace: true });
   }
+
+  /* Ask your library (#45): the search, as a question, on request. A new
+     search closes the answer to the old one. */
+  let asking = $state<string | null>(null);
+  $effect(() => { if (asking !== null && asking !== filters.q) asking = null; });
 
   /* A search hit whose voiceover matched opens at that moment (#44). */
   function itemHref(item: Item) {
@@ -557,6 +563,11 @@
           </button>
         {/each}
         <span class="upload-slot">
+          {#if filters.q && asking === null}
+            <button type="button" class="btn sm" title={m.ask_title()} onclick={() => (asking = filters.q)}>
+              <Icon name="ask" size={14} /> {m.ask_button()}
+            </button>
+          {/if}
           {#if library.total}
             <button type="button" class="btn sm" title={m.shuffle_title()} onclick={shuffle}>
               <Icon name="shuffle" size={14} /> {m.shuffle()}
@@ -571,6 +582,7 @@
 
       <Notice bind:notice />
 
+      {#if asking}<AskPanel q={asking} {search} onclose={() => (asking = null)} />{/if}
       {#if home}<Rediscover {search} />{/if}
 
       {#if places && mapped}

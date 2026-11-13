@@ -1,6 +1,6 @@
 import type {
   AiBacklog, AiPage, AiStage, AiTest, AiUse, AiUserRow, MyPipeline,
-  Account, ApiToken, AuthState, ExportOptions, ImportResult, Invite, Item, ItemDetail, ItemGame, ItemPage,
+  Account, Answer, ApiToken, AuthState, ExportOptions, ImportResult, Invite, Item, ItemDetail, ItemGame, ItemPage,
   LogTail, Me,
   MyTokens, Named, WorkerToken,
   PipelineState, PlacePage, Recipe, RecipeFacets, RecipeIn, ShoppingList, Stage, Stats, Tag, TagChoice,
@@ -48,6 +48,10 @@ export const getItem = (shortcode: string) =>
 /** The reels in your library closest to this one in meaning (#53). */
 export const getSimilar = (shortcode: string) =>
   api<{ items: Item[] }>(`/api/items/${encodeURIComponent(shortcode)}/similar`);
+
+/** Ask your library (#45). Slow on a local model: seconds to a minute. */
+export const askLibrary = (q: string, signal?: AbortSignal) =>
+  api<Answer>(`/api/ask?q=${encodeURIComponent(q)}`, { signal });
 
 /** You opened it, for Rediscover's never-opened strip (#50). */
 export const markOpened = (shortcode: string) =>

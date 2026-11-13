@@ -292,6 +292,25 @@ class TestIsolation(ApiCase):
             404,
         )
 
+    def test_ask_your_library(self):
+        from app import assistant
+        from tests.test_ask import Fake
+
+        asks = Fake({"found": True, "answer": "Brake pads, in [1]."})
+        fake = assistant.Model(asks, "fake:model")
+        with mock.patch.object(assistant, "model_for", return_value=fake):
+            r = self.client.get("/api/ask", params={"q": "brake pads"}).json()
+        self.assertEqual(
+            (r["found"], r["answer"], r["model"]), (True, "Brake pads, in [1].", "fake:model")
+        )
+        self.assertEqual(r["citations"], [{"n": 1, "shortcode": "ALICE1", "at_ms": None}])
+        self.assertEqual([i["shortcode"] for i in r["items"]], ["ALICE1"])
+        # Only your library is asked about: Bob's ramen is not Alice's to cite.
+        with mock.patch.object(assistant, "model_for", return_value=fake):
+            r = self.client.get("/api/ask", params={"q": "secret ramen"}).json()
+        self.assertFalse(r["found"])
+        self.assertEqual(len(asks.prompts), 1)  # no reels found: the model is not asked
+
     def test_save_time_collections_and_tag_are_yours(self):
         self.client.put("/api/items/SHARED/tag", json={"name": "Weeknight"})
         mine = self.client.get("/api/items/SHARED").json()

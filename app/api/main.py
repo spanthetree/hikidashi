@@ -1214,6 +1214,58 @@ def rediscover(
     }
 
 
+@app.get("/api/ask")
+def ask_library(user: Me, q: str = Query(..., min_length=2, max_length=500)) -> dict[str, Any]:
+    """Ask your library (#45): an answer from your own saves, by your AI model,
+    citing the reels it used, each at the moment it was said when known.
+    `found` false: nothing in your library covers it."""
+    from app import ask, assistant
+    from app.ollama import OllamaError
+
+    conn = db()
+    query_vec = None
+    if conn.execute("SELECT 1 FROM item_vec LIMIT 1").fetchone() and search.load_vec(conn):
+        query_vec = query_vector(q)
+    found = ask.sources(conn, q, query_vec, user.id)
+    model = assistant.model_for(
+        conn,
+        user.id,
+        settings.db_path.parent,
+        ollama_url=settings.ollama_url,
+        profile=settings.profile,
+    )
+    try:
+        said = ask.answer(q, found, model.asks)
+    except OllamaError as exc:
+        raise HTTPException(503, f"No AI model to answer with: {exc}") from exc
+    except Exception as exc:
+        raise HTTPException(502, f"The model did not answer: {exc}") from exc
+    finally:
+        assistant.record(conn, model, "ask", None)
+    cited = [found[n - 1] for n in said["cited"]]
+    sel = Selection(conn, [], {"me": user.id}, None, {})
+    rows = {
+        r["shortcode"]: r
+        for r in conn.execute(
+            f"""SELECT {CARD_COLUMNS} FROM {SOURCE}
+                WHERE item.shortcode IN (SELECT value FROM json_each(:codes))""",
+            {"me": user.id, "codes": json.dumps([c["shortcode"] for c in cited])},
+        )
+    }
+    cards = _cards(conn, user, sel, [rows[c["shortcode"]] for c in cited if c["shortcode"] in rows])
+    return {
+        "found": said["found"],
+        "answer": said["answer"],
+        # Each [n] in the answer, by the number the model saw.
+        "citations": [
+            {"n": n, "shortcode": c["shortcode"], "at_ms": c["at_ms"]}
+            for n, c in zip(said["cited"], cited, strict=True)
+        ],
+        "items": cards,
+        "model": model.label,
+    }
+
+
 @app.get("/api/items/{shortcode}/similar")
 def item_similar(shortcode: str, user: Me, limit: int = Query(12, ge=1, le=48)) -> dict[str, Any]:
     """The reels in your library closest to this one in meaning: more like

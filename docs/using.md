@@ -26,6 +26,20 @@ A tour of the web app. [Back to the README](../README.md)
 - **Export**, above the grid, downloads what the grid shows
   ([exports](export.md)).
 
+## Ask your library
+
+With something typed in the search box, **Ask** takes it as a question:
+"How long does that sourdough proof for?", "What were the ramen places in
+Tokyo I saved?". The answer comes from your own saves only, with each claim
+citing the reel it came from as a numbered link that opens the reel, at the
+line that said it when that is known. When nothing you saved covers it, it
+says so rather than guess.
+
+Your AI model answers: your hosted API if your reels use one, otherwise the
+local Ollama, where an answer can take a minute on a CPU
+([ADR 0021](adr/0021-the-server-asks-a-model-while-you-wait.md)). Check what
+it cites; a model can be wrong.
+
 ## Rediscover
 
 Above the grid, when nothing is chosen, two strips bring old saves back: **On
