@@ -215,7 +215,7 @@ their keys; the schema has every column, with a comment on each.
 ```mermaid
 erDiagram
   item {
-    text shortcode PK "and 43 more columns"
+    text shortcode PK "and 46 more columns"
     integer first_seen_in FK
   }
   item_slide {
@@ -279,6 +279,10 @@ erDiagram
     text keywords
     text game
   }
+  item_split {
+    text a PK, FK
+    text b PK, FK
+  }
   import_run {
     integer id PK
   }
@@ -295,11 +299,19 @@ erDiagram
   item ||--o| item_vec : "shortcode"
   item ||--o{ item_chunk_vec : "shortcode"
   item ||--|| item_fts : "content (FTS5)"
+  item ||--o{ item_split : "a"
+  item ||--o{ item_split : "b"
   recipe ||..o| recipe_fts : "indexed by app/recipes"
   geocode |o..o{ item_place : "text"
   item |o..o{ hosted_usage : "shortcode"
 ```
 <!-- /make_diagrams -->
+
+A reel's reposts (#58) are grouped by `item.dup_of`, which points at the
+earliest saved copy of the same video; `item.phash` is the fingerprint they
+were matched by, and `item_split` the pairs someone said are not the same.
+The embed stage makes the fingerprints, since it runs on the server with the
+media ([app/dupes](../app/dupes/__init__.py)).
 
 ### People and their libraries
 

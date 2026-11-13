@@ -69,6 +69,7 @@ GROUPS = {
         "item_vec",
         "item_chunk_vec",
         "item_fts",
+        "item_split",
     ),
     "er-people": (
         "user",

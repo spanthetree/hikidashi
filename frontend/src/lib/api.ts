@@ -226,6 +226,14 @@ export const acceptInvite = (token: string, username: string, password: string) 
   api<Me>(inviteUrl(token), send("POST", { username, password }));
 
 export const updateMe = (ig_handle: string) => api<Me>("/api/me", send("PUT", { ig_handle }));
+export const setCollapseCopies = (on: boolean) =>
+  api<Me>("/api/me", send("PUT", { collapse_copies: on }));
+
+/** Two reels are not the same video after all (#58). */
+export const notACopy = (shortcode: string, other: string) =>
+  api<{ copies: string[] }>(
+    `/api/items/${encodeURIComponent(shortcode)}/not-copy/${encodeURIComponent(other)}`,
+    { method: "POST" });
 export const changePassword = (current: string, next: string) =>
   api<object>("/api/me/password", send("PUT", { current, new: next }));
 export const signOutEverywhere = () => api<object>("/api/me/sign-out-everywhere", send("POST"));

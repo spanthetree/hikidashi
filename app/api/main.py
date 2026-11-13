@@ -30,7 +30,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
-from app import accounts, jobs, library, logs, search, spa
+from app import accounts, dupes, jobs, library, logs, search, spa
 from app.accounts import AccountError, User
 from app.api import ai_routes
 from app.config import settings
@@ -471,24 +471,38 @@ def accept_invite(
 # --- your account ---------------------------------------------------------------
 
 
+def _me(user: User) -> dict[str, Any]:
+    return {
+        **user.as_dict(),
+        "auth": settings.auth,
+        # One card for a reel and its reposts (#58); off until you turn it on.
+        "collapse_copies": dupes.collapsing(db(), user.id),
+    }
+
+
 @app.get("/api/me")
 def me(user: Me) -> dict[str, Any]:
-    return {**user.as_dict(), "auth": settings.auth}
+    return _me(user)
 
 
 class Profile(BaseModel):
     ig_handle: str | None = None
+    collapse_copies: bool | None = None
 
 
 @app.put("/api/me")
 def update_me(body: Profile, user: Me) -> dict[str, Any]:
-    """Your Instagram @handle: yours to say, never checked with Instagram."""
+    """Your Instagram @handle: yours to say, never checked with Instagram.
+    And whether the grid shows a reel's copies as one card."""
     conn = db()
-    accounts.set_handle(conn, user.id, body.ig_handle)
+    if "ig_handle" in body.model_fields_set or body.collapse_copies is None:
+        accounts.set_handle(conn, user.id, body.ig_handle)
+    if body.collapse_copies is not None:
+        dupes.set_collapsing(conn, user.id, body.collapse_copies)
     me = accounts.get(conn, user.id)
     if me is None:  # disabled a moment ago
         raise HTTPException(401, "Sign in again.")
-    return {**me.as_dict(), "auth": settings.auth}
+    return _me(me)
 
 
 class NewPassword(BaseModel):
@@ -807,6 +821,10 @@ def select(user: User, f: Filters) -> Selection:
         where.append(f"{SHOWN_GAME} = :game{i} COLLATE NOCASE")
         params[f"game{i}"] = g
 
+    if dupes.collapsing(conn, user.id):
+        # One card for a reel and its copies: the first you saved (#58).
+        where.append(f"NOT {dupes.LATER_COPY}")
+
     if f.media:
         # The link says which: /reel/ is a video, /p/ a photo or carousel.
         # The same rule as the reels count in /api/stats.
@@ -835,7 +853,7 @@ SOURCE = "item JOIN user_item ui ON ui.shortcode = item.shortcode AND ui.user_id
 CARD_COLUMNS = f"""item.shortcode, item.permalink, item.author, item.author_name,
                    ui.saved_at, item.state, item.thumb_path, item.caption,
                    item.clean_hashtags, item.duration, item.like_count,
-                   item.media_path, {SHOWN_TAG} AS tag,
+                   item.media_path, {SHOWN_TAG} AS tag, {dupes.COPIES} AS copies,
                    (SELECT json_group_array(name) FROM collection
                      WHERE shortcode = item.shortcode AND user_id = :me) AS collections"""
 
@@ -884,6 +902,8 @@ def _cards(
             "hashtags": json.loads(r["clean_hashtags"] or "[]"),
             "collections": json.loads(r["collections"] or "[]"),
             "tag": r["tag"],
+            # This reel and its reposts in your library (#58): 1 for most.
+            "copies": r["copies"],
             "recipe": cards.get(r["shortcode"]),
             # Why a search returned it: which of phrase, keyword and
             # semantic matched, and the similarity. None without a query.
@@ -1112,7 +1132,38 @@ def item_detail(shortcode: str, user: Me, request: Request) -> dict[str, Any]:
         # where browser extensions and recipe managers look for it.
         "jsonld": _jsonld(conn, user, shortcode, base_url(request)),
         "listed": shortcode in shopping.listed(conn, user_id=user.id),
+        # The same video saved again in your library, as another post (#58).
+        "copies": [
+            {
+                "shortcode": c["shortcode"],
+                "author": c["author"],
+                "caption": c["caption"],
+                "saved_at": c["saved_at"],
+                "thumb": f"/media/{c['thumb_path']}" if c["thumb_path"] else None,
+            }
+            for c in conn.execute(
+                """SELECT item.shortcode, item.author, item.caption, item.thumb_path,
+                          ui.saved_at FROM item
+                   JOIN user_item ui ON ui.shortcode = item.shortcode AND ui.user_id = :me
+                   WHERE item.shortcode IN (SELECT value FROM json_each(:codes))
+                   ORDER BY ui.saved_at""",
+                {"me": user.id, "codes": json.dumps(dupes.copies(conn, shortcode, user.id))},
+            )
+        ],
     }
+
+
+@app.post("/api/items/{shortcode}/not-copy/{other}")
+def not_a_copy(shortcode: str, other: str, user: Me) -> dict[str, Any]:
+    """Two reels you have are not the same video after all: they are never
+    grouped again (#58)."""
+    conn = db()
+    if shortcode == other or not (
+        library.has(conn, user.id, shortcode) and library.has(conn, user.id, other)
+    ):
+        raise HTTPException(404, NOT_HERE)
+    dupes.split(conn, shortcode, other)
+    return {"copies": dupes.copies(conn, shortcode, user.id)}
 
 
 @app.post("/api/items/{shortcode}/opened", status_code=204)

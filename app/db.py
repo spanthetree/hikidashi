@@ -56,6 +56,9 @@ _ADDED_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("user_item", "opened_at", "INTEGER"),
     ("user_item", "open_count", "INTEGER NOT NULL DEFAULT 0"),
     ("item", "transcript_segments", "TEXT"),
+    ("item", "phash", "TEXT"),
+    ("item", "phash_v", "INTEGER NOT NULL DEFAULT 0"),
+    ("item", "dup_of", "TEXT"),
 )
 
 # Data that moves when a column first appears. Runs once, in the same call that

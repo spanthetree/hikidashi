@@ -95,7 +95,11 @@ version, so a bump also starts every count again. The embedder adds a digest:
 `item_vec.digest` is a hash of the text it embedded, so a new summary,
 transcript or caption re-embeds that reel alone. That is also how a reel
 embedded from its caption alone is embedded again when its transcript and
-summary arrive.
+summary arrive. The embed stage also fingerprints each reel's frames for
+finding reposts (`phash_v < PHASH_V`, [app/dupes](../app/dupes/__init__.py)):
+three ffmpeg frames, about a quarter of a second a reel on CPU, then the
+library is regrouped. That needs only ffmpeg, so it runs before the embedder
+loads, and still runs when the embedder will not.
 
 **`item.state`** is coarser and older than the queue. It records how far a reel
 has come (`imported`, `fetched`, `transcribed`, `tagged`) and only moves

@@ -247,9 +247,12 @@ class Runners:
             raise Unavailable(str(exc)) from exc
 
     def _embed(self, conn: sqlite3.Connection | None, codes: list[str]) -> Any:
+        from app import dupes
         from app.embed.worker import embed_all
 
         assert conn is not None
+        # First, and without the model: a fingerprint needs only ffmpeg.
+        dupes.hash_all(conn, self.media_dir, codes)
 
         def load() -> Embed:
             if self.embedder:

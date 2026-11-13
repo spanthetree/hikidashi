@@ -109,6 +109,7 @@
     {:else if recipe && !recipeView}<span class="badge is-recipe">{m.badge_recipe()}</span>
     {:else if recipe?.incomplete && recipeView}<span class="badge" title={m.recipe_incomplete_check()}>{m.badge_incomplete()}</span>{/if}
     {#if why}<span class="why" title={m.card_why()}>{why}</span>{/if}
+    {#if item.copies > 1}<span class="copies">{m.copies_badge({ count: item.copies })}</span>{/if}
     {#if len}<span class="dur">{len}</span>{/if}
     {#if !showImage}<span class="code">{item.shortcode}</span>{/if}
   </a>
@@ -148,6 +149,10 @@
 </article>
 
 <style>
+  .copies {
+    position: absolute; right: 8px; top: 8px; font-size: 11px; font-weight: 600;
+    padding: 2px 7px; border-radius: var(--radius-pill); background: rgb(0 0 0 / 0.6); color: #fff;
+  }
   /* The line a search matched in the voiceover, and when (#44). */
   .csaid {
     display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;

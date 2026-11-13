@@ -52,6 +52,10 @@ From its sheet you can:
 - read the transcript line by line, once a reel has been transcribed since
   0.25: the line playing lights up, and pressing one plays from there. A
   search that matched what was said opens the reel at that line;
+- see where else you saved the same video, under **Also saved as**: a repost,
+  or the same reel from another account, whose caption may say more. **Not
+  the same** splits a wrong match for good. To show a reel and its reposts
+  as one card in the grid, tick it on your Account page;
 - open one of the reels **More like this**: the closest in meaning in your
   library, from the same vectors as search;
 - export it, or copy it as Markdown;

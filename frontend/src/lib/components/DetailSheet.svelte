@@ -3,7 +3,7 @@
   import { fade } from "svelte/transition";
   import { replaceState } from "$app/navigation";
   import { page } from "$app/state";
-  import { clearGame, clearTag, exportUrl, getItem, getNote, getSimilar, markOpened, removeItem, retryFetch, setGame, setTag } from "#lib/api.js";
+  import { clearGame, clearTag, exportUrl, getItem, getNote, getSimilar, markOpened, notACopy, removeItem, retryFetch, setGame, setTag } from "#lib/api.js";
   import ExportMenu from "#lib/components/ExportMenu.svelte";
   import MiniMap from "#lib/components/MiniMap.svelte";
   import RecipePanel from "#lib/components/RecipePanel.svelte";
@@ -253,6 +253,16 @@
 
   /* This reel, or its recipe, to take elsewhere. */
   let copied = $state(false);
+
+  async function splitCopy(other: string) {
+    try {
+      await notACopy(shortcode, other);
+      if (detail) detail = { ...detail, copies: detail.copies.filter((c) => c.shortcode !== other) };
+      onchanged?.();
+    } catch (err) {
+      onerror((err as Error).message);
+    }
+  }
 
   async function copyNote() {
     let note: string;
@@ -734,6 +744,22 @@
                 </section>
               {/if}
 
+              {#if detail.copies.length}
+                <section class="d-sec">
+                  <p class="d-label">{m.copies_title()}</p>
+                  <p class="d-note">{m.copies_lede()}</p>
+                  {#each detail.copies as c (c.shortcode)}
+                    <div class="d-copy">
+                      <a href={`/item/${encodeURIComponent(c.shortcode)}${page.url.search}`} data-sveltekit-noscroll>
+                        <b>{c.author ? `@${c.author}` : c.shortcode}</b> · {savedDate(c.saved_at)}
+                        {#if c.caption}<span>{c.caption}</span>{/if}
+                      </a>
+                      <button type="button" class="btn sm" onclick={() => splitCopy(c.shortcode)}>{m.copies_not_same()}</button>
+                    </div>
+                  {/each}
+                </section>
+              {/if}
+
               {#if similar.length}
                 <section class="d-sec">
                   <p class="d-label">{m.more_like_this()}</p>
@@ -1097,6 +1123,14 @@
   .d-fact span { font-size: 12px; color: var(--muted); }
 
   .d-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .d-copy { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; }
+  .d-copy a { color: var(--ink-2); text-decoration: none; font-size: 13px; min-width: 0; }
+  .d-copy .btn { flex: 0 0 auto; white-space: nowrap; }
+  .d-copy a span {
+    display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; color: var(--muted);
+  }
+  .d-copy a:hover b { color: var(--accent); }
   /* More like this (#53): a row of small cards that scrolls sideways. */
   .d-similar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x proximity; }
   .d-similar a {

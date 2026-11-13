@@ -65,7 +65,12 @@ CREATE TABLE IF NOT EXISTS item (
   ocr_profile   TEXT,                  -- NULL: tesseract; else provider:model
   -- The language a multilingual model heard, as an ISO 639-1 code. NULL for the
   -- local models, which are English-only and are told so.
-  asr_language  TEXT
+  asr_language  TEXT,
+  -- Reposts (#58, app/dupes): what it shows, as dHashes of three frames (one
+  -- for a photo), and the earliest saved copy of the same video, if another.
+  phash         TEXT,
+  phash_v       INTEGER NOT NULL DEFAULT 0,
+  dup_of        TEXT
 );
 
 CREATE INDEX IF NOT EXISTS item_state_idx    ON item(state);
@@ -76,6 +81,15 @@ CREATE INDEX IF NOT EXISTS item_primary_tag_idx ON item(primary_tag);
 -- /media/<path> looks its reel up by path, to check who may have it.
 CREATE INDEX IF NOT EXISTS item_thumb_path_idx ON item(thumb_path);
 CREATE INDEX IF NOT EXISTS item_media_path_idx ON item(media_path);
+CREATE INDEX IF NOT EXISTS item_dup_of_idx ON item(dup_of) WHERE dup_of IS NOT NULL;
+
+-- Two reels someone said are not copies of one video (#58): never grouped
+-- again. a < b.
+CREATE TABLE IF NOT EXISTS item_split (
+  a TEXT NOT NULL REFERENCES item(shortcode) ON DELETE CASCADE,
+  b TEXT NOT NULL REFERENCES item(shortcode) ON DELETE CASCADE,
+  PRIMARY KEY (a, b)
+);
 
 -- The photos of a carousel post, in order, when every slide is one. thumb_path
 -- is still the first slide's, for the grid; these are for paging through.

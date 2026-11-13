@@ -194,6 +194,28 @@ class TestIsolation(ApiCase):
         r = self.client.get("/api/items", params={"sort": "random", "limit": 1, "q": "brake"})
         self.assertEqual([i["shortcode"] for i in r.json()["items"]], ["ALICE1"])
 
+    def test_copies_and_collapsing_them(self):
+        conn = open_db(self.settings.db_path)
+        conn.execute("UPDATE item SET dup_of = 'ALICE1' WHERE shortcode = 'SHARED'")
+        conn.close()
+        cards = {i["shortcode"]: i["copies"] for i in self.client.get("/api/items").json()["items"]}
+        self.assertEqual(cards, {"SHARED": 2, "ALICE1": 2})
+        detail = self.client.get("/api/items/ALICE1").json()
+        self.assertEqual([c["shortcode"] for c in detail["copies"]], ["SHARED"])
+        # Off until you turn it on; then the first you saved stands for both.
+        self.assertFalse(self.client.get("/api/me").json()["collapse_copies"])
+        r = self.client.put("/api/me", json={"collapse_copies": True})
+        self.assertTrue(r.json()["collapse_copies"])
+        self.assertEqual(self.codes(), {"ALICE1"})
+        # Bob has only one of them: nothing to collapse, and no copies.
+        self.as_user(BOB)
+        self.assertEqual(self.client.get("/api/items/SHARED").json()["copies"], [])
+        self.assertEqual(self.codes(), {"SHARED", "BOBBY1"})
+        self.assertEqual(self.client.post("/api/items/SHARED/not-copy/ALICE1").status_code, 404)
+        self.as_user(ALICE)
+        r = self.client.post("/api/items/SHARED/not-copy/ALICE1")
+        self.assertEqual(r.json(), {"copies": []})
+
     def test_save_time_collections_and_tag_are_yours(self):
         self.client.put("/api/items/SHARED/tag", json={"name": "Weeknight"})
         mine = self.client.get("/api/items/SHARED").json()

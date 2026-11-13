@@ -21,6 +21,8 @@ export interface Item {
   tag: string | null;
   /** What a card shows of the reel's recipe; null when it has none. */
   recipe: RecipeCard | null;
+  /** This reel and its reposts in your library (#58); 1 for most. */
+  copies: number;
   /** Why a search returned it; null without a query. */
   match: SearchMatch | null;
 }
@@ -165,7 +167,17 @@ export interface ItemGame {
   guess: string | null;
 }
 
-export interface ItemDetail extends Omit<Item, "recipe"> {
+/** The same video saved again from another post (#58). */
+export interface Copy {
+  shortcode: string;
+  author: string | null;
+  caption: string | null;
+  saved_at: number | null;
+  thumb: string | null;
+}
+
+export interface ItemDetail extends Omit<Item, "recipe" | "copies"> {
+  copies: Copy[];
   fbid: string | null;
   fail_stage: string | null;
   fail_reason: string | null;
@@ -345,6 +357,8 @@ export interface Me {
   ig_handle: string | null;
   is_admin: boolean;
   auth: AuthState["mode"];
+  /** One card for a reel and its reposts (#58). */
+  collapse_copies: boolean;
 }
 
 /** An account, as an admin sees it: GET /api/users. */
