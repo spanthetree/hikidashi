@@ -53,6 +53,8 @@ _ADDED_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("user_item", "game", "TEXT"),
     ("item", "asr_language", "TEXT"),
     ("item", "ocr_profile", "TEXT"),
+    ("user_item", "opened_at", "INTEGER"),
+    ("user_item", "open_count", "INTEGER NOT NULL DEFAULT 0"),
 )
 
 # Data that moves when a column first appears. Runs once, in the same call that

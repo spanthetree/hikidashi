@@ -168,6 +168,32 @@ class TestIsolation(ApiCase):
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(r.json(), {"items": []})  # no vectors yet
 
+    def test_rediscover(self):
+        conn = open_db(self.settings.db_path)
+        # ALICE1 saved on 13 Nov 2020, 23:30 UTC: the 14th in Tokyo.
+        conn.execute("UPDATE user_item SET saved_at = 1605310200 WHERE shortcode = 'ALICE1'")
+        conn.close()
+
+        def strips(md, tz=0):
+            r = self.client.get("/api/rediscover", params={"md": md, "tz": tz})
+            self.assertEqual(r.status_code, 200, r.text)
+            return {k: [i["shortcode"] for i in v] for k, v in r.json().items()}
+
+        self.assertEqual(strips("11-13")["on_this_day"], ["ALICE1"])
+        self.assertEqual(strips("11-13", -540)["on_this_day"], [])
+        self.assertEqual(strips("11-14", -540)["on_this_day"], ["ALICE1"])
+        # Never opened, oldest first; opening one is yours alone.
+        self.assertEqual(strips("01-01")["never_opened"], ["SHARED", "ALICE1"])
+        self.assertEqual(self.client.post("/api/items/SHARED/opened").status_code, 204)
+        self.assertEqual(strips("01-01")["never_opened"], ["ALICE1"])
+        self.assertEqual(self.client.post("/api/items/BOBBY1/opened").status_code, 404)
+        self.as_user(BOB)
+        self.assertEqual(strips("01-01")["never_opened"], ["SHARED", "BOBBY1"])
+
+    def test_shuffle_picks_from_the_filters(self):
+        r = self.client.get("/api/items", params={"sort": "random", "limit": 1, "q": "brake"})
+        self.assertEqual([i["shortcode"] for i in r.json()["items"]], ["ALICE1"])
+
     def test_save_time_collections_and_tag_are_yours(self):
         self.client.put("/api/items/SHARED/tag", json={"name": "Weeknight"})
         mine = self.client.get("/api/items/SHARED").json()

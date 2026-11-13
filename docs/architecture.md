@@ -322,6 +322,8 @@ erDiagram
     integer first_seen_in FK
     integer tag_id FK
     text game
+    integer opened_at
+    integer open_count
   }
   collection {
     integer user_id PK, FK

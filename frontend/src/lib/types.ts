@@ -398,7 +398,7 @@ export interface MyTokens {
 
 export type NoticeState = { text: string; kind: "ok" | "error" } | null;
 
-export type Sort ="relevance" | "saved_desc" | "saved_asc" | "author";
+export type Sort ="relevance" | "saved_desc" | "saved_asc" | "author" | "random";
 export type FilterKind = "collection" | "tag" | "game" | "hashtag";
 export type View = "library" | "recipes" | "places";
 /** How Places draws its reels. */

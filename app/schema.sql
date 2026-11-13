@@ -107,6 +107,8 @@ CREATE TABLE IF NOT EXISTS user_item (
   first_seen_in INTEGER REFERENCES import_run(id),
   tag_id        INTEGER REFERENCES tag(id) ON DELETE SET NULL,  -- the tag they chose
   game          TEXT,                    -- the game they say it shows; '' for none
+  opened_at     INTEGER,                 -- last opened in Hikidashi; NULL: never (#50)
+  open_count    INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (user_id, shortcode)
 );
 CREATE INDEX IF NOT EXISTS user_item_saved_idx ON user_item(user_id, saved_at DESC);

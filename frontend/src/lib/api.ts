@@ -49,6 +49,18 @@ export const getItem = (shortcode: string) =>
 export const getSimilar = (shortcode: string) =>
   api<{ items: Item[] }>(`/api/items/${encodeURIComponent(shortcode)}/similar`);
 
+/** You opened it, for Rediscover's never-opened strip (#50). */
+export const markOpened = (shortcode: string) =>
+  fetch(`/api/items/${encodeURIComponent(shortcode)}/opened`, { method: "POST" });
+
+/** Old saves to bring back: saved on this day in earlier years, and never opened. */
+export function getRediscover() {
+  const now = new Date();
+  const md = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return api<{ on_this_day: Item[]; never_opened: Item[] }>(
+    `/api/rediscover?md=${md}&tz=${now.getTimezoneOffset()}`);
+}
+
 export const getStats = () => api<Stats>("/api/stats");
 export const getCollections = () => api<Named[]>("/api/collections");
 export const getTags = () => api<Tag[]>("/api/tags");

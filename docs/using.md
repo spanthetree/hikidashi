@@ -26,6 +26,16 @@ A tour of the web app. [Back to the README](../README.md)
 - **Export**, above the grid, downloads what the grid shows
   ([exports](export.md)).
 
+## Rediscover
+
+Above the grid, when nothing is chosen, two strips bring old saves back: **On
+this day**, saved on today's date in earlier years, and **Never opened**, the
+oldest saves you have not opened here yet. Each hides until tomorrow with its
+×. Whether you opened a reel is yours alone; nobody else sees it.
+
+**Shuffle** opens a random reel from whatever the grid is showing, so a
+filter or a search narrows it. **Another** in its sheet picks again.
+
 ## A reel
 
 Open a reel to watch it (muted and looped) beside its caption, transcript and

@@ -829,7 +829,7 @@ def select(user: User, f: Filters) -> Selection:
 
 Selected = Annotated[Selection, Depends(selection)]
 
-SORT = Query("saved_desc", pattern="^(relevance|saved_desc|saved_asc|author)$")
+SORT = Query("saved_desc", pattern="^(relevance|saved_desc|saved_asc|author|random)$")
 # Your library: only your reels, with your save times and tags.
 SOURCE = "item JOIN user_item ui ON ui.shortcode = item.shortcode AND ui.user_id = :me"
 CARD_COLUMNS = f"""item.shortcode, item.permalink, item.author, item.author_name,
@@ -845,6 +845,8 @@ def _order(sel: Selection, sort: str) -> str:
         "saved_desc": "ui.saved_at IS NULL, ui.saved_at DESC",
         "saved_asc": "ui.saved_at IS NULL, ui.saved_at ASC",
         "author": "item.author IS NULL, item.author COLLATE NOCASE",
+        # Shuffle (#50): one at random from whatever the filters chose.
+        "random": "RANDOM()",
         # Best match first. Without a query there is nothing to match, so newest.
         "relevance": (
             "(SELECT key FROM json_each(:hits) WHERE value = item.shortcode)"
@@ -1091,6 +1093,54 @@ def item_detail(shortcode: str, user: Me, request: Request) -> dict[str, Any]:
         # where browser extensions and recipe managers look for it.
         "jsonld": _jsonld(conn, user, shortcode, base_url(request)),
         "listed": shortcode in shopping.listed(conn, user_id=user.id),
+    }
+
+
+@app.post("/api/items/{shortcode}/opened", status_code=204)
+def item_opened(shortcode: str, user: Me) -> Response:
+    """You opened it: for Rediscover's never-opened strip (#50). Yours only."""
+    conn = db()
+    done = conn.execute(
+        """UPDATE user_item SET opened_at = ?, open_count = open_count + 1
+           WHERE user_id = ? AND shortcode = ?""",
+        (int(time.time()), user.id, shortcode),
+    ).rowcount
+    if not done:
+        raise HTTPException(404, NOT_HERE)
+    return Response(status_code=204)
+
+
+REDISCOVER = 12
+
+
+@app.get("/api/rediscover")
+def rediscover(
+    user: Me,
+    md: str = Query(..., pattern=r"^\d\d-\d\d$"),
+    tz: int = Query(0, ge=-840, le=840),
+) -> dict[str, Any]:
+    """Old saves to bring back (#50): those saved on this day (`md`, MM-DD,
+    in the browser's time zone, `tz` minutes behind UTC as getTimezoneOffset
+    says) in earlier years, and those never opened here, oldest first."""
+    conn = db()
+    sel = Selection(conn, [], {"me": user.id}, None, {})
+    local = "ui.saved_at - :tz * 60, 'unixepoch'"
+    on_day = conn.execute(
+        f"""SELECT {CARD_COLUMNS} FROM {SOURCE}
+            WHERE strftime('%m-%d', {local}) = :md
+              AND strftime('%Y', {local}) < strftime('%Y', 'now', :shift)
+            ORDER BY ui.saved_at DESC LIMIT :n""",
+        {"me": user.id, "md": md, "tz": tz, "shift": f"{-tz} minutes", "n": REDISCOVER},
+    ).fetchall()
+    unopened = conn.execute(
+        f"""SELECT {CARD_COLUMNS} FROM {SOURCE}
+            WHERE ui.opened_at IS NULL AND ui.saved_at IS NOT NULL AND item.state != 'failed'
+            ORDER BY ui.saved_at ASC LIMIT :n""",
+        {"me": user.id, "n": REDISCOVER},
+    ).fetchall()
+    return {
+        "on_this_day": _cards(conn, user, sel, on_day),
+        "never_opened": _cards(conn, user, sel, unopened),
     }
 
 

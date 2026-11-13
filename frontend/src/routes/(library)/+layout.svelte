@@ -12,12 +12,13 @@
   import ImportDialog from "#lib/components/ImportDialog.svelte";
   import MapView from "#lib/components/MapView.svelte";
   import Notice from "#lib/components/Notice.svelte";
+  import Rediscover from "#lib/components/Rediscover.svelte";
   import Rich from "#lib/components/Rich.svelte";
   import Sidebar from "#lib/components/Sidebar.svelte";
   import Topbar from "#lib/components/Topbar.svelte";
-  import { addMatchingToList, addToList, exportUrl } from "#lib/api.js";
+  import { addMatchingToList, addToList, exportUrl, getItems } from "#lib/api.js";
   import {
-    activeFilters, filterUrl, mapParams, readFilters, recipeFiltered, toSearch, withLayout, withPick,
+    activeFilters, apiParams, filterUrl, mapParams, readFilters, recipeFiltered, toSearch, withLayout, withPick,
     withQuery, withMedia, withoutFilters, withTime, withView, type Filters,
   } from "#lib/filters.js";
   import { nf } from "#lib/format.js";
@@ -147,6 +148,24 @@
   function close() {
     if (openedFromGrid) history.back();
     else void go(libraryUrl(filters), { stay: true, replace: true });
+  }
+
+  /* Shuffle (#50): a random reel from whatever the filters show. "Another"
+     in its sheet replaces it, so Back still leaves the shuffle in one step. */
+  const shuffling = $derived(page.url.searchParams.has("shuffle"));
+  async function shuffle() {
+    const p = apiParams(filters, 0, 1);
+    p.set("sort", "random");
+    try {
+      const [item] = (await getItems(p)).items;
+      if (!item) return;
+      const s = new URLSearchParams(search);
+      s.set("shuffle", "1");
+      await goto(`/item/${encodeURIComponent(item.shortcode)}?${s}`,
+                 { replace: shuffling, reset: false });
+    } catch (err) {
+      notice = { text: m.notice_open_failed({ error: (err as Error).message }), kind: "error" };
+    }
   }
 
   function sheetFilter(kind: FilterKind, value: string) {
@@ -288,6 +307,10 @@
       if (sentinelEl && sentinelEl.getBoundingClientRect().top < innerHeight + AHEAD) library.more();
     });
   });
+
+  // The library as it opens, nothing chosen: where Rediscover's strips go.
+  const home = $derived(filters.view === "library" && !chosen && !filters.q && !filters.media
+                        && library.total > 0 && !selecting);
 
   const countText = $derived.by(() => {
     if (library.pending && !library.items.length) return m.loading();
@@ -526,7 +549,12 @@
           </button>
         {/each}
         <span class="upload-slot">
-          {#if library.total}<ExportMenu groups={exports} />{/if}
+          {#if library.total}
+            <button type="button" class="btn sm" title={m.shuffle_title()} onclick={shuffle}>
+              <Icon name="shuffle" size={14} /> {m.shuffle()}
+            </button>
+            <ExportMenu groups={exports} />
+          {/if}
           <button type="button" class="btn sm" aria-haspopup="dialog" onclick={openImport}>
             <Icon name="import" size={14} /> {imports.busy ? m.importing() : m.import_button()}
           </button>
@@ -534,6 +562,8 @@
       </div>
 
       <Notice bind:notice />
+
+      {#if home}<Rediscover {search} />{/if}
 
       {#if places && mapped}
         <MapView {filters} {search} active={shortcode} onmove={mapMoved} />
@@ -619,7 +649,8 @@
 {#if shortcode}
   <DetailSheet {shortcode} {preview} recipeFirst={recipes} onclose={close} onclosed={returnFocus}
                onfilter={sheetFilter} ontagged={tagged} onerror={sheetError}
-               onchanged={recipeChanged} onremoved={removed} />
+               onchanged={recipeChanged} onremoved={removed}
+               onanother={shuffling ? shuffle : undefined} />
 {/if}
 
 {@render children()}

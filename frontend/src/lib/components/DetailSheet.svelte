@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
   import { page } from "$app/state";
-  import { clearGame, clearTag, exportUrl, getItem, getNote, getSimilar, removeItem, retryFetch, setGame, setTag } from "#lib/api.js";
+  import { clearGame, clearTag, exportUrl, getItem, getNote, getSimilar, markOpened, removeItem, retryFetch, setGame, setTag } from "#lib/api.js";
   import ExportMenu from "#lib/components/ExportMenu.svelte";
   import MiniMap from "#lib/components/MiniMap.svelte";
   import RecipePanel from "#lib/components/RecipePanel.svelte";
@@ -18,7 +18,7 @@
   import type { FilterKind, Item, ItemDetail, ItemGame, ItemTag, Recipe, TagChoice } from "#lib/types.js";
 
   let { shortcode, preview, recipeFirst = false, onclose, onclosed, onfilter, ontagged,
-        onerror, onchanged, onremoved }: {
+        onerror, onchanged, onremoved, onanother }: {
     shortcode: string;
     /** The grid's copy of this reel, if it is loaded: enough to draw the
         picture and the header at once while the full record is fetched. */
@@ -38,6 +38,8 @@
     onchanged?: () => void;
     /** It is out of your library now; `name` is what the sheet called it. */
     onremoved?: (shortcode: string, name: string) => void;
+    /** Opened by Shuffle: another random reel in its place (#50). */
+    onanother?: () => void;
   } = $props();
 
   let detail = $state<ItemDetail | null>(null);
@@ -61,6 +63,7 @@
       })
       .catch((err) => { if (!stale) onerror(err.message); });
     similar = [];
+    void markOpened(code).catch(() => {});
     // Extra, not the reel itself: no error shown when it fails.
     getSimilar(code).then((r) => { if (!stale) similar = r.items; }).catch(() => {});
     return () => { stale = true; };
@@ -687,7 +690,8 @@
                       <a href={`/item/${encodeURIComponent(s.shortcode)}${page.url.search}`}
                          data-sveltekit-noscroll title={s.caption ?? s.shortcode}
                          style:--tint={tint(s.shortcode)}>
-                        {#if s.thumb}<img src={s.thumb} alt="" loading="lazy">{/if}
+                        {#if s.thumb}<img src={s.thumb} alt="" loading="lazy"
+                                             onerror={(e) => (e.currentTarget as HTMLElement).remove()}>{/if}
                         <span>{s.author_name || (s.author ? `@${s.author}` : s.shortcode)}</span>
                       </a>
                     {/each}
@@ -715,6 +719,11 @@
           <a class="btn" href={detail.profile_url} target="_blank" rel="noopener noreferrer">
             {detail.author ? `@${detail.author}` : m.sheet_creator()}
           </a>
+        {/if}
+        {#if onanother}
+          <button class="btn" type="button" onclick={onanother}>
+            <Icon name="shuffle" size={14} /> {m.shuffle_another()}
+          </button>
         {/if}
         {#if detail}
           <ExportMenu groups={exports} up small={false} />
@@ -1031,7 +1040,7 @@
     color: var(--ink-2); text-decoration: none; font-size: 11.5px; scroll-snap-align: start;
   }
   .d-similar img, .d-similar a::before {
-    width: 96px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: var(--radius-sm, 6px);
+    width: 96px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--radius-sm, 6px);
     background: var(--tint, var(--surface-2));
   }
   .d-similar a:not(:has(img))::before { content: ""; display: block; }
