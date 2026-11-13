@@ -28,8 +28,10 @@ from .fetcher import (
     FetchError,
     download_media,
     download_thumbnail,
+    has_video,
     is_carousel,
     probe,
+    probe_dimensions,
     probe_duration,
     probe_slides,
     shard,
@@ -37,6 +39,26 @@ from .fetcher import (
 
 # Permanent failures are not worth retrying; transient ones get a few goes.
 MAX_ATTEMPTS = 3
+
+# item.media_note for a post with no video to download (#8). Any other note is
+# why a video's download failed, as a FetchError reason.
+PHOTO = "photo"
+
+
+def _media_note(info: dict[str, Any], exc: Exception) -> str:
+    """Why there is no mp4: a photo post has none, else the download failed."""
+    if not has_video(info):
+        return PHOTO
+    reason = exc.reason if isinstance(exc, FetchError) else f"{type(exc).__name__}: {exc}"
+    return reason[:200]
+
+
+def _thumb_size(got: Fetched, media_dir: Path, thumb_rel: str | None) -> None:
+    """A photo post reports no size: read it off the saved thumbnail."""
+    if got.width is None and thumb_rel:
+        size = probe_dimensions(media_dir / thumb_rel)
+        if size:
+            got.width, got.height = size
 
 
 @dataclass
@@ -96,6 +118,7 @@ def _record_success(
     thumb_rel: str | None,
     media_rel: str | None,
     size: int | None,
+    media_note: str | None = None,
 ) -> None:
     """Fill gaps and set the fetched columns. Never overwrites hand-written data.
 
@@ -116,6 +139,8 @@ def _record_success(
                  thumb_path    = COALESCE(:thumb, thumb_path),
                  media_path    = COALESCE(:media, media_path),
                  bytes         = COALESCE(:bytes, bytes),
+                 media_note    = CASE WHEN :media IS NOT NULL THEN NULL
+                                      ELSE COALESCE(:note, media_note) END,
                  fetch_meta    = :fetch_meta,
                  fetch_v       = :v,
                  state         = 'fetched',
@@ -134,6 +159,7 @@ def _record_success(
                 "thumb": thumb_rel,
                 "media": media_rel,
                 "bytes": size,
+                "note": media_note,
                 "fetch_meta": got.raw_json(),
                 "v": FETCH_V,
                 "shortcode": shortcode,
@@ -246,7 +272,9 @@ def enrich(
                         progress.thumbs += 1
                 except FetchError:
                     pass  # metadata is still worth keeping without art
+            _thumb_size(got, media_dir, thumb_rel)
 
+            note = None
             if with_media:
                 rel = f"video/{shard(shortcode)}/{shortcode}.mp4"
                 try:
@@ -257,10 +285,11 @@ def enrich(
                     with lock:
                         progress.media += 1
                         progress.bytes += size
-                except FetchError:
-                    pass  # a missing video does not undo a good fetch
+                except Exception as exc:
+                    # A missing video does not undo a good fetch, but say why.
+                    note = _media_note(got.raw, exc)
 
-            _record_success(conn, lock, shortcode, got, thumb_rel, media_rel, size)
+            _record_success(conn, lock, shortcode, got, thumb_rel, media_rel, size, note)
             slides = (
                 save_slides(conn, lock, media_dir, shortcode, url) if is_carousel(got.raw) else 0
             )
@@ -282,16 +311,17 @@ def pending_media(conn: sqlite3.Connection, *, limit: int | None = None) -> list
 
     Separate from `pending` on purpose: once an item has been fetched, it is no
     longer behind on fetch_v, so a later --media run would otherwise find
-    nothing to do. Photo posts are included — they simply fail the download and
-    keep everything else they already have — except carousels whose slides are
-    saved, which have all there is. `carousel` marks the ones to page through.
+    nothing to do. Not photo posts already known to be photos, nor carousels
+    whose slides are saved: they have all there is. `carousel` marks the ones
+    to page through, `video` the ones yt-dlp listed a video for.
     """
-    sql = """SELECT shortcode, permalink, attempts,
+    sql = """SELECT shortcode, permalink, attempts, fetch_meta,
                     COALESCE(json_extract(fetch_meta, '$.playlist_count'), 0) > 1
                     AND COALESCE(json_array_length(fetch_meta, '$.formats'), 0) = 0
                       AS carousel
              FROM item
              WHERE media_path IS NULL AND state != 'failed'
+               AND media_note IS NOT 'photo'
                AND NOT EXISTS (SELECT 1 FROM item_slide s
                                WHERE s.shortcode = item.shortcode)
              ORDER BY saved_at IS NULL, saved_at DESC"""
@@ -340,17 +370,21 @@ def fetch_media(
                     return
             try:
                 size = download_media(url, media_dir / rel)
-            except (FetchError, Exception) as exc:
-                # A photo post has no video. That is not a failure of the item.
+            except Exception as exc:
+                # Not a failure of the item: it keeps what it has. A photo post
+                # has no video; anything else records why the download failed.
+                note = _media_note(json.loads(row["fetch_meta"] or "{}"), exc)
                 with lock:
+                    conn.execute(
+                        "UPDATE item SET media_note = ? WHERE shortcode = ?", (note, shortcode)
+                    )
                     progress.skipped += 1
-                    del exc
                 return
 
             seconds = probe_duration(media_dir / rel)
             with lock:
                 conn.execute(
-                    """UPDATE item SET media_path = ?, bytes = ?,
+                    """UPDATE item SET media_path = ?, bytes = ?, media_note = NULL,
                               duration = COALESCE(?, duration), ocr_v = 0
                        WHERE shortcode = ?""",
                     (rel, size, seconds, shortcode),
@@ -366,6 +400,37 @@ def fetch_media(
         list(pool.map(handle, items))
 
     return progress
+
+
+def fill_dimensions(conn: sqlite3.Connection, media_dir: Path) -> int:
+    """Give fetched photo posts and carousels their width and height from the
+    saved thumbnail, since yt-dlp reports none for them. Returns how many."""
+    rows = conn.execute(
+        """SELECT shortcode, thumb_path FROM item
+           WHERE width IS NULL AND thumb_path IS NOT NULL AND state != 'failed'"""
+    ).fetchall()
+    filled = 0
+    for row in rows:
+        size = probe_dimensions(media_dir / row["thumb_path"])
+        if size:
+            conn.execute(
+                "UPDATE item SET width = ?, height = ? WHERE shortcode = ?",
+                (*size, row["shortcode"]),
+            )
+            filled += 1
+    return filled
+
+
+def media_notes(conn: sqlite3.Connection) -> list[tuple[str, int]]:
+    """Why fetched reels have no video, most common first."""
+    return [
+        (r[0], r[1])
+        for r in conn.execute(
+            """SELECT media_note, COUNT(*) FROM item
+               WHERE media_note IS NOT NULL AND media_path IS NULL
+               GROUP BY 1 ORDER BY 2 DESC, 1"""
+        )
+    ]
 
 
 def summary(conn: sqlite3.Connection) -> dict[str, int]:

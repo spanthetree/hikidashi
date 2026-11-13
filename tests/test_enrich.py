@@ -487,5 +487,115 @@ class TestResume(EnrichCase):
         self.assertEqual(len(worker.pending(self.conn)), 1, "the other should requeue")
 
 
+VIDEO = {**INFO, "formats": [{"format_id": "1", "ext": "mp4"}]}
+PHOTO = {k: v for k, v in INFO.items() if k not in ("width", "height", "duration")}
+
+
+class TestMediaNote(EnrichCase):
+    """#8: a reel with no mp4 says why, and a photo post is not a failed download."""
+
+    def enrich_with(self, info, download):
+        with (
+            mock.patch.object(worker, "probe", return_value=from_info(info)),
+            mock.patch.object(worker, "download_thumbnail", return_value=1),
+            mock.patch.object(worker, "download_media", side_effect=download),
+            mock.patch.object(worker, "probe_duration", return_value=5),
+            mock.patch.object(worker, "probe_dimensions", return_value=(1080, 1350)) as dims,
+        ):
+            self.run_enrich(with_media=True)
+        return dims
+
+    def test_a_photo_post_is_noted_as_a_photo(self):
+        self.enrich_with(PHOTO, FetchError("no video formats"))
+        r = self.row()
+        self.assertEqual((r["state"], r["media_note"]), ("fetched", worker.PHOTO))
+        self.assertIsNone(r["media_path"])
+
+    def test_a_failed_video_download_records_why(self):
+        self.enrich_with(VIDEO, FetchError("timeout"))
+        r = self.row()
+        self.assertEqual((r["state"], r["media_note"]), ("fetched", "timeout"))
+
+    def test_an_unexpected_error_is_a_note_too(self):
+        self.enrich_with(VIDEO, OSError("disk full"))
+        self.assertEqual(self.row()["media_note"], "OSError: disk full")
+
+    def test_a_download_clears_the_note(self):
+        self.conn.execute("UPDATE item SET media_note = 'timeout'")
+        with (
+            mock.patch.object(worker, "probe", return_value=from_info(VIDEO)),
+            mock.patch.object(worker, "download_thumbnail", return_value=1),
+            mock.patch.object(worker, "download_media", return_value=10),
+            mock.patch.object(worker, "probe_duration", return_value=5),
+        ):
+            self.run_enrich(with_media=True)
+        self.assertIsNone(self.row()["media_note"])
+
+    def test_a_photo_takes_its_size_from_the_thumbnail(self):
+        dims = self.enrich_with(PHOTO, FetchError("no video formats"))
+        r = self.row()
+        self.assertEqual((r["width"], r["height"]), (1080, 1350))
+        dims.assert_called()
+
+    def test_a_video_keeps_the_size_it_reported(self):
+        dims = self.enrich_with(VIDEO, lambda url, dest: 10)
+        self.assertEqual((self.row()["width"], self.row()["height"]), (1080, 1920))
+        dims.assert_not_called()
+
+    def fetched(self, info):
+        with (
+            mock.patch.object(worker, "probe", return_value=from_info(info)),
+            mock.patch.object(worker, "download_thumbnail", return_value=1),
+            mock.patch.object(worker, "probe_dimensions", return_value=None),
+        ):
+            self.run_enrich()
+
+    def media_only(self, download):
+        with (
+            mock.patch.object(worker, "download_media", side_effect=download),
+            mock.patch.object(worker, "probe_duration", return_value=5),
+        ):
+            return worker.fetch_media(self.conn, self.media, concurrency=1, delay=0)
+
+    def test_media_only_stops_asking_for_a_photo(self):
+        self.fetched(PHOTO)
+        self.media_only(FetchError("no video formats"))
+        self.assertEqual(self.row()["media_note"], worker.PHOTO)
+        self.assertEqual(self.media_only(AssertionError("asked again")).total, 0)
+
+    def test_media_only_keeps_trying_a_failed_video_and_says_why(self):
+        self.fetched(VIDEO)
+        self.media_only(FetchError("rate-limited"))
+        self.assertEqual(self.row()["media_note"], "rate-limited")
+        self.assertEqual(worker.media_notes(self.conn), [("rate-limited", 2)])
+        again = self.media_only(lambda url, dest: 10)
+        self.assertEqual(again.media, 2)
+        self.assertIsNone(self.row()["media_note"])
+
+    def test_fill_dimensions_measures_thumbnails(self):
+        self.fetched(PHOTO)
+        with mock.patch.object(worker, "probe_dimensions", return_value=(640, 800)):
+            self.assertEqual(worker.fill_dimensions(self.conn, self.media), 2)
+            self.assertEqual(worker.fill_dimensions(self.conn, self.media), 0)
+        self.assertEqual(self.row()["width"], 640)
+
+
+class TestProbeDimensions(unittest.TestCase):
+    def test_reads_ffprobe_output(self):
+        done = mock.Mock(stdout="1080x1350\n")
+        with mock.patch("subprocess.run", return_value=done):
+            self.assertEqual(fetcher.probe_dimensions(Path("x.jpg")), (1080, 1350))
+
+    def test_nothing_readable_is_none(self):
+        for out in ("", "N/A", "0x0\n"):
+            done = mock.Mock(stdout=out)
+            with mock.patch("subprocess.run", return_value=done):
+                self.assertIsNone(fetcher.probe_dimensions(Path("x.jpg")))
+
+    def test_no_ffprobe_is_none(self):
+        with mock.patch("subprocess.run", side_effect=FileNotFoundError):
+            self.assertIsNone(fetcher.probe_dimensions(Path("x.jpg")))
+
+
 if __name__ == "__main__":
     unittest.main()

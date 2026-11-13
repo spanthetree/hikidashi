@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS item (
   game_guess    TEXT,                    -- a game it may show, for its savers to confirm
   thumb_path    TEXT,                    -- relative to HIKIDASHI_MEDIA
   media_path    TEXT,                    -- original mp4, never re-encoded
+  media_note    TEXT,                    -- why there is no mp4: 'photo', or the download error (#8)
   bytes         INTEGER,
   duration      INTEGER,                 -- seconds, from the fetch
   width         INTEGER,

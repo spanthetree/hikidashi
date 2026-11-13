@@ -154,6 +154,11 @@ def from_info(info: dict[str, Any]) -> Fetched:
     )
 
 
+def has_video(info: dict[str, Any]) -> bool:
+    """yt-dlp lists formats only for a video: a photo post has none to download."""
+    return bool(info.get("formats"))
+
+
 def is_carousel(info: dict[str, Any]) -> bool:
     """A post of several slides whose first is a photo. Whether the rest are
     photos too only the full list can say: see probe_slides."""
@@ -249,6 +254,36 @@ def probe_duration(path: Path) -> int | None:
         return int(float(proc.stdout.strip()))
     except (TypeError, ValueError):
         return None
+
+
+def probe_dimensions(path: Path) -> tuple[int, int] | None:
+    """An image's or video's width and height, read with ffprobe. A photo post
+    reports no size in its metadata, so its saved thumbnail is the source."""
+    try:
+        proc = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "stream=width,height",
+                "-of",
+                "csv=p=0:s=x",
+                str(path),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    try:
+        w, h = (int(n) for n in proc.stdout.strip().split("x")[:2])
+    except ValueError:
+        return None
+    return (w, h) if w > 0 and h > 0 else None
 
 
 def download_media(url: str, dest: Path, *, timeout: int = 600) -> int:

@@ -223,7 +223,7 @@ their keys; the schema has every column, with a comment on each.
 ```mermaid
 erDiagram
   item {
-    text shortcode PK "and 46 more columns"
+    text shortcode PK "and 47 more columns"
     integer first_seen_in FK
   }
   item_slide {
