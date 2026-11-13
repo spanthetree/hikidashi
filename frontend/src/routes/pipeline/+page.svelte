@@ -5,6 +5,7 @@
   } from "#lib/api.js";
   import AiProviders from "#lib/components/AiProviders.svelte";
   import Notice from "#lib/components/Notice.svelte";
+  import InfoHead from "#lib/components/InfoHead.svelte";
   import Rich from "#lib/components/Rich.svelte";
   import Topbar from "#lib/components/Topbar.svelte";
   import { copyFailure, copyText } from "#lib/clipboard.js";
@@ -152,8 +153,7 @@
 <main class="page pipeline">
   <a class="back" href="/">{m.logs_back()}</a>
   <header>
-    <h1>{m.pl_title()}</h1>
-    <p class="lede">{m.pl_lede()}</p>
+    <InfoHead level={1} title={m.pl_title()}>{m.pl_lede()}</InfoHead>
   </header>
 
   <Notice bind:notice />
@@ -211,8 +211,7 @@
     {/if}
 
     <section class="p-sec" aria-labelledby="p-tokens">
-      <h2 id="p-tokens">{m.pl_tokens_title()}</h2>
-      <p class="p-lede"><Rich parts={m.pl_tokens_lede.parts()} /></p>
+      <InfoHead id="p-tokens" title={m.pl_tokens_title()}><Rich parts={m.pl_tokens_lede.parts()} /></InfoHead>
       <form class="p-make" onsubmit={makeToken}>
         <input id="p-token-name" type="text" maxlength="64" required autocomplete="off"
                aria-label={m.pl_token_name()} placeholder={m.pl_token_placeholder()} bind:value={tokenName}>
@@ -253,8 +252,7 @@
     </section>
 
     <section class="p-sec" aria-labelledby="p-api-tokens">
-      <h2 id="p-api-tokens">{m.pl_api_tokens_title()}</h2>
-      <p class="p-lede"><Rich parts={m.pl_api_tokens_lede.parts()} /></p>
+      <InfoHead id="p-api-tokens" title={m.pl_api_tokens_title()}><Rich parts={m.pl_api_tokens_lede.parts()} /></InfoHead>
       {#each apiTokens as t (t.id)}
         <div class="p-token">
           <div class="p-token-text">
@@ -347,8 +345,7 @@
     </section>
 
     <section class="p-sec" id="ai-default" aria-labelledby="p-ai-default">
-      <h2 id="p-ai-default">{m.ai_default_title()}</h2>
-      <p class="p-lede">{m.ai_default_lede()}</p>
+      <InfoHead id="p-ai-default" title={m.ai_default_title()}>{m.ai_default_lede()}</InfoHead>
       <AiProviders whose="server" bind:notice />
     </section>
 
@@ -372,7 +369,7 @@
     border-radius: var(--radius);
   }
 
-  .p-sec h2 { margin: 0; font-size: 15px; }
+  .p-sec :global(h2) { margin: 0; font-size: 15px; }
 
   .p-worker { display: flex; flex-direction: column; gap: 4px; padding-top: 10px; border-top: 1px solid var(--rule); }
   .p-worker:first-of-type { padding-top: 0; border-top: 0; }
@@ -420,7 +417,6 @@
   .p-failures li { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 13px; overflow-wrap: anywhere; }
   .p-failures code { font-size: 12px; }
 
-  .p-lede { margin: 0; font-size: 13.5px; color: var(--ink-2); }
 
   .p-make, .p-row { display: flex; gap: 10px; align-items: center; }
 
