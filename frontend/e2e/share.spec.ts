@@ -8,6 +8,17 @@ const shared = (code: string) =>
   `/share?title=Reel&text=${encodeURIComponent(`Look at this https://www.instagram.com/reel/${code}/?igsh=x`)}`;
 
 test.describe("share to Hikidashi", () => {
+  // The server is shared with the other tests, which count people's reels.
+  test.afterEach(async ({ playwright }) => {
+    for (const person of [PEOPLE.alice, PEOPLE.bob]) {
+      const api = await playwright.request.newContext({
+        baseURL: test.info().project.use.baseURL, storageState: person.state,
+      });
+      for (const code of ["SHARE1", "SHARE2", "SHARE3"]) await api.delete(`/api/items/${code}`);
+      await api.dispose();
+    }
+  });
+
   test("a shared reel lands in the library, once", async ({ browser }) => {
     const bob = await browser.newPage({ storageState: PEOPLE.bob.state });
     await bob.goto(shared("SHARE1"));
