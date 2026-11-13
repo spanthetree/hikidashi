@@ -821,5 +821,15 @@
   "ai_applies_default_hosted": "あなたのリールはシステムの既定に従います：ホスト型AI（{providers}）。",
   "ai_applies_default_workers": "あなたのリールはシステムの既定に従います：ワーカー。",
   "ai_default_title": "AIのシステム既定",
-  "ai_default_lede": "「システムの既定」を選んでいる人のリールの処理方法です：ワーカー、またはサーバー自身のプロバイダーとキーによるホスト型AI。あなた自身のライブラリは、他の人と同じく、アカウントページでの選択に従います。"
+  "ai_default_lede": "「システムの既定」を選んでいる人のリールの処理方法です：ワーカー、またはサーバー自身のプロバイダーとキーによるホスト型AI。あなた自身のライブラリは、他の人と同じく、アカウントページでの選択に従います。",
+  "add_link_label": "または、リンクから1件追加",
+  "add_link_button": "追加",
+  "add_link_adding": "追加しています…",
+  "add_link_added": "追加しました。いま取得しています…",
+  "add_link_had": "このリールはすでにライブラリにあります。",
+  "add_link_open": "開く",
+  "add_link_failed": "追加できませんでした: {error}",
+  "share_title": "Hikidashiに追加",
+  "share_none": "追加するものがありません。共有にリンクが含まれていませんでした。",
+  "share_library": "ライブラリへ"
 }

@@ -836,5 +836,15 @@
   "ai_applies_default_hosted": "Your reels follow the system default: hosted AI ({providers}).",
   "ai_applies_default_workers": "Your reels follow the system default: workers.",
   "ai_default_title": "System default for AI",
-  "ai_default_lede": "How the reels of everyone on System default are processed: workers, or hosted AI with the server's own provider and key. Your own library follows your choice on your account page, like everyone else's."
+  "ai_default_lede": "How the reels of everyone on System default are processed: workers, or hosted AI with the server's own provider and key. Your own library follows your choice on your account page, like everyone else's.",
+  "add_link_label": "Or add one reel by its link",
+  "add_link_button": "Add",
+  "add_link_adding": "Adding…",
+  "add_link_added": "Added. Fetching it now…",
+  "add_link_had": "That one is already in your library.",
+  "add_link_open": "Open it",
+  "add_link_failed": "Couldn't add it: {error}",
+  "share_title": "Add to Hikidashi",
+  "share_none": "Nothing to add: the share had no link in it.",
+  "share_library": "Your library"
 }

@@ -708,6 +708,67 @@ class TestImport(ApiCase):
         self.assertIsNone(self.main._locator)
 
 
+class TestAddByLink(ApiCase):
+    """#52: the share sheet, the Add by link field and an iOS Shortcut all post a
+    link to /api/items, which adds the reel to the sender's library only."""
+
+    def add(self, url):
+        return self.client.post("/api/items", json={"url": url})
+
+    def test_a_shared_link_lands_in_your_library_only(self):
+        self.as_user(BOB)
+        with mock.patch.object(self.main.jobs, "wake") as wake:
+            r = self.add("Look at this! https://www.instagram.com/reel/NEWONE/?igsh=abc")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json(), {"shortcode": "NEWONE", "added": True})
+        wake.assert_called_once()
+        self.assertIn("NEWONE", self.codes())
+        self.as_user(ALICE)
+        self.assertNotIn("NEWONE", self.codes())
+
+    def test_adding_twice_changes_nothing(self):
+        self.add(R + "NEWONE/")
+        conn = open_db(self.settings.db_path)
+        before = conn.execute("SELECT * FROM user_item WHERE shortcode = 'NEWONE'").fetchall()
+        r = self.add(R + "NEWONE/")
+        after = conn.execute("SELECT * FROM user_item WHERE shortcode = 'NEWONE'").fetchall()
+        self.assertEqual(r.json(), {"shortcode": "NEWONE", "added": False})
+        self.assertEqual([tuple(x) for x in before], [tuple(x) for x in after])
+
+    def test_a_reel_someone_else_has_is_shared_not_copied(self):
+        r = self.add("https://instagram.com/p/BOBBY1")
+        self.assertEqual(r.json(), {"shortcode": "BOBBY1", "added": True})
+        conn = open_db(self.settings.db_path)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM item").fetchone()[0], 3)
+        row = conn.execute(
+            """SELECT added_via, first_seen_in FROM user_item
+               WHERE user_id = 1 AND shortcode = 'BOBBY1'"""
+        ).fetchone()
+        self.assertEqual(tuple(row), ("link", None))
+
+    def test_a_new_reel_waits_for_the_fetch(self):
+        self.add(R + "NEWONE/")
+        conn = open_db(self.settings.db_path)
+        row = conn.execute(
+            "SELECT state, permalink FROM item WHERE shortcode = 'NEWONE'"
+        ).fetchone()
+        self.assertEqual(tuple(row), ("imported", R + "NEWONE/"))
+
+    def test_a_later_export_only_pulls_the_save_time_back(self):
+        self.add(R + "NEWONE/")
+        conn = open_db(self.settings.db_path)
+        import_export(conn, export(self.dir / "later.zip", [("NEWONE", 50, "now with a caption")]))
+        row = conn.execute(
+            """SELECT ui.saved_at, ui.added_via, item.caption FROM user_item ui
+               JOIN item USING (shortcode) WHERE ui.user_id = 1 AND shortcode = 'NEWONE'"""
+        ).fetchone()
+        self.assertEqual(tuple(row), (50, "link", "now with a caption"))
+
+    def test_anything_else_is_refused(self):
+        for text in ("", "hello", "https://www.tiktok.com/@x/video/1", "https://instagram.com/x"):
+            self.assertEqual(self.add(text).status_code, 400, text)
+
+
 class TestPipeline(ApiCase):
     def fail_all(self, stage="enrich"):
         from app.jobs.queue import MAX_ATTEMPTS, LocalJobs
@@ -972,6 +1033,13 @@ class TestCrossSite(SignInCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(self.client.delete("/api/items/SHARED/tag").status_code, 200)
 
+    def test_another_site_cannot_add_a_link(self):
+        self.claim()
+        r = self.client.post(
+            "/api/items", json={"url": R + "NEWONE/"}, headers={"Sec-Fetch-Site": "cross-site"}
+        )
+        self.assertEqual(r.status_code, 403)
+
     def test_without_accounts_too(self):
         self.settings = dataclasses.replace(self.settings, auth="none")
         with mock.patch.object(self.main, "settings", self.settings):
@@ -1037,6 +1105,14 @@ class TestTokens(SignInCase):
         token = self.token("bob", "write:library")
         r = self.call("PUT", "/api/items/SHARED/tag", token, json={"name": "Food"})
         self.assertEqual(r.status_code, 200, r.text)
+
+    def test_a_shortcut_adds_a_link_with_write_library(self):
+        """The iOS Shortcut (#52): a token, no cookie, no Origin."""
+        url = {"url": R + "NEWONE/"}
+        r = self.call("POST", "/api/items", self.token("bob", "read:library"), json=url)
+        self.assertEqual(r.status_code, 403)
+        r = self.call("POST", "/api/items", self.token("bob", "write:library"), json=url)
+        self.assertEqual(r.json(), {"shortcode": "NEWONE", "added": True})
 
     def test_a_users_token_never_reaches_admin(self):
         token = self.token("bob", "write:library")

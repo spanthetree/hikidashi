@@ -355,14 +355,10 @@ erDiagram
     integer created_at
   }
   user_item {
-    integer user_id PK, FK
+    integer user_id PK, FK "and 5 more columns"
     text shortcode PK, FK
-    integer saved_at
     integer first_seen_in FK
     integer tag_id FK
-    text game
-    integer opened_at
-    integer open_count
   }
   collection {
     integer user_id PK, FK

@@ -103,6 +103,7 @@ reverse proxy with HTTPS and set `HIKIDASHI_ORIGIN` to its public address
 
 On your own network, plain HTTP (`http://192.168.1.20:8080`) works, with two
 limits, because browsers keep some features to HTTPS pages: the map's **Near
-me** can't find you, and the copy buttons fall back to an older way of
-copying. If the browser refuses that too, the button says so and selects the
+me** can't find you, the app can't be installed, so it isn't in your phone's
+share sheet ([adding from your phone](using.md#adding-a-reel-from-your-phone)),
+and the copy buttons fall back to an older way of copying. If the browser refuses that too, the button says so and selects the
 text for you to copy.

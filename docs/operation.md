@@ -573,6 +573,23 @@ no rows, and a newer export adds only what is new. Every new reel is
 from there. The counts are of your library: a reel someone else saved first is
 still `inserted` for you, though no new `item` row or download was made.
 
+### One reel by its link
+
+`POST /api/items {"url": …}` (#52) is the share sheet's way in, through the
+`/share` page that the web app manifest names as its share target, and the
+**Add by link** field's, and a script's with a `write:library` token. It reads
+the first Instagram post link in the text, upserts the `item` the same way an
+import does (a new one is `imported` with just its permalink), and adds a
+`user_item` saved now, with `added_via = 'link'` and no `first_seen_in`. A
+repeat is a no-op that answers `added: false`. Then it touches the wake file,
+and the workers fetch it like any new reel. A later export finds the row and
+only pulls `saved_at` back to the real save time.
+
+The service worker that makes the app installable caches the app shell only
+(the hashed build, the icons, `/`). It never answers for `/api/` or `/media/`,
+and pages come from the network first, so a new release is never hidden
+behind an old `index.html`.
+
 ## Sign-in and requests
 
 `HIKIDASHI_AUTH=local`. Under `none`, the session steps are skipped and the

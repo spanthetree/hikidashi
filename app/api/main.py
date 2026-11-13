@@ -36,7 +36,7 @@ from app.api import ai_routes, explorer
 from app.config import settings
 from app.db import open_db
 from app.enrich import worker as fetches
-from app.importer.service import ImportError_, import_export
+from app.importer.service import ImportError_, NotALink, add_link, import_export
 from app.jobs import STAGES, protocol
 from app.jobs import queue as job_queue
 from app.library import SHOWN_GAME, SHOWN_TAG, mine
@@ -2178,6 +2178,24 @@ def upload_export(file: UploadFile, user: Me) -> dict[str, Any]:
         _locator.wake()
     jobs.wake(settings.run_dir)
     return result.as_dict()
+
+
+class Link(BaseModel):
+    url: str = Field(max_length=2000, description="A post's link, or text with one in it.")
+
+
+@app.post("/api/items")
+def add_by_link(body: Link, user: Me) -> dict[str, Any]:
+    """Add one Instagram post to your library by its link (#52): the share
+    sheet, the Add by link field, or a script such as an iOS Shortcut with a
+    token that has write:library. Adding one you have already is not an error;
+    `added` says whether it was new to you. The workers fetch it from here."""
+    try:
+        code, added = add_link(db(), body.url, user_id=user.id)
+    except NotALink:
+        raise HTTPException(400, "That is not a link to an Instagram post or reel.") from None
+    jobs.wake(settings.run_dir)
+    return {"shortcode": code, "added": added}
 
 
 @app.api_route("/media/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)

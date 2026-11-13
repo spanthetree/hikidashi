@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS user_item (
   game          TEXT,                    -- the game they say it shows; '' for none
   opened_at     INTEGER,                 -- last opened in Hikidashi; NULL: never (#50)
   open_count    INTEGER NOT NULL DEFAULT 0,
+  added_via     TEXT,                    -- NULL: an export; 'link': shared or pasted in (#52)
   PRIMARY KEY (user_id, shortcode)
 );
 CREATE INDEX IF NOT EXISTS user_item_saved_idx ON user_item(user_id, saved_at DESC);

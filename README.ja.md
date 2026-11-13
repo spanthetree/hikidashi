@@ -110,7 +110,7 @@ Docker と Compose、またはソースから動かす場合は Python 3.12・uv
 
 ## 開発状況
 
-Hikidashi は 1.0 に向けて開発中です。リリースごとにデータベースは自動で移行され、アップデート時に注意が必要なことは[変更履歴](CHANGELOG.md)に記載します。読み込みは今のところ Instagram の手動エクスポートからで、継続的な同期は[今後の課題](https://github.com/spanthetree/hikidashi/issues/9)です。
+Hikidashi は 1.0 に向けて開発中です。リリースごとにデータベースは自動で移行され、アップデート時に注意が必要なことは[変更履歴](CHANGELOG.md)に記載します。ライブラリは今のところ Instagram の手動エクスポートから始まります。その後の新しい保存は、スマートフォンの共有シートやリンクから1件ずつ追加できます（[スマートフォンから追加](docs/using.md#adding-a-reel-from-your-phone)。共有シートにはサーバーの HTTPS 化が必要です）。継続的な同期は[今後の課題](https://github.com/spanthetree/hikidashi/issues/9)です。
 
 ## コントリビュート
 

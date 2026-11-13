@@ -155,9 +155,12 @@ All of it is in [docs/](docs/README.md).
 
 Hikidashi is in active development, before 1.0. Each release migrates the
 database on its own, and the [changelog](CHANGELOG.md) notes anything that
-needs care when upgrading. Importing still
-starts from a manual Instagram export; continuous sync is
-[on the list](https://github.com/spanthetree/hikidashi/issues/9).
+needs care when upgrading. A library still
+starts from a manual Instagram export. After that, new saves can come in one at
+a time from your phone's share sheet, or by link
+([adding from your phone](docs/using.md#adding-a-reel-from-your-phone)); the
+share sheet needs the server on HTTPS ([HTTPS](docs/accounts.md#https)).
+Continuous sync is [on the list](https://github.com/spanthetree/hikidashi/issues/9).
 
 ## Contributing
 
