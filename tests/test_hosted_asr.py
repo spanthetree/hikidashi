@@ -15,6 +15,7 @@ from app.providers.client import Client, Transcript
 from app.providers.keys import Key
 from app.providers.presets import PRESETS
 from tests.fake_openai import KEY, Fake, verbose
+from tests.fixtures import must
 
 
 def seg(text, start, end, nsp=0.01, lp=-0.2):
@@ -26,7 +27,7 @@ class TestGuard(unittest.TestCase):
         t = Transcript(
             "", segments=[seg(" first stretch the dough", 0, 3), seg(" then bake", 3, 5)]
         )
-        self.assertEqual(guard(t), "first stretch the dough then bake")
+        self.assertEqual(must(guard(t)).text, "first stretch the dough then bake")
 
     def test_a_song_is_empty(self):
         # Whisper writes lyrics over music, and says it is unsure there is speech.
@@ -47,7 +48,7 @@ class TestGuard(unittest.TestCase):
     def test_without_segments_only_is_noise_applies(self):
         self.assertIsNone(guard(Transcript("you", duration=1.0)))
         self.assertEqual(
-            guard(Transcript("first stretch the dough then bake it", duration=4.0)),
+            must(guard(Transcript("first stretch the dough then bake it", duration=4.0))).text,
             "first stretch the dough then bake it",
         )
         self.assertIsNone(guard(Transcript("  ", duration=4.0)))
@@ -85,7 +86,7 @@ class TestHostedTranscription(unittest.TestCase):
 
     def test_uploads_flac_and_asks_for_segments(self):
         heard = self.asr()(self.mp4, 6.0)
-        self.assertEqual(heard.text, self.fake.transcript)
+        self.assertEqual(must(heard.said).text, self.fake.transcript)
         self.assertEqual(heard.language, "en")
         req = self.fake.seen("/audio/transcriptions")[0]
         self.assertIn(b"fLaC", req.body)
@@ -94,11 +95,11 @@ class TestHostedTranscription(unittest.TestCase):
 
     def test_music_comes_back_empty(self):
         self.fake.no_speech_prob = 0.9
-        self.assertIsNone(self.asr()(self.mp4, 6.0).text)
+        self.assertIsNone(self.asr()(self.mp4, 6.0).said)
 
     def test_a_model_without_segments(self):
         heard = self.asr(model="gpt-4o-mini-transcribe")(self.mp4, 6.0)
-        self.assertEqual(heard.text, self.fake.transcript)
+        self.assertEqual(must(heard.said).text, self.fake.transcript)
         self.assertIsNone(heard.language)
         self.assertEqual(
             self.fake.seen("/audio/transcriptions")[0].form()["response_format"], "json"
@@ -116,8 +117,12 @@ class TestHostedTranscription(unittest.TestCase):
         reqs = self.fake.seen("/audio/transcriptions")
         self.assertGreaterEqual(len(reqs), 2)
         self.assertTrue(all(len(r.body) < size for r in reqs))
-        self.assertEqual(heard.text, " ".join([self.fake.transcript] * len(reqs)))
+        self.assertEqual(must(heard.said).text, " ".join([self.fake.transcript] * len(reqs)))
         self.assertEqual(heard.usage.audio_seconds, 6.0 * len(reqs))
+        # Each part's segments are moved to where that part starts in the clip.
+        per = len(must(heard.said).segments) // len(reqs)
+        firsts = [seg[0] for seg in must(heard.said).segments[::per]]
+        self.assertEqual(firsts, [round(i * 6000 / len(reqs)) for i in range(len(reqs))])
 
     def test_no_audio_track_is_no_speech(self):
         silent = self.dir / "silent.mp4"
@@ -129,7 +134,7 @@ class TestHostedTranscription(unittest.TestCase):
         heard = hosted.transcribe_one(
             {"media_path": "silent.mp4", "duration": 1}, self.dir, self.asr()
         )
-        self.assertIsNone(heard.text)
+        self.assertIsNone(heard.said)
         self.assertEqual(self.fake.seen("/audio/transcriptions"), [])
 
 

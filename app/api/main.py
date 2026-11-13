@@ -861,6 +861,7 @@ def _cards(
 ) -> list[dict[str, Any]]:
     """What the grid shows of each reel."""
     cards = recipes.card(conn, [r["shortcode"] for r in rows], user_id=user.id)
+    _moments(conn, sel, [r["shortcode"] for r in rows])
     return [
         {
             **{
@@ -890,6 +891,22 @@ def _cards(
         }
         for r in rows
     ]
+
+
+def _moments(conn: sqlite3.Connection, sel: Selection, shortcodes: list[str]) -> None:
+    """Add to each search hit whose voiceover matched when it was said (#44):
+    `at_ms` and `said`, for the sheet to start there."""
+    if not sel.q:
+        return
+    for sc, segs in conn.execute(
+        """SELECT shortcode, transcript_segments FROM item
+           WHERE shortcode IN (SELECT value FROM json_each(?))
+             AND transcript_segments IS NOT NULL""",
+        (json.dumps([sc for sc in shortcodes if sc in sel.why]),),
+    ):
+        why = sel.why[sc]
+        if at := search.moment(json.loads(segs), sel.q, why.get("chunk")):
+            why.update(at)
 
 
 @app.get("/api/items")
@@ -1068,6 +1085,8 @@ def item_detail(shortcode: str, user: Me, request: Request) -> dict[str, Any]:
                 "summary",
             )
         },
+        # When each part of the transcript was said, when known (#44).
+        "segments": json.loads(r["transcript_segments"] or "null"),
         "saved_at": r["my_saved_at"],
         "keywords": json.loads(r["keywords"] or "[]"),
         "thumb": f"/media/{r['thumb_path']}" if r["thumb_path"] else None,

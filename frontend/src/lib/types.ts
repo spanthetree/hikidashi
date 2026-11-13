@@ -29,7 +29,13 @@ export interface Item {
 export interface SearchMatch {
   match: ("phrase" | "keyword" | "semantic" | "transcript")[];
   similarity: number | null;
+  /** When in the reel the query was said, and the line (#44). */
+  at_ms?: number;
+  said?: string;
 }
+
+/** [start_ms, end_ms, text]: when a part of the transcript was said. */
+export type Segment = [number, number, string];
 
 export interface RecipeCard {
   title: string | null;
@@ -178,6 +184,8 @@ export interface ItemDetail extends Omit<Item, "recipe"> {
   tag_profile: string | null;
   recipe_profile: string | null;
   transcript: string | null;
+  /** When each part of the transcript was said; null when not known. */
+  segments: Segment[] | null;
   ocr_text: string | null;
   summary: string | null;
   keywords: string[];

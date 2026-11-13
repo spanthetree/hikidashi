@@ -177,6 +177,12 @@ which does the same with its own `LocalJobs`. The server stays the only writer
 What the desktop's terminal shows during a real run is in
 [remote-workers.md](remote-workers.md#the-desktop-with-uv).
 
+An asr result is `{shortcode, transcript}`, and since `ASR_V` 3 may carry
+`segments` too: `[[start_ms, end_ms, text], ...]`, when the model timed what
+it heard, so a search can open a reel where the words were said
+([#44](https://github.com/spanthetree/hikidashi/issues/44)). The server checks
+each is two whole numbers and some text before recording any.
+
 ```mermaid
 sequenceDiagram
   autonumber

@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import { fade } from "svelte/transition";
+  import { replaceState } from "$app/navigation";
   import { page } from "$app/state";
   import { clearGame, clearTag, exportUrl, getItem, getNote, getSimilar, markOpened, removeItem, retryFetch, setGame, setTag } from "#lib/api.js";
   import ExportMenu from "#lib/components/ExportMenu.svelte";
@@ -78,6 +80,39 @@
   const thumb = $derived(detail ? detail.thumb : preview?.thumb ?? null);
   const slides = $derived(detail?.slides ?? []);
   const permalink = $derived(detail?.permalink ?? preview?.permalink);
+
+  /* ?t= (seconds): where a search matched in the voiceover (#44). Start a
+     moment before it, so the line is heard whole. */
+  const startAt = $derived(Number(page.url.searchParams.get("t")) || 0);
+  let videoEl = $state<HTMLVideoElement>();
+  let now = $state(0); // ms into the video
+
+  /* The transcript line by line when its timing is known: the one playing
+     lights up, and pressing one plays from there. */
+  const segs = $derived(detail?.segments ?? null);
+  const current = $derived(segs ? segs.findLastIndex(([start]) => start <= now) : -1);
+  const hit = $derived(segs && startAt ? segs.findIndex(([start]) => Math.abs(start - startAt * 1000) < 100) : -1);
+  let linesEl = $state<HTMLElement>();
+
+  function seekTo(ms: number) {
+    if (videoEl) {
+      videoEl.currentTime = ms / 1000;
+      void videoEl.play().catch(() => {});
+    }
+    const url = new URL(page.url.href);
+    url.searchParams.set("t", (ms / 1000).toFixed(1));
+    replaceState(url, page.state);
+  }
+
+  // Keep the playing line in view inside the transcript, not the whole sheet.
+  $effect(() => {
+    const box = linesEl, i = current;
+    const line = box?.children[i] as HTMLElement | undefined;
+    if (!box || !line) return;
+    if (line.offsetTop < box.scrollTop || line.offsetTop + line.offsetHeight > box.scrollTop + box.clientHeight) {
+      box.scrollTo({ top: line.offsetTop - box.clientHeight / 3, behavior: motion.reduced ? "auto" : "smooth" });
+    }
+  });
 
   const facts = $derived(detail ? [
     [detail.duration ? duration(detail.duration) : null, m.fact_length()],
@@ -352,6 +387,13 @@
      cut, or it keeps downloading behind the grid. */
   const play = (el: HTMLVideoElement) => {
     el.muted = true;
+    videoEl = el;
+    const t = untrack(() => startAt);
+    if (t) {
+      const seek = () => { el.currentTime = Math.max(0, t - 1.5); };
+      if (el.readyState >= 1) seek();
+      else el.addEventListener("loadedmetadata", seek, { once: true });
+    }
     el.play().catch(() => {});
     return () => { el.pause(); el.removeAttribute("src"); el.load(); };
   };
@@ -445,7 +487,8 @@
          onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up}>
       {#if video}
         <video src={video} poster={thumb ?? undefined} controls loop muted autoplay playsinline
-               preload="metadata" {@attach play}></video>
+               preload="metadata" {@attach play}
+               ontimeupdate={(e) => (now = e.currentTarget.currentTime * 1000)}></video>
       {:else if slides.length > 1}
         <div class="slides" role="group" aria-roledescription="carousel" aria-label={m.slides()}
              bind:this={trackEl} onscroll={() => (slide = at())} onscrollend={() => (aim = at())}>
@@ -556,11 +599,20 @@
               {#if detail.transcript}
                 <!-- Folded shut: the longest thing on the sheet and the least
                      often read. -->
-                <details class="d-sec d-fold">
+                <details class="d-sec d-fold" open={Boolean(startAt && segs)}>
                   <summary class="d-label">{m.transcript()} <span>{readingTime(detail.transcript)}</span></summary>
-                  <div class="d-body d-prose">
-                    {#each paragraphs(detail.transcript) as p, i (i)}<p>{p}</p>{/each}
-                  </div>
+                  {#if segs && video}
+                    <div class="d-body d-lines" bind:this={linesEl}>
+                      {#each segs as [start, , text], i (i)}
+                        <button type="button" class:on={i === current} class:hit={i === hit}
+                                onclick={() => seekTo(start)}><time>{duration(Math.floor(start / 1000)) || "0:00"}</time>{text}</button>
+                      {/each}
+                    </div>
+                  {:else}
+                    <div class="d-body d-prose">
+                      {#each paragraphs(detail.transcript) as p, i (i)}<p>{p}</p>{/each}
+                    </div>
+                  {/if}
                 </details>
               {/if}
 
@@ -1024,6 +1076,18 @@
   @keyframes unfold { from { opacity: 0; transform: translateY(-4px); } }
 
   .d-prose { white-space: normal; max-width: 62ch; }
+  .d-lines {
+    position: relative; display: flex; flex-direction: column; white-space: normal;
+    max-height: 260px; overflow-y: auto; max-width: 62ch;
+  }
+  .d-lines button {
+    all: unset; cursor: pointer; padding: 3px 6px; border-radius: 6px; display: flex; gap: 8px;
+  }
+  .d-lines button:hover { background: var(--surface-2); }
+  .d-lines button:focus-visible { outline: 2px solid var(--accent); }
+  .d-lines time { flex: 0 0 auto; font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 2px; }
+  .d-lines .hit { box-shadow: inset 2px 0 0 var(--accent); }
+  .d-lines .on { background: var(--accent-soft); color: var(--ink); }
   .d-prose p { margin: 0 0 0.8em; }
   .d-prose p:last-child { margin-bottom: 0; }
 

@@ -17,12 +17,15 @@ from __future__ import annotations
 
 import re
 import subprocess
+from collections.abc import Iterable
 from pathlib import Path
+from typing import NamedTuple
 
 from app.profiles import Profile
 
 # Bumping this invalidates every transcript and schedules a re-transcription.
-ASR_V = 2
+# 3: keeps when each segment was said, for jumping to a search's match (#44).
+ASR_V = 3
 
 SAMPLE_RATE = 16_000
 
@@ -76,6 +79,29 @@ def extract_audio(path: Path, *, timeout: int = 300) -> bytes:
     if not proc.stdout:
         raise NoAudio("empty audio track")
     return proc.stdout
+
+
+Segment = tuple[int, int, str]  # start and end in milliseconds, what was said
+
+
+class Said(NamedTuple):
+    """A transcript, and when each part of it was said, when the model says.
+    `text` is the segments' texts joined, so its words are theirs in order."""
+
+    text: str
+    segments: tuple[Segment, ...] = ()
+
+
+def said(parts: Iterable[tuple[float, float, str]]) -> Said | None:
+    """Timed segments (start and end in seconds) into a Said. None when
+    nothing was said."""
+    kept = tuple(
+        (round(start * 1000), round(end * 1000), text.strip())
+        for start, end, text in parts
+        if text and text.strip()
+    )
+    text = join_segments([t for _, _, t in kept])
+    return Said(text, kept) if text else None
 
 
 def join_segments(texts: list[str]) -> str | None:
@@ -188,7 +214,7 @@ class Whisper:
         )
         list(segments)
 
-    def __call__(self, pcm: bytes) -> str | None:
+    def __call__(self, pcm: bytes) -> Said | None:
         import numpy as np
 
         audio = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
@@ -201,7 +227,7 @@ class Whisper:
             condition_on_previous_text=False,
         )
         # `segments` is lazy: transcription actually happens while iterating.
-        text = join_segments([s.text for s in segments])
-        if text is None or is_noise(text, info.duration_after_vad):
+        heard = said((s.start, s.end, s.text) for s in segments)
+        if heard is None or is_noise(heard.text, info.duration_after_vad):
             return None
-        return text
+        return heard

@@ -347,22 +347,23 @@ def vector_hits(
 
 def chunk_hits(
     conn: sqlite3.Connection, query_vec: bytes, user_id: int = LOCAL
-) -> list[tuple[str, float]]:
-    """(shortcode, similarity of its closest chunk) for the items whose
-    transcript or on-screen text says something close to the query.
+) -> list[tuple[str, float, int]]:
+    """(shortcode, similarity of its closest chunk, that chunk's seq) for the
+    items whose transcript or on-screen text says something close to the query.
 
     The floor is higher than MIN_SIMILARITY: a 60-word stretch of speech is
     near many queries a little, and a reel should be here for one thing said
     that matches, not for talking about food in general.
     """
+    # SQLite takes a bare column (seq) from the row MAX() chose.
     rows = conn.execute(
-        f"""SELECT shortcode, MAX(1 - vec_distance_cosine(embedding, :q)) AS sim
+        f"""SELECT shortcode, MAX(1 - vec_distance_cosine(embedding, :q)) AS sim, seq
             FROM item_chunk_vec WHERE length(embedding) = length(:q)
               AND {mine(user_id, "shortcode")}
             GROUP BY shortcode ORDER BY sim DESC LIMIT :n""",
         {"q": query_vec, "n": MAX_CHUNK_HITS},
     ).fetchall()
-    return [(r[0], r[1]) for r in rows if r[1] >= MIN_CHUNK_SIMILARITY]
+    return [(r[0], r[1], r[2]) for r in rows if r[1] >= MIN_CHUNK_SIMILARITY]
 
 
 def similar(
@@ -384,16 +385,18 @@ def similar(
 
 def semantic_hits(
     conn: sqlite3.Connection, query_vec: bytes, user_id: int = LOCAL
-) -> tuple[list[str], dict[str, Any], dict[str, Any]]:
+) -> tuple[list[str], dict[str, Any], dict[str, Any], dict[str, int]]:
     """The reels close to the query in meaning, most similar first: by their
     summary, or by their closest chunk less CHUNK_HANDICAP, whichever is higher.
-    Also the summary and chunk similarities, for `explain`."""
+    Also the summary and chunk similarities, and which chunk, for `explain`."""
     summary = dict(vector_hits(conn, query_vec, user_id))
-    spoken = dict(chunk_hits(conn, query_vec, user_id))
+    closest = chunk_hits(conn, query_vec, user_id)
+    spoken = {sc: sim for sc, sim, _ in closest}
+    seqs = {sc: seq for sc, _, seq in closest}
     best = dict(summary)
     for sc, sim in spoken.items():
         best[sc] = max(best.get(sc, -1.0), sim - CHUNK_HANDICAP)
-    return sorted(best, key=lambda sc: -best[sc])[:MAX_VECTOR_HITS], summary, spoken
+    return sorted(best, key=lambda sc: -best[sc])[:MAX_VECTOR_HITS], summary, spoken, seqs
 
 
 def fuse(*ranked: list[str], weights: tuple[float, ...] | None = None) -> list[str]:
@@ -424,7 +427,9 @@ def rank(
     keywords = keyword_hits(conn, q, user_id)
     # Only when no reel has every word: if one does, it is the better answer.
     content = [] if keywords else content_word_hits(conn, q, user_id, loose=query_vec is None)
-    semantic, sims, spoken = semantic_hits(conn, query_vec, user_id) if query_vec else ([], {}, {})
+    semantic, sims, spoken, seqs = (
+        semantic_hits(conn, query_vec, user_id) if query_vec else ([], {}, {}, {})
+    )
     if query_vec is not None and not (keywords or content or semantic):
         # Nothing at all: rather than an empty page, what keyword-only search
         # would show, any two of the words (#57's demo voiceover queries).
@@ -451,5 +456,39 @@ def rank(
                     if on
                 ],
                 "similarity": round(best, 3) if best > -1 else None,
+                # The stretch of speech that matched, for `moment`.
+                "chunk": seqs.get(sc) if near else None,
             }
     return ranked
+
+
+def moment(segments: list[list[Any]], q: str, chunk: int | None = None) -> dict[str, Any] | None:
+    """When in a reel the query was said (#44): {at_ms, said}, or None.
+
+    The segment saying the most of the query's content words, earliest on a
+    tie. Failing that, where the transcript chunk that matched in meaning
+    starts: chunk `seq` is words seq * CHUNK_STEP on (app/embed/embedder.py),
+    and the transcript is the segments' words in order. A seq past the
+    transcript's chunks is one of the on-screen text's, with no time.
+    """
+    from app.embed.embedder import CHUNK_STEP, chunks
+
+    if not segments:
+        return None
+    words = [w.lower() for w in content_tokens(q)]
+    best, score = None, 0
+    for seg in segments:
+        said = seg[2].lower()
+        n = sum(w in said for w in words)
+        if n > score:
+            best, score = seg, n
+    if best is None and chunk is not None:
+        text = " ".join(seg[2] for seg in segments)
+        if chunk < len(chunks(text)):
+            start, seen = chunk * CHUNK_STEP, 0
+            for seg in segments:
+                seen += len(seg[2].split())
+                if seen > start:
+                    best = seg
+                    break
+    return {"at_ms": best[0], "said": best[2]} if best else None

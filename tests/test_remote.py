@@ -415,6 +415,16 @@ class TestProtocol(unittest.TestCase):
         [(code, got, why)] = protocol.parse("recipe", [sent])
         self.assertEqual((code, got, why), ("X", found, None))
 
+    def test_a_timed_transcript_round_trips(self):
+        from app.asr.transcriber import Said
+
+        heard = Said("salt the water", ((0, 900, "salt"), (900, 2000, "the water")))
+        sent = json.loads(json.dumps(protocol.ok("asr", "X", heard)))
+        self.assertEqual(protocol.parse("asr", [sent]), [("X", heard, None)])
+        sent["segments"] = [[0, -1, "salt"]]
+        with self.assertRaises(protocol.Refused):
+            protocol.parse("asr", [sent])
+
     def test_a_long_failure_reason_is_cut_short(self):
         [(_, _, why)] = protocol.parse("asr", [{"shortcode": "X", "error": "e" * 5000}])
         self.assertEqual(len(why or ""), protocol.REASON)

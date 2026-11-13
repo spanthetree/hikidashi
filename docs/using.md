@@ -49,6 +49,9 @@ From its sheet you can:
   overwritten;
 - confirm or name the video game a gaming reel shows;
 - follow the addresses in its caption to Google Maps;
+- read the transcript line by line, once a reel has been transcribed since
+  0.25: the line playing lights up, and pressing one plays from there. A
+  search that matched what was said opens the reel at that line;
 - open one of the reels **More like this**: the closest in meaning in your
   library, from the same vectors as search;
 - export it, or copy it as Markdown;

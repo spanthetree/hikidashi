@@ -54,7 +54,7 @@ problem, for no gain over B.
      leases them; sends their rows ─────────▶ downloads the media they name
   GET  /api/worker/media/<path>          ◀── (cached; byte ranges work)
                                               runs the stage on its GPU
-  POST /api/worker/results   one per reel  ◀── transcript, text, tag, recipe
+  POST /api/worker/results   one per reel  ◀── transcript (+ timings), text, tag, recipe
      records each with the stage's own              or why it failed
      record function; releases the leases
   POST /api/worker/check-in  every 30 s    ◀── alive; keep my leases

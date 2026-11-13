@@ -27,7 +27,7 @@
   import { library, pins, sidebar } from "#lib/library.svelte.js";
   import { cardIn, flipDuration } from "#lib/motion.svelte.js";
   import { m } from "#lib/paraglide/messages.js";
-  import type { FilterKind, Layout, Media, NoticeState, PickKind, Sort, View } from "#lib/types.js";
+  import type { FilterKind, Item, Layout, Media, NoticeState, PickKind, Sort, View } from "#lib/types.js";
 
   let { children } = $props();
 
@@ -148,6 +148,14 @@
   function close() {
     if (openedFromGrid) history.back();
     else void go(libraryUrl(filters), { stay: true, replace: true });
+  }
+
+  /* A search hit whose voiceover matched opens at that moment (#44). */
+  function itemHref(item: Item) {
+    const s = new URLSearchParams(search);
+    if (item.match?.at_ms != null) s.set("t", (item.match.at_ms / 1000).toFixed(1));
+    const q = s.toString();
+    return `/item/${encodeURIComponent(item.shortcode)}${q ? `?${q}` : ""}`;
   }
 
   /* Shuffle (#50): a random reel from whatever the filters show. "Another"
@@ -571,7 +579,7 @@
       <div class="grid" class:stale={library.pending && library.items.length > 0} bind:this={gridEl}>
         {#each library.items as item, i (item.shortcode)}
           <div class="cell" animate:flip={{ duration: flipDuration() }} in:cardIn={{ index: i % 60 }}>
-            <Card {item} {filters} href={`/item/${encodeURIComponent(item.shortcode)}${search}`}
+            <Card {item} {filters} href={itemHref(item)}
                   active={item.shortcode === shortcode} />
             {#if selecting}
               <button type="button" class="pick" aria-pressed={picked.has(item.shortcode)}

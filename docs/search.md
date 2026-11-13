@@ -137,7 +137,12 @@ no longer reproduced two days later: re-summarised reels move the numbers
 5. **Every hit says why it matched.** `/api/items?q=` returns `match` per item:
    `{"match": ["keyword", "semantic", "transcript"], "similarity": 0.52}`.
    Cards show it as a badge under `npm run dev`, or on the built app with
-   `localStorage.explain = "1"`.
+   `localStorage.explain = "1"`. A hit whose voiceover matched also gets
+   `at_ms` and `said` ([#44](https://github.com/spanthetree/hikidashi/issues/44)):
+   the transcript segment saying the most of the query's content words, or,
+   for a match in meaning, the segment where the closest chunk starts (chunk
+   `seq` is word `seq × 40` of the transcript). The card shows the line, and
+   opens the reel there with `?t=`. Ranking is unchanged.
 6. **A reel's game is indexed** ([#117](https://github.com/spanthetree/hikidashi/issues/117)). `item_fts` gained `game`, the title
    the tagger is sure a reel shows, so "gran turismo" finds a reel whose
    caption spells it "Grand Turismo". A game you named matches with your tags

@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS item (
   hashtags      TEXT,                    -- JSON array, as posted; never rewritten
   clean_hashtags TEXT,                   -- JSON array: normalised, noise dropped, deduped
   transcript    TEXT,
+  transcript_segments TEXT,              -- JSON [[start_ms, end_ms, text], ...], when known (#44)
   ocr_text      TEXT,
   summary       TEXT,                    -- one sentence, from the LLM tagger
   keywords      TEXT,                    -- JSON array, free text from the LLM tagger

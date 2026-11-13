@@ -18,7 +18,8 @@ their remaining stages at once, asks for each stage's rows as it gets there,
 and sends its results with `languages` and `usage`.
 
 `what` is per stage: `transcript` (asr), `text` (ocr), `tag` (tag), `recipe`
-(recipe), each possibly null for "nothing there".
+(recipe), each possibly null for "nothing there". An asr result may also carry
+`segments`, [[start_ms, end_ms, text], ...], when the model timed them (#44).
 
 Every request carries `protocol` and the worker's stage `versions`. A worker
 whose stage version differs from the server's would stamp work the server
@@ -39,6 +40,7 @@ from collections.abc import Callable
 from typing import Any
 
 from app.asr import worker as asr
+from app.asr.transcriber import Said
 from app.ocr import worker as ocr
 from app.recipes import llm as recipe_llm
 from app.recipes import worker as recipe
@@ -126,6 +128,12 @@ def ok(stage: str, shortcode: str, produced: Any) -> dict[str, Any]:
         produced = _from_tag(produced)
     elif stage == "recipe":
         produced = None if produced is None else _from_found(produced)
+    elif isinstance(produced, Said):
+        return {
+            "shortcode": shortcode,
+            "transcript": produced.text,
+            "segments": [list(seg) for seg in produced.segments],
+        }
     return {"shortcode": shortcode, FIELD[stage]: produced}
 
 
@@ -295,6 +303,21 @@ def _to_found(v: Any) -> recipe_llm.Found | None:
     )
 
 
+def _segments(v: Any) -> tuple[tuple[int, int, str], ...]:
+    """An asr result's [[start_ms, end_ms, text], ...]."""
+    if not isinstance(v, list) or len(v) > TEXT // 10:
+        raise Refused("segments must be a list")
+    out = []
+    for seg in v:
+        if not isinstance(seg, list) or len(seg) != 3:
+            raise Refused("a segment is [start_ms, end_ms, text]")
+        start, end = _int(seg[0], "segment start"), _int(seg[1], "segment end")
+        text = _str(seg[2], "segment text", TEXT, null=False)
+        assert start is not None and end is not None and text is not None
+        out.append((start, end, text))
+    return tuple(out)
+
+
 def parse(stage: str, results: Any) -> list[tuple[str, Any, str | None]]:
     """Check every result before any is recorded: (shortcode, what it
     produced, None) or (shortcode, None, why it failed). Raises Refused."""
@@ -315,6 +338,8 @@ def parse(stage: str, results: Any) -> list[tuple[str, Any, str | None]]:
         v = r[name]
         if stage in ("asr", "ocr"):
             produced: Any = _str(v, name, TEXT)
+            if stage == "asr" and produced and r.get("segments"):
+                produced = Said(produced, _segments(r["segments"]))
         elif stage == "tag":
             produced = _to_tag(v)
         else:
