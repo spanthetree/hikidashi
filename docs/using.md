@@ -3,6 +3,7 @@
 A tour of the web app. [Back to the README](../README.md)
 
 - [The library](#the-library)
+- [Adding a reel from your phone](#adding-a-reel-from-your-phone)
 - [A reel](#a-reel)
 - [Recipes and the shopping list](#recipes-and-the-shopping-list)
 - [Places and the map](#places-and-the-map)
@@ -25,6 +26,34 @@ A tour of the web app. [Back to the README](../README.md)
   works.
 - **Export**, above the grid, downloads what the grid shows
   ([exports](export.md)).
+
+## Adding a reel from your phone
+
+New saves don't have to wait for the next export. Three ways to add one now;
+each adds it to your library only, and the workers fetch it as they would a
+reel from an export. Adding one you already have changes nothing, and a later
+export only moves its save time back to when you saved it on Instagram.
+
+- **Share it.** Install Hikidashi on your phone (Android: Chrome's menu,
+  **Install app** or **Add to Home screen**). It then shows up in the share
+  sheet: in the Instagram app, **Share**, then **Hikidashi**. Browsers only
+  install a site served over HTTPS ([HTTPS](accounts.md#https)).
+- **Add by link.** **Import**, above the grid, has a field for one link at a
+  time. Paste a post or reel's link, or the whole message an app copied with
+  it in.
+- **An iOS Shortcut.** iPhones don't offer installed web apps in the share
+  sheet, so a Shortcut posts the link instead. Make an API token with
+  **write:library** on your account page ([tokens](accounts.md#api-tokens)),
+  then a Shortcut that receives **URLs and Text** from the share sheet,
+  with one **Get Contents of URL** action:
+  - URL: `https://<your server>/api/items`, method **POST**
+  - Header: `Authorization` = `Bearer <your token>`
+  - Request body **JSON**: `url` = **Shortcut Input**
+
+  The same request works from any script:
+  `curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"url":"https://www.instagram.com/reel/…/"}' https://<your server>/api/items`.
+
+Only Instagram links for now.
 
 ## Ask your library
 

@@ -33,4 +33,7 @@
   <Config Name="Hosted AI: monthly budget" Target="HIKIDASHI_HOSTED_BUDGET" Default="" Mode="" Description="USD a month for the server's API. Required before it can be turned on; it turns itself off when reached." Type="Variable" Display="advanced" Required="false" Mask="false"/>
   <Config Name="Hosted AI: secret key" Target="HIKIDASHI_SECRET_KEY" Default="" Mode="" Description="Encrypts the API keys saved in the database. Empty: a random one in /data/secret.key. The same here and in the server." Type="Variable" Display="advanced" Required="false" Mask="true"/>
   <Config Name="Unload after" Target="HIKIDASHI_UNLOAD_AFTER" Default="300" Mode="" Description="Seconds with no work before the embedder is unloaded." Type="Variable" Display="advanced" Required="false" Mask="false">300</Config>
+  <Config Name="Log to syslog" Target="HIKIDASHI_SYSLOG" Default="" Mode="" Description="Also send the log to a syslog server, as udp://192.168.1.10:514 (Unraid's own, under Settings, Syslog Server). Empty: off." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Log to Loki" Target="HIKIDASHI_LOKI_URL" Default="" Mode="" Description="Also push the log to Loki, as http://192.168.1.10:3100. Empty: off." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Loki token" Target="HIKIDASHI_LOKI_TOKEN" Default="" Mode="" Description="A bearer token for Loki, if it asks for one." Type="Variable" Display="advanced" Required="false" Mask="true"/>
 </Container>

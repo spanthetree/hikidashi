@@ -58,6 +58,7 @@
  "POST /api/auth/setup [Account] public",
  "POST /api/import [Import & export] write:library",
  "POST /api/invites [Admin] write:admin",
+ "POST /api/items [Library] write:library",
  "POST /api/items/{shortcode}/not-copy/{other} [Library] write:library",
  "POST /api/items/{shortcode}/opened [Library] write:library",
  "POST /api/items/{shortcode}/recipe/fetch [Recipes & shopping] write:library",

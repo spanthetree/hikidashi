@@ -6,6 +6,49 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.26.0] — 2026-11-13
+
+### Added
+
+- **Add a reel from your phone** (#52): Hikidashi installs as an app, and
+  then sits in the share sheet. Share a reel in the Instagram app, pick
+  Hikidashi, and it is in your library, fetched by the workers like any new
+  reel. **Import** has an **Add by link** field too, and on an iPhone, which
+  has no share targets, an iOS Shortcut posts the link with an API token
+  ([how](docs/using.md#adding-a-reel-from-your-phone)). Adding one you have
+  already changes nothing, and a later export only moves its save time back.
+  Installing needs the server on HTTPS. `POST /api/items` takes the link, with
+  a `write:library` token from a script.
+- **Prometheus metrics** (#149), off unless `HIKIDASHI_METRICS=on`: the
+  backlog and failures per stage, workers up, reels by state, coverage,
+  imports, search and request latency, hosted AI spend, the database's size.
+  A bearer token or private addresses only; never a shortcode, caption,
+  query or username in a label. One scrape covers every container, and costs
+  under 2 ms from its cache. `deploy/monitoring/` has a scrape job, alert
+  rules and a Grafana dashboard, and `docker-compose.monitoring.yml` runs
+  Prometheus, Loki and Grafana beside the app (ADR 0022).
+- **`/healthz` and `/readyz`** (#149), with no sign-in. The image, the compose
+  files and the NAS templates check `/readyz`, which migrates an old database
+  first.
+- **The log to syslog and Loki** (#149), off unless set: `HIKIDASHI_SYSLOG`
+  (UDP, TCP or a unix socket; RFC 5424 or 3164) and `HIKIDASHI_LOKI_URL`, from
+  every container, redacted first (tokens, keys, passwords, search queries).
+  `HIKIDASHI_LOG_FORMAT=json` makes stdout and what is sent JSON lines. The
+  Unraid and TrueNAS templates have the new settings.
+
+### Fixed
+
+- **A reel without its video says why** (#8): `photo` for a photo post, or
+  the download's error, where a failed download used to vanish without a
+  word. `./hikidashi enrich --media-only` stops asking for photos, counts what
+  is missing and why, and gives photo posts and carousels the width and
+  height their thumbnail has, which yt-dlp never reported.
+
+### Changed
+
+- The service worker caches the app's shell only; pages still come from the
+  network first, so an update is never hidden behind an old page.
+
 ## [0.25.0] — 2026-11-13
 
 ### Added

@@ -1,0 +1,40 @@
+# Prometheus, Loki and Grafana beside Hikidashi, for anyone without them (#149):
+#
+#   HIKIDASHI_METRICS=on HIKIDASHI_LOKI_URL=http://loki:3100 \
+#     docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
+#
+# Grafana is on port 3000 (admin / admin, then change it), with the Hikidashi
+# dashboard. Prometheus scrapes the app over the Compose network, a private
+# address, so no token is needed. Nothing here is published but Grafana.
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=30d"]
+    volumes:
+      - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus:/prometheus
+
+  loki:
+    image: grafana/loki:3.5.3
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - loki:/loki
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    restart: unless-stopped
+    ports:
+      - "${HIKIDASHI_GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - ./deploy/monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/hikidashi.yml:ro
+      - ./deploy/monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/hikidashi.yml:ro
+      - ./deploy/monitoring/grafana/hikidashi.json:/var/lib/grafana/dashboards/hikidashi.json:ro
+      - grafana:/var/lib/grafana
+
+volumes:
+  prometheus:
+  loki:
+  grafana:

@@ -1,0 +1,42 @@
+# Alerts for Hikidashi (#149). Load with rule_files in prometheus.yml.
+groups:
+  - name: hikidashi
+    rules:
+      - alert: HikidashiDown
+        expr: up{job="hikidashi"} == 0
+        for: 5m
+        annotations:
+          summary: The Hikidashi server has not answered a scrape for 5 minutes.
+
+      - alert: HikidashiStageWithoutWorker
+        # Reels ready at a stage that no running worker runs, for an hour.
+        expr: |
+          hikidashi_stage_reels{status="ready"} > 0
+          unless on (stage)
+          (max by (stage) (hikidashi_worker_stages * on (worker) group_left () hikidashi_worker_up) == 1)
+        for: 1h
+        annotations:
+          summary: "{{ $value }} reels are ready for {{ $labels.stage }}, and no running worker runs it."
+
+      - alert: HikidashiFailuresRising
+        expr: sum by (stage) (delta(hikidashi_stage_failed_attempts[1h])) > 20
+        for: 15m
+        annotations:
+          summary: "More than 20 failed tries at {{ $labels.stage }} in the last hour."
+
+      - alert: HikidashiHostedApiOff
+        # A hosted API switched itself off: its budget ran out, or it kept failing.
+        expr: hikidashi_api_disabled_reason > 0
+        annotations:
+          summary: "The {{ $labels.api }} hosted API is off: {{ $labels.reason }}."
+
+      - alert: HikidashiDatabaseGrowingFast
+        expr: deriv(hikidashi_db_size_bytes[6h]) * 3600 > 100e6
+        for: 1h
+        annotations:
+          summary: The database has grown by more than 100 MB an hour for an hour.
+
+      - alert: HikidashiLogLinesDropped
+        expr: increase(hikidashi_log_lines_dropped_total[1h]) > 0
+        annotations:
+          summary: Loki was away long enough for log lines to be dropped.

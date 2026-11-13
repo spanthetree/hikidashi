@@ -332,6 +332,13 @@ post with no video to download keeps everything it already had. A carousel of
 photos has no mp4 either; for one fetched before slides were, it saves the
 slides instead, and once it has them it is not offered again.
 
+A reel left without an mp4 says why in `item.media_note` (#8): `photo` for a
+post yt-dlp listed no video for, which is expected and not offered again, or
+the download's failure label (`timeout`, `rate-limited`, …), which is, so the
+next `--media-only` run tries it once more. The run ends by counting the notes,
+and by measuring photos from their saved thumbnail, since yt-dlp reports no
+width or height for a photo.
+
 Three Instagram-specific details the fetcher handles:
 
 - **Photo posts have no video formats**, and yt-dlp refuses the whole request

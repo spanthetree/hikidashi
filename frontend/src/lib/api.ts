@@ -185,6 +185,15 @@ export const removeItem = (shortcode: string) =>
   api<{ shortcode: string; purged: boolean }>(`/api/items/${encodeURIComponent(shortcode)}`,
                                               { method: "DELETE" });
 
+/** Add one post to your library by its link, or text with one in it (#52).
+    `added` is false when you had it already. */
+export const addLink = (url: string) =>
+  api<{ shortcode: string; added: boolean }>("/api/items", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+
 /** Fetch a reel whose fetch failed again, now. Returns it as it is after. */
 export const retryFetch = (shortcode: string) =>
   api<ItemDetail>(`/api/items/${encodeURIComponent(shortcode)}/retry`, { method: "POST" });

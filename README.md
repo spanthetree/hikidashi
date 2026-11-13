@@ -61,6 +61,11 @@ remember. It runs on your own machine, with local models.
   background. The heavy stages can run on a separate machine with a GPU, or,
   if you switch it on, on a hosted AI API (OpenAI, Groq, Mistral, Gemini, any
   OpenAI-compatible server, or an Ollama of your own), from the settings page or `hikidashi ai`.
+- **Add from your phone.** Install it as an app and share a reel to it from
+  Instagram, or paste a link; an iOS Shortcut does the same on an iPhone.
+- **Monitoring, if you want it.** Prometheus metrics, health checks, and the
+  log to syslog or Loki, with a ready-made Grafana dashboard. All off by
+  default.
 - **English and Japanese**, light and dark themes.
 
 | | | |
@@ -143,6 +148,7 @@ tagging much faster ([hardware profiles](docs/pipeline.md#hardware-profiles)).
 | [Installing](docs/install.md) | Docker or uv, importing, updating |
 | [Using Hikidashi](docs/using.md) | Search, recipes, the map, the pipeline page |
 | [Configuration](docs/configuration.md) | Every setting and its default |
+| [Monitoring and logging](docs/operation.md#monitoring) | Prometheus metrics, health checks, syslog and Loki, all off by default |
 | [Accounts and access](docs/accounts.md) | Multiple users, sign-in proxies, API tokens, HTTPS |
 | [Exports](docs/export.md) | Recipe managers, Obsidian, JSON and CSV |
 | [Remote workers](docs/remote-workers.md) | Running the heavy stages on another machine |
@@ -155,9 +161,12 @@ All of it is in [docs/](docs/README.md).
 
 Hikidashi is in active development, before 1.0. Each release migrates the
 database on its own, and the [changelog](CHANGELOG.md) notes anything that
-needs care when upgrading. Importing still
-starts from a manual Instagram export; continuous sync is
-[on the list](https://github.com/spanthetree/hikidashi/issues/9).
+needs care when upgrading. A library still
+starts from a manual Instagram export. After that, new saves can come in one at
+a time from your phone's share sheet, or by link
+([adding from your phone](docs/using.md#adding-a-reel-from-your-phone)); the
+share sheet needs the server on HTTPS ([HTTPS](docs/accounts.md#https)).
+Continuous sync is [on the list](https://github.com/spanthetree/hikidashi/issues/9).
 
 ## Contributing
 

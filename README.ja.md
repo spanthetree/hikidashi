@@ -39,6 +39,8 @@ Instagram の「保存済み」では、話している内容や画面に映っ�
 - **エクスポート。** レシピは Mealie・Tandoor・Paprika へ。ライブラリ全体は Obsidian の Vault、JSON、CSV で書き出せます。
 - **複数ユーザー。** 一台のサーバーで、ユーザーごとに別々のライブラリを持てます。スクリプト用の API トークンと、`/api/docs` の API エクスプローラーもあります。
 - **自動処理。** 新しい保存はバックグラウンドでダウンロード・解析されます。重い処理は GPU のある別のマシンに任せることもできます。
+- **スマートフォンから追加。** アプリとしてインストールすれば、Instagram の共有メニューからリールを送れます。リンクを貼り付けても追加でき、iPhone ではショートカットで同じことができます。
+- **必要なら監視も。** Prometheus メトリクス、ヘルスチェック、syslog や Loki へのログ送信、Grafana ダッシュボード付き。いずれも既定ではオフです。
 - **日本語と英語の UI**、ライトとダークのテーマ。
 
 | | | |
@@ -102,6 +104,7 @@ Docker と Compose、またはソースから動かす場合は Python 3.12・uv
 | [Installing](docs/install.md) | Docker または uv、読み込み、アップデート |
 | [Using Hikidashi](docs/using.md) | 検索、レシピ、地図、パイプライン画面 |
 | [Configuration](docs/configuration.md) | すべての設定とその既定値 |
+| [Monitoring and logging](docs/operation.md#monitoring) | Prometheus メトリクス、ヘルスチェック、syslog と Loki（いずれも既定ではオフ） |
 | [Accounts and access](docs/accounts.md) | 複数ユーザー、認証プロキシ、API トークン、HTTPS |
 | [Exports](docs/export.md) | レシピ管理アプリ、Obsidian、JSON、CSV |
 | [Remote workers](docs/remote-workers.md) | 重い処理を別のマシンで動かす |
@@ -110,7 +113,7 @@ Docker と Compose、またはソースから動かす場合は Python 3.12・uv
 
 ## 開発状況
 
-Hikidashi は 1.0 に向けて開発中です。リリースごとにデータベースは自動で移行され、アップデート時に注意が必要なことは[変更履歴](CHANGELOG.md)に記載します。読み込みは今のところ Instagram の手動エクスポートからで、継続的な同期は[今後の課題](https://github.com/spanthetree/hikidashi/issues/9)です。
+Hikidashi は 1.0 に向けて開発中です。リリースごとにデータベースは自動で移行され、アップデート時に注意が必要なことは[変更履歴](CHANGELOG.md)に記載します。ライブラリは今のところ Instagram の手動エクスポートから始まります。その後の新しい保存は、スマートフォンの共有シートやリンクから1件ずつ追加できます（[スマートフォンから追加](docs/using.md#adding-a-reel-from-your-phone)。共有シートにはサーバーの HTTPS 化が必要です）。継続的な同期は[今後の課題](https://github.com/spanthetree/hikidashi/issues/9)です。
 
 ## コントリビュート
 

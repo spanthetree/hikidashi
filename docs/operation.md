@@ -13,6 +13,8 @@ stage's own detail is in [the pipeline](pipeline.md).
 - [A search request](#a-search-request)
 - [Import](#import)
 - [Sign-in and requests](#sign-in-and-requests)
+- [Monitoring](#monitoring)
+- [Logging](#logging)
 
 ## Reel lifecycle
 
@@ -573,6 +575,23 @@ no rows, and a newer export adds only what is new. Every new reel is
 from there. The counts are of your library: a reel someone else saved first is
 still `inserted` for you, though no new `item` row or download was made.
 
+### One reel by its link
+
+`POST /api/items {"url": …}` (#52) is the share sheet's way in, through the
+`/share` page that the web app manifest names as its share target, and the
+**Add by link** field's, and a script's with a `write:library` token. It reads
+the first Instagram post link in the text, upserts the `item` the same way an
+import does (a new one is `imported` with just its permalink), and adds a
+`user_item` saved now, with `added_via = 'link'` and no `first_seen_in`. A
+repeat is a no-op that answers `added: false`. Then it touches the wake file,
+and the workers fetch it like any new reel. A later export finds the row and
+only pulls `saved_at` back to the real save time.
+
+The service worker that makes the app installable caches the app shell only
+(the hashed build, the icons, `/`). It never answers for `/api/` or `/media/`,
+and pages come from the network first, so a new release is never hidden
+behind an old `index.html`.
+
 ## Sign-in and requests
 
 `HIKIDASHI_AUTH=local`. Under `none`, the session steps are skipped and the
@@ -652,3 +671,137 @@ sequenceDiagram
 The `/api/stats` worker summary and exporting someone else's library are
 admin reach inside library routes: a token needs `read:admin` for them too. A
 token is never read from the URL, where logs would keep it.
+
+## Monitoring
+
+Off by default. `HIKIDASHI_METRICS=on` serves Prometheus metrics at
+`/metrics` on the server's port (#149, `app/metrics.py`), in the Prometheus
+text format, or OpenMetrics when the scraper asks for it. Any collector that
+reads that format works: Prometheus, VictoriaMetrics, Grafana Alloy, the OTel
+collector, Netdata. `deploy/monitoring/` has a scrape job, alert rules and a
+Grafana dashboard, and `docker-compose.monitoring.yml` runs Prometheus, Loki
+and Grafana beside the app ([ADR 0022](adr/0022-metrics-and-log-shipping.md)).
+
+```bash
+HIKIDASHI_METRICS=on HIKIDASHI_LOKI_URL=http://loki:3100 \
+  docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
+```
+
+**Who may scrape.** With `HIKIDASHI_METRICS_TOKEN` set (or `_FILE`), a scrape
+sends it as `Authorization: Bearer <token>`, as Prometheus's `authorization`
+setting does; a missing or wrong one gets 401. Without a token, only
+addresses in `HIKIDASHI_METRICS_ALLOW` may scrape (default: loopback and the
+private ranges, which a container on the same Docker network is), and anyone
+else gets 403. A session cookie counts for nothing: these are the server's
+numbers, not a library's. `HIKIDASHI_METRICS_PORT` moves `/metrics` to a port
+of its own, which Compose can leave unpublished. `/metrics` is not in the API
+explorer, and scrapes are not logged.
+
+**Health.** `/healthz` answers while the process is up. `/readyz` answers
+once the database opens and its schema is this release's (it migrates an old
+one first, as any request does), and 503 otherwise. Neither needs signing in,
+and neither depends on metrics being on. The image's `HEALTHCHECK`, the
+Compose files and the NAS templates use `/readyz`.
+
+**What a scrape costs.** Requests and search times are counted as they
+happen. Everything else is read from the database by one collector, on a
+read-only connection of its own, at most once every
+`HIKIDASHI_METRICS_REFRESH` seconds (30): a scrape in between is answered
+from memory. The media folder is measured once an hour. On the 420-reel
+library a scrape took 31 ms with the cache cold and under 2 ms warm. The
+workers are not scraped: their state is in the database (`job_worker`,
+`job_lease`, `job_attempt`), which the server's one scrape covers, remote
+workers included.
+
+| Metric | Type | Labels |
+|---|---|---|
+| `hikidashi_build_info` | gauge, 1 | `version`, `profile`, `auth` |
+| `process_*`, `python_gc_*` | the client library's own | |
+| `hikidashi_http_requests_total` | counter | `route` (the template, as `/api/items/{shortcode}`; `unmatched` for none), `method`, `status` |
+| `hikidashi_http_request_duration_seconds` | histogram, 5 ms to 10 s | `route`, `method` |
+| `hikidashi_search_duration_seconds` | histogram | `part`: `fts`, `vector`, `chunk`, `rank` |
+| `hikidashi_items` | gauge | `state` |
+| `hikidashi_users`, `hikidashi_collections`, `hikidashi_recipes` | gauge | |
+| `hikidashi_items_with` | gauge | `field`: `media`, `transcript`, `ocr`, `tags`, `recipe`, `place` |
+| `hikidashi_db_size_bytes`, `hikidashi_db_wal_size_bytes`, `hikidashi_media_size_bytes` | gauge | |
+| `hikidashi_import_last_timestamp_seconds` | gauge | |
+| `hikidashi_imports_total` | counter | `result`: `finished`, `unfinished` |
+| `hikidashi_stage_reels` | gauge | `stage`, `status`: `ready`, `waiting`, `leased`, `failed` (at the cap), as the Pipeline page counts them |
+| `hikidashi_stage_done_reels` | gauge | `stage`: reels stamped at its current version; its rate is the throughput |
+| `hikidashi_stage_failed_attempts` | gauge | `stage`: failed tries at its current version, summed |
+| `hikidashi_fetch_failures` | gauge | `reason`: the fetch's own labels (`deleted`, `private account`, …), else `other` |
+| `hikidashi_worker_up` | gauge | `worker`: 1 if it checked in within 120 s |
+| `hikidashi_worker_last_seen_timestamp_seconds` | gauge | `worker` |
+| `hikidashi_worker_stages` | gauge, 1 | `worker`, `stage` |
+| `hikidashi_pipeline_overall` | gauge, 1 | `state`: `running`, `problem`, `lost`, `stopped`, `none` |
+| `hikidashi_api_enabled`, `hikidashi_api_in_flight`, `hikidashi_api_budget_usd` | gauge | `api`: `server`, `user`, `hosted:<worker>` |
+| `hikidashi_api_disabled_reason` | gauge, 1 | `api`, `reason`: `budget`, `key`, `settings`, `admin`, `error`, `other` |
+| `hikidashi_api_requests_total` | counter | `api`, `provider`, `stage` |
+| `hikidashi_api_cost_usd_total` | counter, estimated | `api`, `provider` |
+| `hikidashi_log_lines_dropped_total` | counter | |
+
+Stage completions are a gauge read from the database rather than a counter
+kept by each worker, so one scrape covers every container without each
+exposing its own. A stage's version bump resets it, which shows as a drop.
+
+**What a label never holds**, as `tests/test_metrics.py` checks: a shortcode,
+URL, caption, search query, username or token. Labels come from bounded sets
+(stages, states, route templates, worker and provider names), so a thousand
+reels opened add no series. Every user's hosted API is `api="user"`, summed;
+`HIKIDASHI_METRICS_PER_USER=on` adds a `user` label with their username, for
+an admin who wants to see who spends what.
+
+A few queries:
+
+```promql
+sum by (stage) (hikidashi_stage_reels{status="ready"})            # backlog
+histogram_quantile(0.95, sum by (le) (rate(hikidashi_search_duration_seconds_bucket[5m])))
+sum by (stage) (delta(hikidashi_stage_done_reels[1h]))             # reels an hour
+sum by (api, provider) (hikidashi_api_cost_usd_total)              # spend
+```
+
+`deploy/monitoring/alerts.yml` fires when the server stops answering, a stage
+has reels ready and no running worker runs it for an hour, failures climb,
+a hosted API switches itself off, the database grows by 100 MB an hour, or
+Loki was away long enough to drop lines.
+
+## Logging
+
+Every process writes its own file in `data/logs/` (`server.log`,
+`worker.log`, `server-worker.log`, `worker-once.log`), which the Logs page
+reads, and stdout, which Docker keeps. Either or both of these can also get
+every line (#149, `app/logship.py`), from every process that has them set,
+a remote worker on another machine included:
+
+- **syslog**: `HIKIDASHI_SYSLOG=udp://host:514`, `tcp://host:514` or
+  `unix:///dev/log`. RFC 5424 by default (APP-NAME `hikidashi`, the logger's
+  name as MSGID, the process and worker as structured data), or
+  `HIKIDASHI_SYSLOG_FORMAT=rfc3164`. Unraid's own syslog server, rsyslog,
+  syslog-ng and Graylog take it. Not TLS yet: send it over a network you
+  trust, or through a local rsyslog that forwards over TLS.
+- **Loki**: `HIKIDASHI_LOKI_URL=http://loki:3100` pushes to
+  `/loki/api/v1/push`, gzipped, a batch a second (or 500 lines), from a queue
+  a thread empties, so a request never waits on it. Labels are only `app`,
+  `process`, `worker`, `level` and `HIKIDASHI_LOKI_LABELS`; everything else is
+  in the line. While Loki is away the queue keeps the newest 10,000 lines,
+  counts the rest in `hikidashi_log_lines_dropped_total`, and retries with
+  backoff.
+
+`HIKIDASHI_LOG_LEVEL` sets what is sent (the file keeps `info`), and
+`HIKIDASHI_LOG_FORMAT=json` makes stdout and what is sent one JSON object a
+line: `ts`, `level`, `logger`, `msg`, `process`, `worker`, and `stage`,
+`route`, `status` or `duration_ms` where a line has them. The file stays
+text, for the Logs page.
+
+**What is never sent.** Before a line leaves the machine, and on stdout in
+JSON, it is redacted: bearer and basic credentials, Hikidashi's own tokens,
+API keys, anything after `token=`, `password=`, `api_key=` and their like,
+every URL's query string (where a search's words are), and the token in an
+invite link. The app logs no caption, transcript or username in the first
+place. A shipper's own trouble goes to stderr, never back into what it ships,
+and a receiver that is away at start does not stop anything starting.
+Scrapes and health checks are logged nowhere.
+
+**Without the built-in push.** If you already run Grafana Alloy or Promtail,
+tail the files instead: `deploy/monitoring/alloy.config` reads
+`data/logs/*.log` and gives each line the same `process` label.

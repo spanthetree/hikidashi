@@ -24,7 +24,7 @@ from typing import Any
 from app.library import LOCAL
 
 from .parser import SavedPost, parse_collections, parse_saved_posts
-from .shortcode import canonical_permalink
+from .shortcode import canonical_permalink, extract
 
 POSTS_FILE = "saved_posts.json"
 COLLECTIONS_FILE = "saved_collections.json"
@@ -128,6 +128,49 @@ ON CONFLICT(user_id, shortcode) DO UPDATE SET saved_at = excluded.saved_at
 WHERE excluded.saved_at IS NOT NULL
   AND (user_item.saved_at IS NULL OR excluded.saved_at < user_item.saved_at)
 """
+
+
+class NotALink(ValueError):
+    """The text has no Instagram post link in it."""
+
+
+def add_link(
+    conn: sqlite3.Connection, text: str, *, user_id: int = LOCAL, now: int | None = None
+) -> tuple[str, bool]:
+    """Add the post linked in `text` (a URL, or a share sheet's message with one
+    in it) to `user_id`'s library, saved now. Returns (shortcode, whether it is
+    new to them). Saving it again changes nothing. The workers fetch it as they
+    would a reel from an export; a later export only pulls its save time back."""
+    code = extract(text)
+    if code is None:
+        raise NotALink(text)
+    row = {
+        "shortcode": code,
+        "permalink": canonical_permalink(code),
+        "author": None,
+        "author_name": None,
+        "saved_at": int(time.time()) if now is None else now,
+        "fbid": None,
+        "caption": None,
+        "hashtags": None,
+        "raw_meta": None,
+        "run_id": None,
+        "user_id": user_id,
+    }
+    conn.execute("BEGIN")
+    try:
+        conn.execute(_UPSERT, row)
+        new = conn.execute(
+            """INSERT INTO user_item (user_id, shortcode, saved_at, added_via)
+               VALUES (:user_id, :shortcode, :saved_at, 'link')
+               ON CONFLICT(user_id, shortcode) DO NOTHING""",
+            row,
+        ).rowcount
+        conn.execute("COMMIT")
+    except BaseException:
+        conn.execute("ROLLBACK")
+        raise
+    return code, bool(new)
 
 
 def import_export(conn: sqlite3.Connection, source: Path, *, user_id: int = LOCAL) -> ImportStats:

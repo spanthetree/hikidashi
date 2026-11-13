@@ -34,6 +34,7 @@ new: a later decision gets its own record and marks the old one
 | [0019](0019-hosted-ai-behind-a-switch.md) | Hosted AI, behind an on/off switch | Accepted; supersedes 0009 | #116, #125 |
 | [0020](0020-fetch-incomplete-recipes.md) | Fetch the rest of an incomplete recipe, on by default | Accepted | #114 |
 | [0021](0021-the-server-asks-a-model-while-you-wait.md) | The server asks a model while someone waits, and recipes are translated as they are read | Accepted | #45, #114 |
+| [0022](0022-metrics-and-log-shipping.md) | Metrics and log shipping: opt-in, pulled, bounded, redacted | Accepted | #149 |
 
 ## Adding one
 

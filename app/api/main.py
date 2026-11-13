@@ -30,13 +30,13 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
-from app import accounts, dupes, jobs, library, logs, search, spa
+from app import accounts, dupes, jobs, library, logs, metrics, search, spa
 from app.accounts import AccountError, User
 from app.api import ai_routes, explorer
 from app.config import settings
-from app.db import open_db
+from app.db import is_current, open_db
 from app.enrich import worker as fetches
-from app.importer.service import ImportError_, import_export
+from app.importer.service import ImportError_, NotALink, add_link, import_export
 from app.jobs import STAGES, protocol
 from app.jobs import queue as job_queue
 from app.library import SHOWN_GAME, SHOWN_TAG, mine
@@ -62,6 +62,31 @@ LOG_FILE = logs.install(settings.logs_dir)
 # The schema and the explorer are served by app/api/explorer.py, to signed-in
 # people only (#147).
 app = FastAPI(title="Hikidashi", docs_url=None, redoc_url=None, openapi_url=None)
+# /metrics and its counters, when HIKIDASHI_METRICS=on (#149); None otherwise.
+METRICS = metrics.install(app, settings, explorer.app_version())
+
+
+@app.get("/healthz", include_in_schema=False)
+def healthz() -> dict[str, str]:
+    """The process is up. No sign-in, for a container's health check."""
+    return {"status": "ok"}
+
+
+@app.get("/readyz", include_in_schema=False)
+def readyz() -> JSONResponse:
+    """The database opens and its schema is this release's: 503 if not. It
+    opens as every request does, so a new release's migration runs first."""
+    try:
+        conn = db()
+        try:
+            current = is_current(conn)
+        finally:
+            conn.close()
+    except (sqlite3.Error, OSError) as exc:
+        return JSONResponse({"status": "unavailable", "detail": str(exc)}, status_code=503)
+    if not current:
+        return JSONResponse({"status": "unavailable", "detail": "schema not current"}, 503)
+    return JSONResponse({"status": "ok"})
 
 
 _embedder: Embedder | None = None
@@ -2178,6 +2203,24 @@ def upload_export(file: UploadFile, user: Me) -> dict[str, Any]:
         _locator.wake()
     jobs.wake(settings.run_dir)
     return result.as_dict()
+
+
+class Link(BaseModel):
+    url: str = Field(max_length=2000, description="A post's link, or text with one in it.")
+
+
+@app.post("/api/items")
+def add_by_link(body: Link, user: Me) -> dict[str, Any]:
+    """Add one Instagram post to your library by its link (#52): the share
+    sheet, the Add by link field, or a script such as an iOS Shortcut with a
+    token that has write:library. Adding one you have already is not an error;
+    `added` says whether it was new to you. The workers fetch it from here."""
+    try:
+        code, added = add_link(db(), body.url, user_id=user.id)
+    except NotALink:
+        raise HTTPException(400, "That is not a link to an Instagram post or reel.") from None
+    jobs.wake(settings.run_dir)
+    return {"shortcode": code, "added": added}
 
 
 @app.api_route("/media/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)

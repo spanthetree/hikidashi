@@ -151,6 +151,15 @@ under **Security Context**, the dataset as a host path at `/data` on each,
 and `hikidashi worker --log server-worker.log` as the server-worker's
 command. Use it only if YAML is unavailable.
 
+## Monitoring
+
+`HIKIDASHI_METRICS: "on"` in the app's environment serves Prometheus metrics
+at `/metrics`. A Prometheus app on this machine can scrape it with no token
+over the apps network; from elsewhere, set `HIKIDASHI_METRICS_TOKEN` and send
+it. `HIKIDASHI_SYSLOG` and `HIKIDASHI_LOKI_URL`, in any service, send its log
+there too. See [monitoring](operation.md#monitoring) and
+[logging](operation.md#logging).
+
 ## Troubleshooting
 
 - **`Permission denied` or `readonly database` in a log.** The dataset

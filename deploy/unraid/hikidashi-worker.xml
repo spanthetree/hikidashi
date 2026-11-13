@@ -30,4 +30,7 @@
   <Config Name="Ollama URL" Target="OLLAMA_URL" Default="http://host.docker.internal:11434" Mode="" Description="The Ollama that tag and recipe call: Unraid's Ollama app on this server, with its port 11434 published, by default." Type="Variable" Display="always" Required="false" Mask="false">http://host.docker.internal:11434</Config>
   <Config Name="Profile" Target="HIKIDASHI_PROFILE" Default="auto|cpu" Mode="" Description="The models: cpu, or auto to pick from the hardware." Type="Variable" Display="advanced" Required="true" Mask="false">auto</Config>
   <Config Name="Unload after" Target="HIKIDASHI_UNLOAD_AFTER" Default="300" Mode="" Description="Seconds with no work before Whisper is unloaded." Type="Variable" Display="advanced" Required="false" Mask="false">300</Config>
+  <Config Name="Log to syslog" Target="HIKIDASHI_SYSLOG" Default="" Mode="" Description="Also send the log to a syslog server, as udp://192.168.1.10:514 (Unraid's own, under Settings, Syslog Server). Empty: off." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Log to Loki" Target="HIKIDASHI_LOKI_URL" Default="" Mode="" Description="Also push the log to Loki, as http://192.168.1.10:3100. Empty: off." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Loki token" Target="HIKIDASHI_LOKI_TOKEN" Default="" Mode="" Description="A bearer token for Loki, if it asks for one." Type="Variable" Display="advanced" Required="false" Mask="true"/>
 </Container>

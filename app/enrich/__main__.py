@@ -13,7 +13,16 @@ import sys
 from app.config import settings
 from app.db import open_db
 
-from .worker import Progress, enrich, fetch_media, pending, pending_media, summary
+from .worker import (
+    Progress,
+    enrich,
+    fetch_media,
+    fill_dimensions,
+    media_notes,
+    pending,
+    pending_media,
+    summary,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -70,11 +79,15 @@ def main(argv: list[str] | None = None) -> int:
         except KeyboardInterrupt:
             print("\n  interrupted — progress is saved, re-run to resume")
             return 130
+        sized = fill_dimensions(conn, settings.media_dir)
         after = summary(conn)
         print(f"\n  downloaded  {result.media}")
         print(f"  slides      {result.slides}  <- photos of carousels")
-        print(f"  skipped     {result.skipped}  <- no video (photo posts)")
+        print(f"  skipped     {result.skipped}  <- no video, see below")
+        print(f"  sized       {sized}  <- photos measured from their thumbnail")
         print(f"  size        {result.bytes / 1_048_576:,.0f} MB")
+        for note, n in media_notes(conn):
+            print(f"  no video    {n:>4}  {note}")
         print(
             f"\n  library     {after['media']}/{after['total']} with video, "
             f"{after['bytes'] / 1_073_741_824:,.2f} GB"

@@ -56,6 +56,21 @@ On Unraid and TrueNAS the same settings are fields in the template or the YAML
 | `HIKIDASHI_LOCATE_EVERY` | `300` | Seconds between the server's looks for new places to put on the map. `0`: only `./hikidashi places` looks |
 | `HIKIDASHI_TILES` | OpenStreetMap's | Map tiles, as `https://tiles.example.com/{z}/{x}/{y}.png` |
 | `HIKIDASHI_TILES_ATTRIBUTION` | OpenStreetMap's | The credit shown on the map, as HTML. Empty for your own tiles unless set |
+| `HIKIDASHI_METRICS` | `off` | `on`: Prometheus metrics at `/metrics` ([monitoring](operation.md#monitoring)) |
+| `HIKIDASHI_METRICS_TOKEN` | *(empty)* | A bearer token every scrape must send, or `HIKIDASHI_METRICS_TOKEN_FILE`. Empty: only addresses in `HIKIDASHI_METRICS_ALLOW` may scrape |
+| `HIKIDASHI_METRICS_ALLOW` | loopback and private ranges | Without a token: the addresses that may scrape, as CIDRs, comma-separated |
+| `HIKIDASHI_METRICS_PORT` | *(empty)* | Serve `/metrics` on this port instead of the main one, to leave it unpublished |
+| `HIKIDASHI_METRICS_REFRESH` | `30` | Seconds between the collector's reads of the database; a scrape between them is answered from memory |
+| `HIKIDASHI_METRICS_PER_USER` | *(empty)* | `on`: a `user` label on hosted AI metrics. Off, every user's API is `api="user"`, summed |
+| `HIKIDASHI_SYSLOG` | *(empty)* | Also send the log to syslog: `udp://host:514`, `tcp://host:514` or `unix:///dev/log` ([logging](operation.md#logging)) |
+| `HIKIDASHI_SYSLOG_FORMAT` | `rfc5424` | `rfc5424`, or `rfc3164` for older receivers |
+| `HIKIDASHI_SYSLOG_FACILITY` | `local0` | The syslog facility |
+| `HIKIDASHI_LOKI_URL` | *(empty)* | Also push the log to Loki, as `http://loki:3100` |
+| `HIKIDASHI_LOKI_TOKEN`, `HIKIDASHI_LOKI_USER`, `HIKIDASHI_LOKI_PASSWORD` | *(empty)* | Loki's bearer token, or basic auth; each also as `*_FILE` |
+| `HIKIDASHI_LOKI_TENANT` | *(empty)* | Loki's `X-Scope-OrgID` |
+| `HIKIDASHI_LOKI_LABELS` | *(empty)* | Extra static labels, as `env=home,site=nas` |
+| `HIKIDASHI_LOG_LEVEL` | `info` | What is sent to syslog and Loki; the log file keeps its own |
+| `HIKIDASHI_LOG_FORMAT` | `text` | `json`: one JSON object a line on stdout, syslog and Loki |
 | `HIKIDASHI_VERSION` | `latest` | Docker: the release of the published images, as `1.2.3`. A tag nobody published, as `dev`, keeps your own `--build` images |
 | `HIKIDASHI_WORKER_IMAGE` | `hikidashi-worker`; `hikidashi-worker-cuda` in `docker-compose.worker.yml` | Docker: the worker image, `hikidashi-worker-cuda` for a GPU |
 | `HIKIDASHI_EXTRAS` | *(empty)*; `--extra cuda` in `docker-compose.worker.yml` | Docker builds only. `--extra cuda` adds the GPU libraries to the worker image; set to nothing for the CPU one |

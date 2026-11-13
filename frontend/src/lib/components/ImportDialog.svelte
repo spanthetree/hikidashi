@@ -1,5 +1,6 @@
 <script lang="ts">
   import { m } from "#lib/paraglide/messages.js";
+  import AddLink from "./AddLink.svelte";
   import Icon from "./Icon.svelte";
   import ImportBox from "./ImportBox.svelte";
 
@@ -50,6 +51,8 @@
       </button>
     </header>
     <ImportBox level={3} />
+    <hr>
+    <AddLink />
   </div>
 </dialog>
 
@@ -69,6 +72,8 @@
   .imp::backdrop { background: rgb(0 0 0 / 45%); animation: fade 200ms ease; }
 
   .panel { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+
+  hr { width: 100%; margin: 0; border: 0; border-top: 1px solid var(--rule); }
 
   header { display: flex; align-items: center; gap: 12px; }
   h2 { margin: 0; font-size: 18px; flex: 1; }

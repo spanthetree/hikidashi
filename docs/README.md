@@ -18,8 +18,9 @@
 
 ## Using it
 
-- **[Using Hikidashi](using.md)**: search and filters, a reel, recipes and the
-  shopping list, places and the map, the pipeline page
+- **[Using Hikidashi](using.md)**: search and filters, adding a reel from your
+  phone, a reel, recipes and the shopping list, places and the map, the
+  pipeline page
 - **[Exports](export.md)**: recipes for Mealie, Tandoor and Paprika, the
   library as an Obsidian vault, JSON and CSV
 - **[Tags](tags.md)**: the categories, and where each reel's tag comes from
@@ -35,7 +36,8 @@
 - **[Architecture](architecture.md)**: the components, images, data model,
   storage and security boundaries
 - **[Operation](operation.md)**: a reel's lifecycle, the worker loop, the
-  remote protocol, a search and a signed-in request, with diagrams
+  remote protocol, a search and a signed-in request, with diagrams;
+  monitoring (metrics, health checks) and sending the log to syslog or Loki
 - **[Design notes](design.md)**: principles and project layout
 - **[Decision records](adr/README.md)**: why it is built this way, one record
   per decision

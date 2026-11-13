@@ -86,6 +86,10 @@ ENV HIKIDASHI_LOCAL_STAGES=enrich,embed
 
 EXPOSE 8080
 
+# The database opens and its schema is this release's (#149).
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=10s \
+  CMD ["python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8080/readyz')"]
+
 # Single user, single writer: one worker is correct here, not a limitation.
 CMD ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
 

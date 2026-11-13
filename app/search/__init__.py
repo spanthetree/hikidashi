@@ -36,11 +36,30 @@ from __future__ import annotations
 
 import re
 import sqlite3
-from collections.abc import Iterable
+import time
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from itertools import combinations
 from typing import Any
 
 from app.library import LOCAL, mine
+
+# Told how long each part of a search took (fts, vector, chunk, rank), when
+# metrics are on (app/metrics, #149). None costs nothing.
+observe: Callable[[str, float], None] | None = None
+
+
+@contextmanager
+def _timed(part: str) -> Iterator[None]:
+    if observe is None:
+        yield
+        return
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        observe(part, time.perf_counter() - start)
+
 
 K = 60  # the usual RRF constant; damps the head of each list
 
@@ -389,8 +408,10 @@ def semantic_hits(
     """The reels close to the query in meaning, most similar first: by their
     summary, or by their closest chunk less CHUNK_HANDICAP, whichever is higher.
     Also the summary and chunk similarities, and which chunk, for `explain`."""
-    summary = dict(vector_hits(conn, query_vec, user_id))
-    closest = chunk_hits(conn, query_vec, user_id)
+    with _timed("vector"):
+        summary = dict(vector_hits(conn, query_vec, user_id))
+    with _timed("chunk"):
+        closest = chunk_hits(conn, query_vec, user_id)
     spoken = {sc: sim for sc, sim, _ in closest}
     seqs = {sc: seq for sc, _, seq in closest}
     best = dict(summary)
@@ -424,9 +445,10 @@ def rank(
     connection must have had `load_vec` run on it to use one. `explain`, when
     given, is filled with why each hit matched.
     """
-    keywords = keyword_hits(conn, q, user_id)
-    # Only when no reel has every word: if one does, it is the better answer.
-    content = [] if keywords else content_word_hits(conn, q, user_id, loose=query_vec is None)
+    with _timed("fts"):
+        keywords = keyword_hits(conn, q, user_id)
+        # Only when no reel has every word: if one does, it is the better answer.
+        content = [] if keywords else content_word_hits(conn, q, user_id, loose=query_vec is None)
     semantic, sims, spoken, seqs = (
         semantic_hits(conn, query_vec, user_id) if query_vec else ([], {}, {}, {})
     )
@@ -434,10 +456,11 @@ def rank(
         # Nothing at all: rather than an empty page, what keyword-only search
         # would show, any two of the words (#57's demo voiceover queries).
         content = content_word_hits(conn, q, user_id, loose=True)
-    fused = fuse(keywords, semantic, content, weights=(1.0, 1.0, CONTENT_WEIGHT))
-    exact = phrase_hits(conn, q, user_id)
-    # sorted() is stable, so each tier keeps its fused order.
-    ranked = sorted(fused, key=lambda sc: sc not in exact)
+    with _timed("rank"):
+        fused = fuse(keywords, semantic, content, weights=(1.0, 1.0, CONTENT_WEIGHT))
+        exact = phrase_hits(conn, q, user_id)
+        # sorted() is stable, so each tier keeps its fused order.
+        ranked = sorted(fused, key=lambda sc: sc not in exact)
 
     if explain is not None:
         kw, close = set(keywords) | set(content), set(semantic)

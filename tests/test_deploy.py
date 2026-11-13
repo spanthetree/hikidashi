@@ -72,7 +72,7 @@ class TestUnraid(unittest.TestCase):
 
     def test_the_server_probes_a_route_that_needs_no_sign_in(self):
         params = templates()["hikidashi.xml"].findtext("ExtraParams") or ""
-        self.assertIn("/api/auth", params)
+        self.assertIn("/readyz", params)
 
     def test_the_cuda_worker_has_the_card(self):
         t = templates()["hikidashi-worker-cuda.xml"]
