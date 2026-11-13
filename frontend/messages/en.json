@@ -29,6 +29,7 @@
   "ask_failed": "No answer: {error}",
   "ask_by": "Answered by {model}, from the reels it cites. Check them: a model can be wrong.",
   "ask_close": "Close the answer",
+  "api_explore": "Explore the API",
   "places": "Places",
   "places_restaurants": "Restaurants",
   "places_travel": "Travel",

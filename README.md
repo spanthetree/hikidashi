@@ -48,7 +48,7 @@ remember. It runs on your own machine, with local models.
 - **Exports.** Recipes to Mealie, Tandoor and Paprika; the library as an
   Obsidian vault, JSON or CSV.
 - **Multiple users.** Each person gets a private library on one server, with
-  API tokens for scripts.
+  API tokens for scripts and a browsable API explorer at `/api/docs`.
 - **Automatic processing.** New saves are downloaded and analysed in the
   background. The heavy stages can run on a separate machine with a GPU, or,
   if you switch it on, on a hosted AI API (OpenAI, Groq, Mistral, Gemini or

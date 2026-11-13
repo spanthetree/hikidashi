@@ -63,6 +63,18 @@ how long it lasts, up to 30 days. It is shown once.
 curl -H "Authorization: Bearer hk_api_…" https://your.host/api/stats
 ```
 
+**The API explorer**, at `/api/docs` (linked from **API tokens**), lists every
+route by area, what it takes and returns, and the scope it needs, and runs it
+with your session or a token you give **Authorize** (kept in that page only,
+never saved). Trying a route that changes something stays off until you tick
+**Allow changes**. It is for signed-in people only, and a non-admin sees no
+admin or worker routes. `/api/openapi.json` is the same schema, for tools,
+under the same rule. Everything it loads comes from the server.
+
+Most `hikidashi` commands that touch the library call these routes: `token`
+wraps `/api/me/tokens` and `/api/tokens`, `ai --server` the
+`/api/admin/settings/providers` and `/api/me/providers` routes.
+
 A token acts as you and reads only your library: `read:library` reads it, and
 `write:library` may change it too. `read:ai` and `write:ai` are for your
 hosted AI settings (`hikidashi ai --server`); write spends money, so it is

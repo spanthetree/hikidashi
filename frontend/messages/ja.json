@@ -29,6 +29,7 @@
   "ask_failed": "答えられませんでした: {error}",
   "ask_by": "{model}が引用したリールから答えています。モデルは間違えることがあるので、確認してください。",
   "ask_close": "答えを閉じる",
+  "api_explore": "APIを見る",
   "places": "場所",
   "places_restaurants": "レストラン",
   "places_travel": "旅行",

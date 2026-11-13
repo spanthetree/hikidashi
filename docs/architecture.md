@@ -624,6 +624,19 @@ response by `app/providers/keys.py`. The server never sends a key to a
 worker: a hosted worker brings its own. API tokens need the `read:ai` or
 `write:ai` scope for these routes, and a worker token can't reach them.
 
+**The API explorer** (#147, `app/api/explorer.py`). `/api/docs` and
+`/api/openapi.json` answer only someone signed in, and a non-admin's schema
+has no admin or worker routes or the worker token scheme. Its Swagger UI is
+built into the front end, so the page loads nothing from outside the server.
+A token given to its Authorize stays in the page's memory
+(`persistAuthorization` off), and routes that change something can't be tried
+until **Allow changes** is ticked. It changes no rule: every route still
+checks the session or the token's scope itself.
+
+**Fetching a recipe page** (#114) refuses any address that is not on the
+public internet, redirects included, so a caption can't make the server reach
+into its own network ([ADR 0020](adr/0020-fetch-incomplete-recipes.md)).
+
 **What a remote worker can make true.** It sends what its model said; the
 server records it with the stage's own `record`. For a reel's game that means
 the server, not the worker, checks the title against the reel's text, so a

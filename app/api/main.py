@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 
 from app import accounts, dupes, jobs, library, logs, search, spa
 from app.accounts import AccountError, User
-from app.api import ai_routes
+from app.api import ai_routes, explorer
 from app.config import settings
 from app.db import open_db
 from app.enrich import worker as fetches
@@ -59,7 +59,9 @@ log = logging.getLogger("uvicorn.error")
 settings.ensure_dirs()
 LOG_FILE = logs.install(settings.logs_dir)
 
-app = FastAPI(title="Hikidashi", docs_url="/api/docs", openapi_url="/api/openapi.json")
+# The schema and the explorer are served by app/api/explorer.py, to signed-in
+# people only (#147).
+app = FastAPI(title="Hikidashi", docs_url=None, redoc_url=None, openapi_url=None)
 
 
 _embedder: Embedder | None = None
@@ -284,6 +286,7 @@ Signed = Annotated[User, Depends(by_session)]
 
 # Hosted AI settings (#125): /api/me/providers and /api/admin/settings/providers.
 ai_routes.install(app, db, current_user, _scoped, lambda: settings.db_path.parent)
+explorer.install(app, lambda request: current_user(request))
 
 
 @app.exception_handler(AccountError)

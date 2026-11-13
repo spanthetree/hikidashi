@@ -328,6 +328,7 @@
     {#if mine}
       <section class="a-sec">
         <InfoHead title={m.tokens_title()}><Rich parts={m.tokens_lede.parts()} /></InfoHead>
+        <p id="tokens"><a href="/api/docs" data-sveltekit-reload>{m.api_explore()} &rarr;</a></p>
         <form class="a-export" onsubmit={makeToken}>
           <label for="t-name">{m.tokens_name()}</label>
           <input id="t-name" type="text" maxlength="64" required autocomplete="off"
