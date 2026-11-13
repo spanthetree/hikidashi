@@ -132,7 +132,7 @@ def _calls(dependant: Any) -> set[str]:
     return out
 
 
-def _app_version() -> str:
+def app_version() -> str:
     try:
         return version("hikidashi")
     except PackageNotFoundError:
@@ -143,7 +143,7 @@ def build(app: FastAPI) -> dict[str, Any]:
     """The whole schema, every route tagged, summarised and authorised."""
     schema = get_openapi(
         title="Hikidashi",
-        version=_app_version(),
+        version=app_version(),
         description=(
             "Your library, for scripts. Make an API token on your Account page "
             "(or `hikidashi token make`), then send it as `Authorization: Bearer "

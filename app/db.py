@@ -223,6 +223,18 @@ def migrate(conn: sqlite3.Connection) -> list[str]:
     return applied
 
 
+def is_current(conn: sqlite3.Connection) -> bool:
+    """Whether this database has every table and column this release adds,
+    so a check can tell one an older release left from one ready to serve."""
+    have: dict[str, set[str]] = {}
+    for table, column, _ in _ADDED_COLUMNS:
+        if table not in have:
+            have[table] = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+        if column not in have[table]:
+            return False
+    return True
+
+
 def init(conn: sqlite3.Connection) -> None:
     """Apply the schema, then any later column additions.
 

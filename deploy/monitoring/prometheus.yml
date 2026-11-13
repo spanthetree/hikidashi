@@ -1,0 +1,20 @@
+# A Prometheus scrape job for Hikidashi (#149; docs/operation.md#monitoring).
+# Turn metrics on first: HIKIDASHI_METRICS=on on the server.
+global:
+  scrape_interval: 30s      # the server reads the database for most numbers
+  evaluation_interval: 30s  # at most once every HIKIDASHI_METRICS_REFRESH (30 s)
+
+rule_files:
+  - alerts.yml
+
+scrape_configs:
+  - job_name: hikidashi
+    static_configs:
+      # The server's port, or HIKIDASHI_METRICS_PORT if it has its own.
+      - targets: ["hikidashi:8080"]
+    metrics_path: /metrics
+    # With HIKIDASHI_METRICS_TOKEN set on the server, send it. Without one,
+    # only private addresses may scrape, which a container on the same
+    # Docker network is.
+    # authorization:
+    #   credentials_file: /etc/prometheus/hikidashi.token

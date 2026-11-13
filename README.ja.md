@@ -102,6 +102,7 @@ Docker と Compose、またはソースから動かす場合は Python 3.12・uv
 | [Installing](docs/install.md) | Docker または uv、読み込み、アップデート |
 | [Using Hikidashi](docs/using.md) | 検索、レシピ、地図、パイプライン画面 |
 | [Configuration](docs/configuration.md) | すべての設定とその既定値 |
+| [Monitoring and logging](docs/operation.md#monitoring) | Prometheus メトリクス、ヘルスチェック、syslog と Loki（いずれも既定ではオフ） |
 | [Accounts and access](docs/accounts.md) | 複数ユーザー、認証プロキシ、API トークン、HTTPS |
 | [Exports](docs/export.md) | レシピ管理アプリ、Obsidian、JSON、CSV |
 | [Remote workers](docs/remote-workers.md) | 重い処理を別のマシンで動かす |

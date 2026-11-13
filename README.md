@@ -143,6 +143,7 @@ tagging much faster ([hardware profiles](docs/pipeline.md#hardware-profiles)).
 | [Installing](docs/install.md) | Docker or uv, importing, updating |
 | [Using Hikidashi](docs/using.md) | Search, recipes, the map, the pipeline page |
 | [Configuration](docs/configuration.md) | Every setting and its default |
+| [Monitoring and logging](docs/operation.md#monitoring) | Prometheus metrics, health checks, syslog and Loki, all off by default |
 | [Accounts and access](docs/accounts.md) | Multiple users, sign-in proxies, API tokens, HTTPS |
 | [Exports](docs/export.md) | Recipe managers, Obsidian, JSON and CSV |
 | [Remote workers](docs/remote-workers.md) | Running the heavy stages on another machine |

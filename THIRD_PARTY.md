@@ -63,6 +63,7 @@ used unmodified. The main ones:
 | sqlite-vec | MIT or Apache-2.0 |
 | argon2-cffi | MIT |
 | cryptography | Apache-2.0 or BSD-3-Clause |
+| prometheus-client (only with `HIKIDASHI_METRICS=on`) | Apache-2.0 |
 | Svelte, SvelteKit, Paraglide JS | MIT |
 | Leaflet, Leaflet.markercluster | BSD-2-Clause, MIT |
 

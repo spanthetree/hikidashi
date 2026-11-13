@@ -50,6 +50,21 @@ x-hosted-ai: &hosted-ai
   GEMINI_API_KEY: ${GEMINI_API_KEY:-}
   OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
 
+# Sending the log to syslog and Loki as well (#149; docs/operation.md#logging),
+# from every container, each labelled with its own name. All off when empty.
+x-logging: &logging
+  HIKIDASHI_SYSLOG: ${HIKIDASHI_SYSLOG:-}
+  HIKIDASHI_SYSLOG_FORMAT: ${HIKIDASHI_SYSLOG_FORMAT:-rfc5424}
+  HIKIDASHI_SYSLOG_FACILITY: ${HIKIDASHI_SYSLOG_FACILITY:-local0}
+  HIKIDASHI_LOKI_URL: ${HIKIDASHI_LOKI_URL:-}
+  HIKIDASHI_LOKI_TOKEN: ${HIKIDASHI_LOKI_TOKEN:-}
+  HIKIDASHI_LOKI_USER: ${HIKIDASHI_LOKI_USER:-}
+  HIKIDASHI_LOKI_PASSWORD: ${HIKIDASHI_LOKI_PASSWORD:-}
+  HIKIDASHI_LOKI_TENANT: ${HIKIDASHI_LOKI_TENANT:-}
+  HIKIDASHI_LOKI_LABELS: ${HIKIDASHI_LOKI_LABELS:-}
+  HIKIDASHI_LOG_LEVEL: ${HIKIDASHI_LOG_LEVEL:-info}
+  HIKIDASHI_LOG_FORMAT: ${HIKIDASHI_LOG_FORMAT:-text}
+
 # A worker on new reels: its name, its share of the CPU, its models.
 x-worker: &worker
   <<: *hikidashi
@@ -69,7 +84,16 @@ services:
       context: .
       target: server
     environment:
-      <<: *hosted-ai
+      <<: [*hosted-ai, *logging]
+      # Prometheus metrics at /metrics (#149; docs/operation.md#monitoring):
+      # off, or on. A scrape sends HIKIDASHI_METRICS_TOKEN as a bearer token,
+      # or, without one, comes from an address in HIKIDASHI_METRICS_ALLOW.
+      HIKIDASHI_METRICS: ${HIKIDASHI_METRICS:-off}
+      HIKIDASHI_METRICS_TOKEN: ${HIKIDASHI_METRICS_TOKEN:-}
+      HIKIDASHI_METRICS_PORT: ${HIKIDASHI_METRICS_PORT:-}
+      HIKIDASHI_METRICS_ALLOW: ${HIKIDASHI_METRICS_ALLOW:-}
+      HIKIDASHI_METRICS_REFRESH: ${HIKIDASHI_METRICS_REFRESH:-30}
+      HIKIDASHI_METRICS_PER_USER: ${HIKIDASHI_METRICS_PER_USER:-}
       # Accounts: none (everyone is the owner), local or proxy. See the README.
       HIKIDASHI_AUTH: ${HIKIDASHI_AUTH:-none}
       HIKIDASHI_ORIGIN: ${HIKIDASHI_ORIGIN:-}
@@ -96,7 +120,7 @@ services:
       - "${HIKIDASHI_HOST:-0.0.0.0}:${HIKIDASHI_PORT:-8080}:8080"
     healthcheck:
       test: ["CMD", "python", "-c",
-             "import urllib.request;urllib.request.urlopen('http://localhost:8080/api/auth')"]
+             "import urllib.request;urllib.request.urlopen('http://localhost:8080/readyz')"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -118,7 +142,7 @@ services:
     # Its name in `./hikidashi status`.
     hostname: ${HIKIDASHI_SERVER_WORKER_NAME:-hikidashi-server-worker}
     environment:
-      <<: *hosted-ai
+      <<: [*hosted-ai, *logging]
       # Of enrich and embed. The other stages need the worker image.
       HIKIDASHI_LOCAL_STAGES: ${HIKIDASHI_SERVER_STAGES:-enrich,embed}
       HIKIDASHI_UNLOAD_AFTER: ${HIKIDASHI_UNLOAD_AFTER:-300}
@@ -140,6 +164,7 @@ services:
     # Its name in `./hikidashi status`; give each worker on a database its own.
     hostname: ${HIKIDASHI_WORKER_NAME:-hikidashi-worker}
     environment:
+      <<: *logging
       HIKIDASHI_PROFILE: ${HIKIDASHI_PROFILE:-auto}
       # Of asr, ocr, tag and recipe. On a box that leaves tagging to a GPU
       # desktop's worker: asr,ocr.

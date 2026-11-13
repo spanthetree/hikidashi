@@ -35,6 +35,14 @@ services:
       # OPENAI_API_KEY: ""
       # GROQ_API_KEY: ""
       # HIKIDASHI_HOSTED_BUDGET: ""
+      # Prometheus metrics at /metrics (docs/operation.md#monitoring): on to
+      # serve them, to a bearer token if set, else to private addresses.
+      HIKIDASHI_METRICS: "off"
+      # HIKIDASHI_METRICS_TOKEN: ""
+      # The log to syslog or Loki as well (docs/operation.md#logging), from
+      # each service that sets them.
+      # HIKIDASHI_SYSLOG: udp://truenas.lan:514
+      # HIKIDASHI_LOKI_URL: http://loki.lan:3100
     ports:
       - "8080:8080"
     volumes:
@@ -44,9 +52,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      # /api/auth answers without signing in.
+      # /readyz answers without signing in, once the database is ready.
       test: ["CMD", "python", "-c",
-             "import urllib.request;urllib.request.urlopen('http://localhost:8080/api/auth')"]
+             "import urllib.request;urllib.request.urlopen('http://localhost:8080/readyz')"]
       interval: 30s
       timeout: 5s
       retries: 3

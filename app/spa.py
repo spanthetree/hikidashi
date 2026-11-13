@@ -20,6 +20,8 @@ REVALIDATE = "no-cache"
 # Paths that belong to the backend. A miss under these is a real 404, never a
 # page: a mistyped API call must not come back as HTML with a 200.
 BACKEND = ("api/", "media/")
+# And these, whole: with metrics off (#149), /metrics is a 404, not the app.
+BACKEND_PATHS = ("api", "media", "metrics")
 
 
 def resolve(root: Path, path: str) -> tuple[Path, str] | None:
@@ -27,7 +29,7 @@ def resolve(root: Path, path: str) -> tuple[Path, str] | None:
 
     `path` is the URL path without its leading slash.
     """
-    if path.startswith(BACKEND) or path in ("api", "media"):
+    if path.startswith(BACKEND) or path in BACKEND_PATHS:
         return None
 
     root = root.resolve()

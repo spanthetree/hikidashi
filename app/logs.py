@@ -4,13 +4,15 @@ uvicorn logs to stdout, which Docker keeps and the app cannot see. `install`
 adds a rotating file next to it, fed by the same loggers, and `tail` reads the
 end of that file for the /logs page.
 
-Stdlib only.
+Stdlib only. app/logship sends the same lines to syslog and Loki, when set.
 """
 
 from __future__ import annotations
 
 import logging
 import logging.handlers
+import os
+import socket
 from pathlib import Path
 
 FILE = "server.log"
@@ -35,6 +37,17 @@ LOGGERS = ("", "uvicorn", "uvicorn.access")
 #               every few seconds, forever
 #   /media/     one per thumbnail, sixty per page of the grid
 QUIET_PATHS = ("/api/logs", "/media/")
+
+
+# Not logged anywhere, stdout included: a collector's scrape and a health
+# check, every few seconds, forever (#149).
+SCRAPES = ("/metrics", "/healthz", "/readyz")
+
+
+class _SkipScrapes(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        args = record.args
+        return not (isinstance(args, tuple) and len(args) >= 3 and str(args[2]).startswith(SCRAPES))
 
 
 class _SkipNoise(logging.Filter):
@@ -71,9 +84,18 @@ def install(log_dir: Path, file: str = FILE) -> Path:
         logger = logging.getLogger(name)
         if handler not in logger.handlers:  # --reload imports the app again
             logger.addHandler(handler)
+    access = logging.getLogger("uvicorn.access")
+    if not any(isinstance(f, _SkipScrapes) for f in access.filters):
+        access.addFilter(_SkipScrapes())
     root = logging.getLogger()
     # The root defaults to WARNING; a library's INFO is worth keeping.
     root.setLevel(min(root.level or logging.INFO, logging.INFO))
+    # And to syslog and Loki, when they are set (#149). This file's process
+    # name labels the lines: server, worker, server-worker, worker-once.
+    from app import logship
+
+    worker = os.environ.get("HIKIDASHI_WORKER_NAME") or socket.gethostname()
+    logship.install(Path(file).stem, worker, LOGGERS, _SkipNoise())
     return path
 
 

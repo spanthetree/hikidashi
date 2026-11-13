@@ -333,6 +333,16 @@ the two libraries drift apart. Importing a newer export here later is safe:
 an import only adds reels and fills in what was missing, and never repeats
 or resets one.
 
+## Monitoring
+
+To graph Hikidashi in a Prometheus or Grafana you already run on Unraid, set
+**Metrics** to `on` in the server's template (under advanced). A Prometheus
+container on the same Docker network can scrape `http://hikidashi:8080/metrics`
+with no token; from anywhere else, set **Metrics token** and send it.
+**Log to syslog** takes Unraid's own syslog server (Settings, Syslog Server,
+with its port), and **Log to Loki** a Loki. See
+[monitoring](operation.md#monitoring) and [logging](operation.md#logging).
+
 ## Troubleshooting
 
 - **`database disk image is malformed`, or locks that never clear.** The Data
