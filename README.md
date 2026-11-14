@@ -65,7 +65,7 @@ remember. It runs on your own machine, with local models.
   Instagram, or paste a link; an iOS Shortcut does the same on an iPhone.
 - **Monitoring, if you want it.** Prometheus metrics, health checks, and the
   log to syslog or Loki, with a ready-made Grafana dashboard. All off by
-  default.
+  default, and switched on from the Account page or the environment.
 - **English and Japanese**, light and dark themes.
 
 | | | |
