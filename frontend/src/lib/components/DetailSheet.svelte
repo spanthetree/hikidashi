@@ -441,10 +441,13 @@
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
 
-  /* Swipe down to close, at phone width. Only from the picture or the grab
-     handle: the text column scrolls, and a drag there should scroll it. */
+  /* Swipe down at phone width: the first swipe pushes the text away and gives
+     the video the whole sheet, a second one closes it. Swipe up brings the
+     text back. Only from the picture or the grab handle: the text column
+     scrolls, and a drag there should scroll it. */
   let drag = $state<{ y0: number; t0: number; dy: number } | null>(null);
   let settling = $state(false);
+  let full = $state(false);
 
   function down(e: PointerEvent) {
     if (!motion.narrow || e.pointerType === "mouse" || e.button !== 0) return;
@@ -454,20 +457,25 @@
 
   function move(e: PointerEvent) {
     if (!drag) return;
-    drag.dy = Math.max(0, e.clientY - drag.y0);
-    if (drag.dy > 6) (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    drag.dy = e.clientY - drag.y0;
+    if (Math.abs(drag.dy) > 6) (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
   }
 
   function up(e: PointerEvent) {
     if (!drag) return;
     const { dy, t0 } = drag;
-    const speed = dy / Math.max(1, e.timeStamp - t0);   // px per ms
+    const speed = Math.abs(dy) / Math.max(1, e.timeStamp - t0);   // px per ms
     drag = null;
-    if (dy > 120 || (dy > 30 && speed > 0.6)) onclose();
-    else settling = true;
+    const far = Math.abs(dy) > 120 || (Math.abs(dy) > 30 && speed > 0.6);
+    if (far && dy < 0) full = false;
+    else if (far && !full) full = true;
+    else if (far) onclose();
+    else settling = full && dy > 0;   // spring back from a pull that fell short
   }
 
-  const panelStyle = $derived(drag?.dy ? `transform: translateY(${drag.dy}px)` : undefined);
+  // Only a swipe that would close moves the sheet with the finger.
+  const pull = $derived(full && drag && drag.dy > 0 ? drag.dy : 0);
+  const panelStyle = $derived(pull ? `transform: translateY(${pull}px)` : undefined);
 </script>
 
 <svelte:head>
@@ -476,10 +484,10 @@
 
 <dialog class="sheet" aria-labelledby="d-title" {@attach modal} oncancel={cancel}>
   <div class="sheet-backdrop" role="presentation" onclick={onclose} transition:backdrop
-       style:opacity={drag?.dy ? Math.max(0.25, 1 - drag.dy / 500) : undefined}></div>
+       style:opacity={pull ? Math.max(0.25, 1 - pull / 500) : undefined}></div>
 
   <!-- svelte-ignore a11y_no_static_element_interactions (Tab wrapping only) -->
-  <div class="sheet-panel" class:settling bind:this={panelEl}
+  <div class="sheet-panel" class:settling class:full bind:this={panelEl}
        onkeydown={(e) => { trap(e); slideKey(e); }} transition:panel style={panelStyle}
        ontransitionend={() => (settling = false)}>
     <div class="grab" aria-hidden="true"
@@ -1228,7 +1236,8 @@
   .d-confirm p { margin: 0; color: var(--ink-2); }
   .d-confirm .d-remove { border-color: var(--risk); color: var(--risk); }
 
-  /* Phone width: a bottom sheet with a grab handle, swiped down to close. */
+  /* Phone width: a bottom sheet with a grab handle. Swiped down, the video
+     takes the whole sheet; swiped down again, it closes. */
   @media (max-width: 760px) {
     .sheet { padding: 0; place-items: end stretch; }
 
@@ -1240,7 +1249,11 @@
       height: calc(100dvh - 12px);
       border-radius: 14px 14px 0 0;
       border-bottom: 0;
+      transition: grid-template-rows 240ms var(--ease-out);
     }
+
+    .sheet-panel.full { grid-template-rows: minmax(0, 1fr) 0; }
+    .sheet-panel.full .sheet-body { visibility: hidden; }
 
     .grab {
       display: block;
