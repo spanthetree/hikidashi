@@ -608,3 +608,22 @@ export interface Answer {
   items: Item[];
   model: string;
 }
+
+/** A logging or monitoring setting on the Account page (admins). A secret's
+    value is only whether one is set. */
+export interface MonitoringSetting {
+  name: string;
+  kind: "text" | "bool" | "choice" | "secret";
+  choices: string[];
+  default: string;
+  source: "env" | "saved" | "default";
+  value: string | boolean;
+}
+
+export interface Monitoring {
+  settings: MonitoringSetting[];
+  metrics: boolean;
+  metrics_port: number | null;
+  shipping: string[];
+  problem: string | null;
+}

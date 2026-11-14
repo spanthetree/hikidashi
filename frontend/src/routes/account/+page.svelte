@@ -5,6 +5,7 @@
     logout, makeInvite, makeMyToken, revokeInvite, revokeMyToken, signOutEverywhere, updateMe, setCollapseCopies,
   } from "#lib/api.js";
   import AiProviders from "#lib/components/AiProviders.svelte";
+  import MonitoringSettings from "#lib/components/MonitoringSettings.svelte";
   import Notice from "#lib/components/Notice.svelte";
   import InfoHead from "#lib/components/InfoHead.svelte";
   import Rich from "#lib/components/Rich.svelte";
@@ -324,6 +325,13 @@
            default, which "System default" follows, on the Pipeline page. -->
       <AiProviders whose="mine" bind:notice />
     </section>
+
+    {#if me.is_admin}
+      <section class="a-sec" id="monitoring">
+        <InfoHead title={m.mon_title()}>{m.mon_lede()}</InfoHead>
+        <MonitoringSettings bind:notice />
+      </section>
+    {/if}
 
     {#if mine}
       <section class="a-sec">
