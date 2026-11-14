@@ -37,8 +37,8 @@ remember. It runs on your own machine, with local models.
   text (Tesseract) are searched by keyword and by meaning together: "a
   vegetarian sandwich" finds a reel captioned *Portobello banh mi*. A match in
   what was said opens the reel at that line.
-- **Ask your library.** Ask a question and get an answer from your own saves,
-  each claim citing the reel it came from.
+- **Ask your library.** Ask a question from the search bar and get an answer
+  from your own saves, each claim citing the reel it came from.
 - **Rediscover.** Saves from this day in earlier years, ones you never opened,
   a shuffle button, and "more like this" on every reel. Reposts of the same
   video are found and listed together.
