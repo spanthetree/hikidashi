@@ -339,7 +339,8 @@
   .seg label:has(:checked) { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / 12%); }
 
   @media (max-width: 700px) {
-    .topbar { gap: 10px; padding: 0 12px; }
+    /* Wraps when a page puts a second row in it (the library's search). */
+    .topbar { flex-wrap: wrap; align-content: center; gap: 8px 10px; padding: 0 12px; }
     .menu { display: grid; }
     .brand strong { display: none; }
     .who, .who:not(:has(.name)) { padding: 0; width: 34px; height: 34px; justify-content: center; }
