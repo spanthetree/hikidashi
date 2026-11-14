@@ -9,6 +9,7 @@ How well search and tagging do, scored the same way at every release
 <!-- make_diagrams: eval-history -->
 | version | date | blended nDCG@10 | keyword nDCG@10 | negatives quiet | tag precision | what moved it |
 |---|---|---|---|---|---|---|
+| 0.28.0 | 2026-11-14 | 0.995 | 0.749 | 4/4 | 0.923 |  |
 | 0.27.0 | 2026-11-14 | 0.995 | 0.749 | 4/4 | 0.923 |  |
 | 0.26.0 | 2026-11-13 | 0.995 | 0.749 | 4/4 | 0.923 |  |
 | 0.25.0 | 2026-11-13 | 0.995 | 0.749 | 4/4 | 0.923 |  |

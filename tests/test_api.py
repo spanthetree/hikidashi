@@ -133,6 +133,53 @@ class ApiCase(unittest.TestCase):
         return {i["shortcode"] for i in r.json()["items"]}
 
 
+@unittest.skipUnless(importlib.util.find_spec("prometheus_client"), "prometheus_client is missing")
+class TestMonitoring(ApiCase):
+    """Logging and monitoring from the Account page: saved, and on at once."""
+
+    def setUp(self):
+        super().setUp()
+        # Back to nothing shipped and no metrics, whatever a test turned on.
+        self.addCleanup(self.main.apply_monitoring, {})
+
+    def put(self, **changes):
+        return self.client.put("/api/admin/monitoring", json=changes)
+
+    def test_metrics_switch_on_and_off_without_a_restart(self):
+        self.assertEqual(self.client.get("/metrics").status_code, 404)
+        r = self.put(HIKIDASHI_METRICS=True, HIKIDASHI_METRICS_TOKEN="t0ken")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertTrue(r.json()["metrics"])
+        got = self.client.get("/metrics", headers={"Authorization": "Bearer t0ken"})
+        self.assertEqual(got.status_code, 200)
+        self.assertIn("hikidashi_http_requests", got.text)
+        self.assertEqual(self.client.get("/metrics").status_code, 401)
+        self.assertFalse(self.put(HIKIDASHI_METRICS=False).json()["metrics"])
+        self.assertEqual(self.client.get("/metrics").status_code, 404)
+
+    def test_log_shipping_starts_and_stops(self):
+        r = self.put(HIKIDASHI_SYSLOG="udp://127.0.0.1:9", HIKIDASHI_LOG_LEVEL="warning")
+        self.assertEqual(r.json()["shipping"], ["syslog"])
+        shown = {s["name"]: s for s in r.json()["settings"]}
+        self.assertEqual(shown["HIKIDASHI_LOG_LEVEL"]["source"], "saved")
+        self.assertEqual(self.put(HIKIDASHI_SYSLOG=None).json()["shipping"], [])
+
+    def test_a_secret_is_never_sent_back(self):
+        r = self.put(HIKIDASHI_LOKI_PASSWORD="hunter2")
+        self.assertNotIn("hunter2", r.text)
+        self.assertNotIn("hunter2", self.client.get("/api/admin/monitoring").text)
+
+    def test_a_wrong_setting_is_refused(self):
+        r = self.put(HIKIDASHI_SYSLOG="http://logs:514")
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("udp://", r.json()["detail"])
+
+    def test_admins_only(self):
+        self.as_user(BOB)
+        self.assertEqual(self.client.get("/api/admin/monitoring").status_code, 403)
+        self.assertEqual(self.put(HIKIDASHI_METRICS=True).status_code, 403)
+
+
 class TestIsolation(ApiCase):
     def test_the_grid_is_your_library(self):
         self.assertEqual(self.codes(), {"SHARED", "ALICE1"})

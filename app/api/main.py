@@ -20,21 +20,21 @@ import shutil
 import sqlite3
 import threading
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 from urllib.parse import urlsplit
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, UploadFile
+from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
-from app import accounts, dupes, jobs, library, logs, metrics, search, spa
+from app import accounts, dupes, jobs, library, logs, metrics, monitoring, search, spa
 from app.accounts import AccountError, User
 from app.api import ai_routes, explorer
 from app.config import settings
-from app.db import is_current, open_db
+from app.db import connect, is_current, open_db
 from app.enrich import worker as fetches
 from app.importer.service import ImportError_, NotALink, add_link, import_export
 from app.jobs import STAGES, protocol
@@ -64,6 +64,35 @@ LOG_FILE = logs.install(settings.logs_dir)
 app = FastAPI(title="Hikidashi", docs_url=None, redoc_url=None, openapi_url=None)
 # /metrics and its counters, when HIKIDASHI_METRICS=on (#149); None otherwise.
 METRICS = metrics.install(app, settings, explorer.app_version())
+
+
+def apply_monitoring(env: Mapping[str, str]) -> str | None:
+    """Ship the log and serve /metrics as `env` says. Returns why one could
+    not start (a port in use, say), the rest being on."""
+    problem = None
+    try:
+        logs.ship(env)
+    except (OSError, ValueError) as exc:
+        problem = f"log shipping: {exc}"
+    try:
+        metrics.switch(app, env)
+    except (OSError, ValueError) as exc:
+        problem = f"metrics: {exc}"
+    if problem:
+        log.warning("monitoring: %s", problem)
+    return problem
+
+
+# And as saved on the Account page, which the environment overrides.
+try:
+    _conn = connect(settings.db_path)
+    try:
+        if monitoring.saved(_conn):
+            apply_monitoring(monitoring.environ(_conn, settings.db_path.parent))
+    finally:
+        _conn.close()
+except sqlite3.Error as exc:
+    log.warning("monitoring settings not read: %s", exc)
 
 
 @app.get("/healthz", include_in_schema=False)
@@ -613,6 +642,39 @@ def change_user(user_id: int, body: AccountChange, user: Admin) -> list[dict[str
     conn = db()
     accounts.update(conn, user, user_id, disabled=body.disabled, is_admin=body.is_admin)
     return accounts.everyone(conn)
+
+
+def _monitoring(problem: str | None = None) -> dict[str, Any]:
+    live: metrics.Live = app.state.metrics
+    return {
+        "settings": monitoring.show(db()),
+        "metrics": live.metrics is not None,
+        "metrics_port": live.options.port if live.metrics else None,
+        "shipping": [
+            h.get_name().removeprefix("hikidashi-")
+            for h in logging.getLogger(logs.LOGGERS[0]).handlers
+            if h.get_name() in ("hikidashi-syslog", "hikidashi-loki")
+        ],
+        "problem": problem,
+    }
+
+
+@app.get("/api/admin/monitoring")
+def monitoring_settings(user: Admin) -> dict[str, Any]:
+    """Logging and monitoring, as the Account page shows them."""
+    return _monitoring()
+
+
+@app.put("/api/admin/monitoring")
+def change_monitoring(
+    changes: Annotated[dict[str, str | bool | None], Body()], user: Admin
+) -> dict[str, Any]:
+    """Save settings (null or "" clears one), and apply them at once."""
+    try:
+        env = monitoring.save(db(), settings.db_path.parent, changes, user.id)
+    except monitoring.Invalid as exc:
+        raise HTTPException(400, str(exc)) from None
+    return _monitoring(apply_monitoring(env))
 
 
 @app.get("/api/invites")

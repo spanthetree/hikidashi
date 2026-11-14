@@ -473,9 +473,13 @@
     else settling = full && dy > 0;   // spring back from a pull that fell short
   }
 
-  // Only a swipe that would close moves the sheet with the finger.
+  /* Everything follows the finger. A swipe that would close moves the sheet;
+     one that would grow or shrink the video moves the line between video and
+     text (--grow), and on release it eases to wherever the swipe lands. */
   const pull = $derived(full && drag && drag.dy > 0 ? drag.dy : 0);
-  const panelStyle = $derived(pull ? `transform: translateY(${pull}px)` : undefined);
+  const grow = $derived(drag && (full ? Math.min(0, drag.dy) : Math.max(0, drag.dy)));
+  const panelStyle = $derived(pull ? `transform: translateY(${pull}px)`
+                              : grow ? `--grow: ${grow}px` : undefined);
 </script>
 
 <svelte:head>
@@ -487,7 +491,7 @@
        style:opacity={pull ? Math.max(0.25, 1 - pull / 500) : undefined}></div>
 
   <!-- svelte-ignore a11y_no_static_element_interactions (Tab wrapping only) -->
-  <div class="sheet-panel" class:settling class:full bind:this={panelEl}
+  <div class="sheet-panel" class:settling class:full class:growing={grow} bind:this={panelEl}
        onkeydown={(e) => { trap(e); slideKey(e); }} transition:panel style={panelStyle}
        ontransitionend={() => (settling = false)}>
     <div class="grab" aria-hidden="true"
@@ -1244,7 +1248,7 @@
     .sheet-panel {
       grid-template-columns: 1fr;
       /* The picture gets a fixed share; the rest scrolls underneath it. */
-      grid-template-rows: minmax(0, 42dvh) minmax(0, 1fr);
+      grid-template-rows: minmax(0, calc(42dvh + var(--grow, 0px))) minmax(0, 1fr);
       width: 100%;
       height: calc(100dvh - 12px);
       border-radius: 14px 14px 0 0;
@@ -1252,8 +1256,10 @@
       transition: grid-template-rows 240ms var(--ease-out);
     }
 
-    .sheet-panel.full { grid-template-rows: minmax(0, 1fr) 0; }
-    .sheet-panel.full .sheet-body { visibility: hidden; }
+    .sheet-panel.full { grid-template-rows: minmax(0, calc(100% + var(--grow, 0px))) minmax(0, 1fr); }
+    .sheet-panel.full:not(.growing) .sheet-body { visibility: hidden; }
+    /* No easing while the finger holds the line, or it lags behind. */
+    .sheet-panel.growing { transition: none; }
 
     .grab {
       display: block;

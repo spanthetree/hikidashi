@@ -135,6 +135,12 @@ def main(argv: list[str] | None = None) -> int:
         logging.getLogger(noisy).setLevel(logging.WARNING)
     settings.ensure_dirs()
     logs.install(settings.logs_dir, Path(args.log).name)
+    if not args.server:
+        # Beside the server: ship the log as the Account page says, and follow
+        # changes to it. A worker on another machine keeps to its environment.
+        from app import monitoring
+
+        monitoring.watch(settings.db_path, settings.db_path.parent, logs.ship)
 
     if args.backend == "hosted":
         return _hosted(args.server, token, args.name, args.for_)

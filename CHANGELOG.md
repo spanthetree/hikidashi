@@ -6,6 +6,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.28.0] — 2026-11-14
+
+### Added
+
+- **Logging and monitoring on the Account page**: an admin switches
+  Prometheus metrics on and off, sends the log to syslog or Loki, and sets the
+  level, format and the rest, without a restart. It shows what is on. A
+  variable set in the environment still wins, and shows locked; the metrics
+  token and Loki's token and password are saved sealed and never shown back.
+  Workers beside the server follow a change within 30 seconds; a worker on
+  another machine keeps to its own environment (ADR 0023).
+  `GET`/`PUT /api/admin/monitoring`.
+
+### Changed
+
+- **The swipe that fills a reel's sheet with its video follows the finger**,
+  both ways, and eases to full or back when you let go, as the swipe that
+  closes the sheet already did.
+- `/metrics` is always routed, and answers 404 while metrics are off.
+
 ## [0.27.0] — 2026-11-14
 
 ### Added

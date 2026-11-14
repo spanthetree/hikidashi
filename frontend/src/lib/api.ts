@@ -1,7 +1,7 @@
 import type {
   AiBacklog, AiPage, AiStage, AiTest, AiUse, AiUserRow, MyPipeline,
   Account, Answer, ApiToken, AuthState, ExportOptions, ImportResult, Invite, Item, ItemDetail, ItemGame, ItemPage,
-  LogTail, Me,
+  LogTail, Me, Monitoring,
   MyTokens, Named, WorkerToken,
   PipelineState, PlacePage, Recipe, RecipeFacets, RecipeIn, ShoppingList, Stage, Stats, Tag, TagChoice,
 } from "./types";
@@ -268,6 +268,11 @@ export const getInvites = () => api<Invite[]>("/api/invites");
 /** A new invite link. Its path is shown this once. */
 export const makeInvite = () => api<{ path: string; expires_at: number }>("/api/invites", send("POST"));
 export const revokeInvite = (id: number) => api<Invite[]>(`/api/invites/${id}`, send("DELETE"));
+
+/** Logging and monitoring (admins): null or "" clears a setting. */
+export const getMonitoring = () => api<Monitoring>("/api/admin/monitoring");
+export const setMonitoring = (changes: Record<string, string | boolean | null>) =>
+  api<Monitoring>("/api/admin/monitoring", send("PUT", changes));
 
 /* ---------- API tokens (#103) ---------- */
 
