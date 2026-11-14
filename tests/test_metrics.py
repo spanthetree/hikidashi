@@ -307,7 +307,10 @@ class TestAuth(MetricsCase):
         with mock.patch("app.metrics.Metrics.serve") as serve:
             self.install(HIKIDASHI_METRICS_PORT="9464")
         serve.assert_called_once()
-        self.assertFalse(any(getattr(r, "path", "") == "/metrics" for r in self.app.routes))
+        from fastapi.testclient import TestClient
+
+        # Not on the published port as well.
+        self.assertEqual(TestClient(local(self.app)).get("/metrics").status_code, 404)
 
     def test_the_port_answers_with_the_same_rules(self):
         from app.metrics import Metrics, Options

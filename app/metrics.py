@@ -1,4 +1,5 @@
-"""Prometheus metrics (#149): off unless HIKIDASHI_METRICS=on.
+"""Prometheus metrics (#149): off unless HIKIDASHI_METRICS=on, or switched
+on on the Account page (app/monitoring.py), which takes without a restart.
 
 `/metrics` on the main port, or on HIKIDASHI_METRICS_PORT instead, in the
 Prometheus text format (OpenMetrics when the scraper asks for it). A scrape
@@ -45,7 +46,7 @@ if TYPE_CHECKING:
 
     from app.config import Settings
 
-from app.logship import on, secret
+from app.logship import Env, on, secret
 
 log = logging.getLogger(__name__)
 
@@ -73,20 +74,38 @@ class Options:
     per_user: bool = False
 
     @classmethod
-    def from_env(cls) -> Options:
+    def from_env(cls, env: Env | None = None) -> Options:
+        """From the environment, or `env`. ValueError names a setting that is wrong."""
+        env = os.environ if env is None else env
+
+        def number(name: str, default: float, kind: Callable[[str], Any] = float) -> Any:
+            value = env.get(name) or ""
+            if not value.strip():
+                return default
+            try:
+                got = kind(value)
+            except ValueError:
+                raise ValueError(f"{name}: not a number: {value}") from None
+            if got <= 0 or (name.endswith("_PORT") and got > 65535):
+                raise ValueError(f"{name}: out of range: {value}")
+            return got
+
+        allow = []
+        for n in (env.get("HIKIDASHI_METRICS_ALLOW") or ALLOW).split(","):
+            if n.strip():
+                try:
+                    allow.append(ipaddress.ip_network(n.strip(), strict=False))
+                except ValueError:
+                    raise ValueError(
+                        f"HIKIDASHI_METRICS_ALLOW: not an address: {n.strip()}"
+                    ) from None
         return cls(
-            on=on(os.environ.get("HIKIDASHI_METRICS")),
-            token=secret("HIKIDASHI_METRICS_TOKEN"),
-            port=int(os.environ["HIKIDASHI_METRICS_PORT"])
-            if os.environ.get("HIKIDASHI_METRICS_PORT")
-            else None,
-            allow=tuple(
-                ipaddress.ip_network(n.strip(), strict=False)
-                for n in (os.environ.get("HIKIDASHI_METRICS_ALLOW") or ALLOW).split(",")
-                if n.strip()
-            ),
-            refresh=float(os.environ.get("HIKIDASHI_METRICS_REFRESH") or 30),
-            per_user=on(os.environ.get("HIKIDASHI_METRICS_PER_USER")),
+            on=on(env.get("HIKIDASHI_METRICS")),
+            token=secret("HIKIDASHI_METRICS_TOKEN", env),
+            port=number("HIKIDASHI_METRICS_PORT", 0, int) or None,
+            allow=tuple(allow),
+            refresh=number("HIKIDASHI_METRICS_REFRESH", 30.0),
+            per_user=on(env.get("HIKIDASHI_METRICS_PER_USER")),
         )
 
     def refuse(self, authorization: str | None, address: str | None) -> int | None:
@@ -553,32 +572,74 @@ class Metrics:
         return server
 
 
-def install(app: FastAPI, settings: Settings, version: str) -> Metrics | None:
-    """Turn metrics on for `app`, if HIKIDASHI_METRICS says so."""
-    options = Options.from_env()
-    if not options.on:
-        return None
+class Live:
+    """What /metrics answers with now. Switched on, off or changed from the
+    Account page, it starts again: the counters go back to zero, as after a
+    restart, which Prometheus takes in its stride."""
+
+    def __init__(self, settings: Settings, version: str) -> None:
+        self.settings = settings
+        self.version = version
+        self.options = Options()
+        self.metrics: Metrics | None = None
+        self.server: ThreadingHTTPServer | None = None
+        self._lock = threading.Lock()
+
+    def switch(self, options: Options) -> Metrics | None:
+        from app import search
+
+        with self._lock:
+            if options == self.options:
+                return self.metrics
+            if self.server is not None:
+                self.server.shutdown()
+                self.server.server_close()
+                self.server = None
+            self.metrics = Metrics(self.settings, options, self.version) if options.on else None
+            search.observe = self.metrics.time_search if self.metrics else None
+            if self.metrics and options.port:
+                self.server = self.metrics.serve(self.settings.host, options.port)
+            self.options = options
+            return self.metrics
+
+
+def install(
+    app: FastAPI, settings: Settings, version: str, env: Env | None = None
+) -> Metrics | None:
+    """Give `app` a /metrics that answers while metrics are on, as
+    HIKIDASHI_METRICS (or `env`) says now; `switch` changes that later."""
     from starlette.responses import Response
 
-    from app import search
+    live = Live(settings, version)
+    app.state.metrics = live
 
-    metrics = Metrics(settings, options, version)
-    app.middleware("http")(metrics.middleware)
-    search.observe = metrics.time_search
-    if options.port:
-        metrics.serve(settings.host, options.port)
-        return metrics
+    async def middleware(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        m = live.metrics
+        return await (m.middleware(request, call_next) if m else call_next(request))
+
+    app.middleware("http")(middleware)
 
     # A plain Starlette route: nothing for FastAPI to read from the request.
     def scrape(request: Request) -> Response:
+        m, options = live.metrics, live.options
+        if m is None or options.port:
+            return Response(status_code=404)
         refused = options.refuse(
             request.headers.get("authorization"), request.client.host if request.client else None
         )
         if refused:
             headers = {"WWW-Authenticate": 'Bearer realm="metrics"'} if refused == 401 else None
             return Response(status_code=refused, headers=headers)
-        body, ctype = metrics.render(request.headers.get("accept"))
+        body, ctype = m.render(request.headers.get("accept"))
         return Response(body, media_type=ctype)
 
     app.router.add_route(PATH, scrape, methods=["GET"], include_in_schema=False)
-    return metrics
+    return live.switch(Options.from_env(env))
+
+
+def switch(app: FastAPI, env: Env) -> Metrics | None:
+    """Metrics as `env` now says: on, off, another port or token."""
+    live: Live = app.state.metrics
+    return live.switch(Options.from_env(env))

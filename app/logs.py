@@ -13,6 +13,7 @@ import logging
 import logging.handlers
 import os
 import socket
+from collections.abc import Mapping
 from pathlib import Path
 
 FILE = "server.log"
@@ -92,11 +93,23 @@ def install(log_dir: Path, file: str = FILE) -> Path:
     root.setLevel(min(root.level or logging.INFO, logging.INFO))
     # And to syslog and Loki, when they are set (#149). This file's process
     # name labels the lines: server, worker, server-worker, worker-once.
+    global _process
+    _process = Path(file).stem
+    ship()
+    return path
+
+
+_process = Path(FILE).stem
+
+
+def ship(env: Mapping[str, str] | None = None) -> list[str]:
+    """Send the log to syslog and Loki as `env` says (the environment by
+    default), replacing what was set up before: app/monitoring.py calls this
+    with the Account page's settings."""
     from app import logship
 
     worker = os.environ.get("HIKIDASHI_WORKER_NAME") or socket.gethostname()
-    logship.install(Path(file).stem, worker, LOGGERS, _SkipNoise())
-    return path
+    return logship.install(_process, worker, LOGGERS, _SkipNoise(), env)
 
 
 def tail(path: Path, lines: int = 500, *, chunk: int = 64 * 1024) -> list[str]:

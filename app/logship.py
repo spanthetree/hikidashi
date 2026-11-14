@@ -1,7 +1,9 @@
 """The log, sent elsewhere as well (#149): syslog and Loki, off unless set.
 
 `install(process)` adds a handler for each destination configured in the
-environment. The file the /logs page reads, and stdout, stay as they are:
+environment, or saved on the Account page (app/monitoring.py: the variable
+wins); called again, it replaces them. The file the /logs page reads, and
+stdout, stay as they are:
 
     HIKIDASHI_SYSLOG=udp://host:514         udp:// | tcp:// | unix:///dev/log
     HIKIDASHI_SYSLOG_FORMAT=rfc5424         rfc5424 (default) | rfc3164
@@ -42,6 +44,7 @@ import sys
 import threading
 import time
 import urllib.request
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -75,12 +78,16 @@ def on(value: str | None) -> bool:
     return (value or "").strip().lower() in ("on", "1", "true", "yes")
 
 
-def secret(name: str) -> str | None:
+Env = Mapping[str, str]
+
+
+def secret(name: str, env: Env | None = None) -> str | None:
     """`name` from the environment, or the contents of the file `name_FILE`
     names, as Docker secrets are passed."""
-    if value := os.environ.get(name):
+    env = os.environ if env is None else env
+    if value := env.get(name):
         return value
-    if path := os.environ.get(f"{name}_FILE"):
+    if path := env.get(f"{name}_FILE"):
         return Path(path).read_text(encoding="utf-8").strip() or None
     return None
 
@@ -198,9 +205,10 @@ class SysLog(logging.handlers.SysLogHandler):
             self.socket = None
 
 
-def syslog_handler(url: str, process: str, worker: str) -> logging.Handler:
+def syslog_handler(url: str, process: str, worker: str, env: Env | None = None) -> logging.Handler:
+    env = os.environ if env is None else env
     parts = urlsplit(url)
-    facility = os.environ.get("HIKIDASHI_SYSLOG_FACILITY", "local0").lower()
+    facility = (env.get("HIKIDASHI_SYSLOG_FACILITY") or "local0").lower()
     fac = logging.handlers.SysLogHandler.facility_names.get(facility)
     if fac is None:
         raise ValueError(f"HIKIDASHI_SYSLOG_FACILITY: no facility called {facility}")
@@ -212,11 +220,11 @@ def syslog_handler(url: str, process: str, worker: str) -> logging.Handler:
         handler = SysLog(address=address, facility=fac, socktype=kind)
     else:
         raise ValueError(f"HIKIDASHI_SYSLOG: use udp://, tcp:// or unix://, not {url}")
-    style = os.environ.get("HIKIDASHI_SYSLOG_FORMAT", "rfc5424").lower()
+    style = (env.get("HIKIDASHI_SYSLOG_FORMAT") or "rfc5424").lower()
     if style not in ("rfc5424", "rfc3164"):
         raise ValueError("HIKIDASHI_SYSLOG_FORMAT: rfc5424 or rfc3164")
     fmt = Rfc5424 if style == "rfc5424" else Rfc3164
-    handler.setFormatter(fmt(process, worker, json_lines=_json()))
+    handler.setFormatter(fmt(process, worker, json_lines=_json(env)))
     return handler
 
 
@@ -330,66 +338,104 @@ class Loki(logging.Handler):
         super().close()
 
 
-def loki_handler(url: str, process: str, worker: str) -> Loki:
+def loki_handler(url: str, process: str, worker: str, env: Env | None = None) -> Loki:
+    env = os.environ if env is None else env
     headers = {}
-    if token := secret("HIKIDASHI_LOKI_TOKEN"):
+    if token := secret("HIKIDASHI_LOKI_TOKEN", env):
         headers["Authorization"] = f"Bearer {token}"
-    elif user := secret("HIKIDASHI_LOKI_USER"):
-        pair = f"{user}:{secret('HIKIDASHI_LOKI_PASSWORD') or ''}".encode()
+    elif user := secret("HIKIDASHI_LOKI_USER", env):
+        pair = f"{user}:{secret('HIKIDASHI_LOKI_PASSWORD', env) or ''}".encode()
         headers["Authorization"] = "Basic " + base64.b64encode(pair).decode()
-    if tenant := os.environ.get("HIKIDASHI_LOKI_TENANT"):
+    if tenant := env.get("HIKIDASHI_LOKI_TENANT"):
         headers["X-Scope-OrgID"] = tenant
     labels = {"app": APP, "process": process, "worker": worker}
-    for kv in (os.environ.get("HIKIDASHI_LOKI_LABELS") or "").split(","):
+    for kv in (env.get("HIKIDASHI_LOKI_LABELS") or "").split(","):
         key, _, value = kv.partition("=")
         if key.strip() and value.strip():
             labels.setdefault(key.strip(), value.strip())
     handler = Loki(url, labels, headers=headers)
-    handler.setFormatter(Shipped(process, worker, json_lines=_json()))
+    handler.setFormatter(Shipped(process, worker, json_lines=_json(env)))
     return handler
 
 
-def _json() -> bool:
-    return (os.environ.get("HIKIDASHI_LOG_FORMAT") or "text").lower() == "json"
+def _json(env: Env) -> bool:
+    style = (env.get("HIKIDASHI_LOG_FORMAT") or "text").lower()
+    if style not in ("text", "json"):
+        raise ValueError("HIKIDASHI_LOG_FORMAT: text or json")
+    return style == "json"
 
 
-def _level() -> int:
-    name = (os.environ.get("HIKIDASHI_LOG_LEVEL") or "info").upper()
+def _level(env: Env) -> int:
+    name = (env.get("HIKIDASHI_LOG_LEVEL") or "info").upper()
     level = logging.getLevelName(name)
     if not isinstance(level, int):
         raise ValueError(f"HIKIDASHI_LOG_LEVEL: no level called {name.lower()}")
     return level
 
 
+def check(env: Env) -> None:
+    """Raise ValueError if these settings could not be installed, before any
+    are: what the Account page says when one is wrong."""
+    _level(env)
+    _json(env)
+    if url := env.get("HIKIDASHI_SYSLOG"):
+        if urlsplit(url).scheme not in ("udp", "tcp", "unix"):
+            raise ValueError(f"HIKIDASHI_SYSLOG: use udp://, tcp:// or unix://, not {url}")
+        facility = (env.get("HIKIDASHI_SYSLOG_FACILITY") or "local0").lower()
+        if facility not in logging.handlers.SysLogHandler.facility_names:
+            raise ValueError(f"HIKIDASHI_SYSLOG_FACILITY: no facility called {facility}")
+        if (env.get("HIKIDASHI_SYSLOG_FORMAT") or "rfc5424").lower() not in ("rfc5424", "rfc3164"):
+            raise ValueError("HIKIDASHI_SYSLOG_FORMAT: rfc5424 or rfc3164")
+    if (url := env.get("HIKIDASHI_LOKI_URL")) and urlsplit(url).scheme not in ("http", "https"):
+        raise ValueError(f"HIKIDASHI_LOKI_URL: use http:// or https://, not {url}")
+
+
 def install(
-    process: str, worker: str, loggers: tuple[str, ...], noise: logging.Filter
+    process: str,
+    worker: str,
+    loggers: tuple[str, ...],
+    noise: logging.Filter,
+    env: Env | None = None,
 ) -> list[str]:
-    """Add a handler for each destination set in the environment to `loggers`,
-    and make stdout JSON if asked. Returns what it added, as `syslog`, `loki`.
-    Safe to call twice."""
+    """Add a handler for each destination set in `env` (the environment by
+    default) to `loggers`, and make stdout JSON if asked. Returns what it
+    added, as `syslog`, `loki`. Called again, it replaces what it added
+    before, so a change on the Account page takes without a restart."""
+    env = os.environ if env is None else env
+    check(env)
+    level = _level(env)
+    for name in (f"{APP}-syslog", f"{APP}-loki"):
+        old = [h for h in logging.getLogger(loggers[0]).handlers if h.get_name() == name]
+        for h in old:
+            for logger in loggers:
+                logging.getLogger(logger).removeHandler(h)
+            # Off the caller's thread: a Loki that is away makes its flush wait.
+            threading.Thread(target=h.close, name=f"{name}-close", daemon=True).start()
     wanted = {
-        "syslog": (os.environ.get("HIKIDASHI_SYSLOG"), syslog_handler),
-        "loki": (os.environ.get("HIKIDASHI_LOKI_URL"), loki_handler),
+        "syslog": (env.get("HIKIDASHI_SYSLOG"), syslog_handler),
+        "loki": (env.get("HIKIDASHI_LOKI_URL"), loki_handler),
     }
-    level = _level()
     added: list[str] = []
     for kind, (url, make) in wanted.items():
         if not url:
             continue
+        handler = make(url, process, worker, env)
         added.append(kind)
-        name = f"{APP}-{kind}"
-        if any(h.get_name() == name for h in logging.getLogger(loggers[0]).handlers):
-            continue  # --reload imports the app again
-        handler = make(url, process, worker)
-        handler.set_name(name)
+        handler.set_name(f"{APP}-{kind}")
         handler.setLevel(level)
         handler.addFilter(noise)
         for logger in loggers:
             logging.getLogger(logger).addHandler(handler)
-    if _json():
-        fmt = Shipped(process, worker, json_lines=True)
-        for name in loggers:
-            for h in logging.getLogger(name).handlers:
-                if type(h) is logging.StreamHandler:
-                    h.setFormatter(fmt)
+    as_json = _json(env)
+    for name in loggers:
+        for h in logging.getLogger(name).handlers:
+            if type(h) is not logging.StreamHandler:
+                continue
+            # The formatter it had before JSON, to go back to.
+            if not isinstance(h.formatter, Shipped):
+                h._hk_text = h.formatter  # type: ignore[attr-defined]
+            if as_json:
+                h.setFormatter(Shipped(process, worker, json_lines=True))
+            elif isinstance(h.formatter, Shipped):
+                h.setFormatter(getattr(h, "_hk_text", None))
     return added
