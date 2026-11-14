@@ -6,6 +6,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.27.0] — 2026-11-14
+
+### Added
+
+- **Full-screen video on a phone**: swipe down on a reel's video and the text
+  makes way, so the video takes the whole sheet. Swipe down again to close
+  it, or up to bring the text back.
+
+### Changed
+
+- **Search has its own row on a phone**, full width under the header,
+  instead of squeezing between the logo and the sort.
+- **Ask sits at the end of the search bar**, at every width, rather than in
+  the toolbar with Shuffle, Export and Import.
+
+### Fixed
+
+- **A reel's sheet sat cut off on a phone** in every theme but Hikidashi:
+  the wider type in the toolbar ran past the screen, Chrome on Android
+  widened the page to fit, and the sheet stretched with it. The themes size
+  the toolbar to fit, and with Ask moved, searching no longer widens it.
+
 ## [0.26.0] — 2026-11-13
 
 ### Added

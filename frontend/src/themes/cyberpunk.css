@@ -91,6 +91,9 @@
 }
 :root[data-theme="cyberpunk"] :is(.slabel, .d-label, .r-label, legend) { font-size: 10.5px; }
 :root[data-theme="cyberpunk"] :is(.btn, .upload) { font-size: 11px; font-weight: 700; }
+/* The library toolbar's row is as wide as Hikidashi's, so it fits a phone
+   unwrapped; any wider and the page, and the detail sheet with it, overflows. */
+:root[data-theme="cyberpunk"] .upload-slot .btn { font-size: 9px; }
 :root[data-theme="cyberpunk"] .brand strong {
   font-size: 15px;
   text-transform: uppercase;

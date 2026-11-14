@@ -86,6 +86,9 @@
   filter: drop-shadow(0 0 6px rgb(255 41 117 / 45%));
 }
 :root[data-theme="retrowave"] :is(.btn, .upload) { font-weight: 400; letter-spacing: 0.03em; }
+/* The library toolbar's row is as wide as Hikidashi's, so it fits a phone
+   unwrapped; any wider and the page, and the detail sheet with it, overflows. */
+:root[data-theme="retrowave"] .upload-slot .btn { font-size: 11px; }
 :root[data-theme="retrowave"] :is(.slabel, .d-label, .r-label, legend) { font-weight: 400; letter-spacing: 0.06em; }
 :root[data-theme="retrowave"][data-scheme="dark"] :is(.page h1, .sheet-head h2) { text-shadow: 0 0 12px rgb(45 226 230 / 55%); }
 

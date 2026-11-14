@@ -1087,7 +1087,8 @@ class TestTokens(SignInCase):
         self.assertEqual(r.status_code, 401)
         self.assertEqual(r.headers["www-authenticate"], 'Bearer realm="Hikidashi"')
         token = self.token("bob", "read:library")
-        r = self.call("GET", "/api/items", token[:-1] + "x")
+        # Change the last character; a fixed "x" was no change when it already ended in x.
+        r = self.call("GET", "/api/items", token[:-1] + ("y" if token.endswith("x") else "x"))
         self.assertEqual(r.status_code, 401)
         self.assertIn('error="invalid_token"', r.headers["www-authenticate"])
 

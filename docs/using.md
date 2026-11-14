@@ -57,7 +57,8 @@ Only Instagram links for now.
 
 ## Ask your library
 
-With something typed in the search box, **Ask** takes it as a question:
+With something typed in the search box, **Ask** at the end of it takes it as a
+question:
 "How long does that sourdough proof for?", "What were the ramen places in
 Tokyo I saved?". The answer comes from your own saves only, with each claim
 citing the reel it came from as a numbered link that opens the reel, at the
@@ -85,6 +86,9 @@ filter or a search narrows it. **Another** in its sheet picks again.
 
 Open a reel to watch it (muted and looped) beside its caption, transcript and
 on-screen text.
+On a phone the reel opens as a sheet from the bottom, the video above the
+text. Swipe down on the video and it takes the whole sheet; swipe down again
+to close it, or up to bring the text back.
 
 <img src="demo/sheet.webp" alt="A woodturning reel open on the demo library, in dark mode: the video beside its length, likes and size, its caption, the model's summary and keywords, its tag Home and DIY, its collection and hashtags." width="640">
 

@@ -500,6 +500,11 @@
       <input type="search" autocomplete="off"
              placeholder={recipes ? m.search_placeholder_recipes() : m.search_placeholder()}
              aria-label={m.search()} bind:value={q} oninput={typed}>
+      {#if filters.q && asking === null}
+        <button type="button" class="btn sm" title={m.ask_title()} onclick={() => (asking = filters.q)}>
+          <Icon name="ask" size={14} /> {m.ask_button()}
+        </button>
+      {/if}
     </div>
     <select class="sort" aria-label={m.sort_label()} value={filters.sort} onchange={setSort}>
       <option value="relevance">{m.sort_relevance()}</option>
@@ -563,11 +568,6 @@
           </button>
         {/each}
         <span class="upload-slot">
-          {#if filters.q && asking === null}
-            <button type="button" class="btn sm" title={m.ask_title()} onclick={() => (asking = filters.q)}>
-              <Icon name="ask" size={14} /> {m.ask_button()}
-            </button>
-          {/if}
           {#if library.total}
             <button type="button" class="btn sm" title={m.shuffle_title()} onclick={shuffle}>
               <Icon name="shuffle" size={14} /> {m.shuffle()}
@@ -676,7 +676,9 @@
 {@render children()}
 
 <style>
-  .search { flex: 1; min-width: 0; }
+  /* Ask your library (#45) sits at the end of the search it would ask. */
+  .search { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
+  .search .btn { flex: none; }
 
   .search input, .sort {
     padding: 7px 12px;
@@ -686,7 +688,7 @@
     transition: border-color 120ms ease, box-shadow 120ms ease;
   }
 
-  .search input { width: 100%; }
+  .search input { flex: 1; min-width: 0; width: 100%; }
   .search input:focus { border-color: var(--rule); background: var(--surface); outline: none; }
 
   .sort { flex: none; padding: 7px 10px; }
@@ -873,6 +875,10 @@
   .scrim { display: none; }
 
   @media (max-width: 700px) {
+    /* A phone: search gets a row of its own under the header, so neither row
+       is wider than the screen. Everything below the header reads its height. */
+    .app { --topbar-h: 98px; }
+    .search { order: 1; flex-basis: 100%; }
     .layout { grid-template-columns: 1fr; }
     .main { padding: 14px 12px; }
     .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
