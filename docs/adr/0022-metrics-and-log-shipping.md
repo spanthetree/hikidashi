@@ -47,4 +47,5 @@ their NAS want Hikidashi in them.
   whether the process is up and the database is ready.
 - syslog over TLS is not built; a local rsyslog can forward over TLS.
 - Settings are environment only: there is no switch on the admin pages or in
-  the CLI yet.
+  the CLI yet. (The Account page can set them since
+  [ADR 0023](0023-monitoring-settings-on-the-account-page.md).)

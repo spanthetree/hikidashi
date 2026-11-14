@@ -19,7 +19,8 @@ Hikidashi is one server with one SQLite file, and workers that make what
 search needs out of each reel. Everything heavy runs on your own hardware,
 unless someone switches a hosted AI API on. Six things leave the machine,
 and four of them only if you configure them. Metrics are pulled, never sent:
-a collector you run scrapes `/metrics` when `HIKIDASHI_METRICS=on`.
+a collector you run scrapes `/metrics` when `HIKIDASHI_METRICS=on`, or when
+metrics are switched on on the Account page.
 
 ```mermaid
 flowchart LR
@@ -58,7 +59,7 @@ flowchart LR
 | A Nominatim geocoder | the server's places locator | the place names read from captions | default: `HIKIDASHI_GEOCODER` is empty |
 | Map tiles | your browser, on the map view | the tile coordinates you look at | `HIKIDASHI_TILES` pointing at your own |
 | A recipe page a caption links to (#114) | the server, when an incomplete recipe is opened | a request for that one page: the server's address, and that someone saved a post linking to it | `HIKIDASHI_RECIPE_FETCH=off` ([ADR 0020](adr/0020-fetch-incomplete-recipes.md)) |
-| A syslog server or Loki (#149) | every process: the server, each worker, a remote worker from its own machine | log lines, with tokens, keys, passwords, query strings and invite tokens taken out first. No caption, transcript or username is logged | default: `HIKIDASHI_SYSLOG` and `HIKIDASHI_LOKI_URL` are empty ([logging](operation.md#logging)) |
+| A syslog server or Loki (#149) | every process: the server, each worker, a remote worker from its own machine | log lines, with tokens, keys, passwords, query strings and invite tokens taken out first. No caption, transcript or username is logged | default: `HIKIDASHI_SYSLOG` and `HIKIDASHI_LOKI_URL` are empty, and nothing is set on the Account page ([logging](operation.md#logging)) |
 | Hosted AI providers (#116, #125) | the server's worker, for each API that is switched on; or a hosted worker on another machine | a reel's audio (transcription), its cover and five frames (on-screen text), and its caption, hashtags, transcript and on-screen text (tags and recipes) | default: every switch is off, and env never turns one on ([ADR 0019](adr/0019-hosted-ai-behind-a-switch.md)) |
 
 Installing and updating under Docker pulls the images from GitHub's

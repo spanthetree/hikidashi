@@ -805,3 +805,16 @@ Scrapes and health checks are logged nowhere.
 **Without the built-in push.** If you already run Grafana Alloy or Promtail,
 tail the files instead: `deploy/monitoring/alloy.config` reads
 `data/logs/*.log` and gives each line the same `process` label.
+
+### Set on the Account page
+
+An admin can set all of the variables above, for metrics and for the log,
+in **Logging and monitoring** on the Account page, and see what is on: whether
+`/metrics` answers, and where the log goes. A change takes at once, without a
+restart: on the server as it is saved, and on a worker beside it (sharing its
+database) within 30 seconds. A worker on another machine keeps to its own
+environment. A variable set in the environment wins, and the page shows it
+locked. The metrics token and Loki's token and password are saved sealed
+under the secret key, as hosted AI keys are, and are never shown back
+([ADR 0023](adr/0023-monitoring-settings-on-the-account-page.md)). Switching
+metrics on or changing them starts the counters again.
